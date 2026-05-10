@@ -2,13 +2,13 @@ import "express-async-errors";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import path from "path";
 
 dotenv.config();
 
 import uploadRouter from "./routes/upload";
 import generateRouter from "./routes/generate";
 import ncertRouter from "./routes/ncert";
+import chatRouter from "./routes/chat";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -29,6 +29,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api/upload", uploadRouter);
 app.use("/api/generate", generateRouter);
 app.use("/api/ncert", ncertRouter);
+app.use("/api/chat", chatRouter);
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error("Error:", err.message);

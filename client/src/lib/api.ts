@@ -7,6 +7,8 @@ export const api = axios.create({
   timeout: 120000,
 });
 
+// ─── Phase 1 ──────────────────────────────────────────────────────────────
+
 export async function uploadPDF(file: File, subject: string, classNum: string, chapterName: string) {
   const formData = new FormData();
   formData.append("pdf", file);
@@ -32,4 +34,37 @@ export async function generateQuestions(text: string, subject: string, classNum:
 export async function fetchNCERTChapters(classNum: string, subject: string) {
   const res = await api.get("/api/ncert/chapters", { params: { classNum, subject } });
   return res.data.chapters;
+}
+
+// ─── Phase 2 ──────────────────────────────────────────────────────────────
+
+export async function generateFormulas(text: string, subject: string, classNum: string, chapterName: string, language: string) {
+  const res = await api.post("/api/generate/formulas", { text, subject, classNum, chapterName, language });
+  return res.data;
+}
+
+export async function generateMindmap(text: string, subject: string, chapterName: string) {
+  const res = await api.post("/api/generate/mindmap", { text, subject, chapterName });
+  return res.data;
+}
+
+export async function generateMistakes(text: string, subject: string, classNum: string, chapterName: string, language: string) {
+  const res = await api.post("/api/generate/mistakes", { text, subject, classNum, chapterName, language });
+  return res.data;
+}
+
+export async function generateFlashcards(text: string, subject: string, classNum: string, chapterName: string, language: string) {
+  const res = await api.post("/api/generate/flashcards", { text, subject, classNum, chapterName, language });
+  return res.data;
+}
+
+export async function sendChatMessage(
+  messages: Array<{ role: "user" | "assistant"; content: string }>,
+  chapterContext: string,
+  chapterName: string,
+  subject: string,
+  language: string
+) {
+  const res = await api.post("/api/chat", { messages, chapterContext, chapterName, subject, language });
+  return res.data;
 }

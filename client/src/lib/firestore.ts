@@ -15,6 +15,11 @@ export interface Chapter {
   notes: any;
   questions: any;
   createdAt: any;
+  // Phase 2 enrichment (generated lazily on first access)
+  formulas?: any[];
+  mindmap?: any;
+  mistakes?: any[];
+  flashcards?: any[];
 }
 
 const CHAPTERS_COLLECTION = "chapters";
@@ -58,4 +63,10 @@ export async function deleteChapter(chapterId: string): Promise<void> {
 export async function updateChapterContent(chapterId: string, notes: any, questions: any): Promise<void> {
   const ref = doc(db, CHAPTERS_COLLECTION, chapterId);
   await setDoc(ref, { notes, questions }, { merge: true });
+}
+
+// Phase 2: save a single enrichment section lazily
+export async function updateChapterSection(chapterId: string, sectionKey: string, data: any): Promise<void> {
+  const ref = doc(db, CHAPTERS_COLLECTION, chapterId);
+  await setDoc(ref, { [sectionKey]: data }, { merge: true });
 }

@@ -13,14 +13,24 @@ function getClient(): OpenAI {
   });
 }
 
-export async function callNvidia(systemPrompt: string, userPrompt: string, jsonMode = true): Promise<string> {
+// Standard two-message call (system + user)
+export async function callNvidia(
+  systemPrompt: string,
+  userPrompt: string,
+  fullMessages?: Array<{ role: string; content: string }>
+): Promise<string> {
   const client = getClient();
+
+  const messages = fullMessages
+    ? fullMessages.map(m => ({ role: m.role as any, content: m.content }))
+    : [
+        { role: "system" as const, content: systemPrompt },
+        { role: "user" as const, content: userPrompt },
+      ];
+
   const response = await client.chat.completions.create({
     model: MODEL,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
+    messages,
     temperature: 0.7,
     max_tokens: 8000,
   });

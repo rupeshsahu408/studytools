@@ -1,20 +1,37 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { BookOpen, HelpCircle, ArrowLeft, Atom, FlaskConical, Calculator, Leaf, Calendar } from "lucide-react";
-import { getChapter } from "../lib/firestore";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  BookOpen, HelpCircle, ArrowLeft, Atom, FlaskConical,
+  Calculator, Leaf, Calendar, Sigma, Network, AlertTriangle,
+  Layers, MessageCircle, HelpingHand, Loader2,
+} from "lucide-react";
+import { getChapter, updateChapterSection } from "../lib/firestore";
 import type { Chapter } from "../lib/firestore";
+import {
+  generateFormulas, generateMindmap, generateMistakes, generateFlashcards,
+} from "../lib/api";
 import Navbar from "../components/Navbar";
 import NotesView from "../components/NotesView";
 import QuestionsView from "../components/QuestionsView";
+import FormulaSheet from "../components/FormulaSheet";
+import MindMap from "../components/MindMap";
+import MistakesView from "../components/MistakesView";
+import FlashCards from "../components/FlashCards";
+import DoubtChat from "../components/DoubtChat";
 
 const SUBJECT_ICONS: Record<string, any> = {
   Physics: Atom, Chemistry: FlaskConical, Mathematics: Calculator, Biology: Leaf,
 };
 
 const SIDEBAR_ITEMS = [
-  { key: "notes", label: "Notes", icon: BookOpen },
-  { key: "questions", label: "Questions", icon: HelpCircle },
+  { key: "notes", label: "Notes", icon: BookOpen, phase: 1 },
+  { key: "questions", label: "Questions", icon: HelpCircle, phase: 1 },
+  { key: "formulas", label: "Formulas", icon: Sigma, phase: 2 },
+  { key: "mindmap", label: "Concept Map", icon: Network, phase: 2 },
+  { key: "mistakes", label: "Ye Galti Mat Karo", icon: AlertTriangle, phase: 2 },
+  { key: "flashcards", label: "Flash Cards", icon: Layers, phase: 2 },
+  { key: "chat", label: "Doubt Chat", icon: MessageCircle, phase: 2 },
 ];
 
 function formatDate(ts: any): string {
@@ -27,12 +44,63 @@ function formatDate(ts: any): string {
   }
 }
 
+// Animated loader shown while Phase 2 content is being generated
+function SectionGenerating({ label }: { label: string }) {
+  const [dots, setDots] = useState(".");
+  useEffect(() => {
+    const t = setInterval(() => setDots(d => d.length >= 3 ? "." : d + "."), 500);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <div className="relative w-16 h-16 mb-5">
+        <motion.div className="absolute inset-0 rounded-full border-4 border-green-200 dark:border-green-900" animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} />
+        <motion.div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-600" animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }} />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Loader2 className="w-6 h-6 text-green-600 animate-spin" />
+        </div>
+      </div>
+      <p className="text-base font-semibold text-gray-800 dark:text-white mb-1">
+        Generating {label}{dots}
+      </p>
+      <p className="text-sm text-gray-400 dark:text-gray-500 max-w-xs">
+        AI is analyzing your chapter. This takes 20–40 seconds.
+      </p>
+    </div>
+  );
+}
+
+// Empty state shown when there's nothing to display and it hasn't started generating yet
+function SectionEmpty({ label, description, onGenerate, generating }: {
+  label: string;
+  description: string;
+  onGenerate: () => void;
+  generating: boolean;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+        <HelpingHand className="w-8 h-8 text-green-600 dark:text-green-400" />
+      </div>
+      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{label}</h3>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-xs">{description}</p>
+      <button onClick={onGenerate} disabled={generating}
+        className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold px-6 py-3 rounded-xl transition-colors flex items-center gap-2">
+        {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+        {generating ? "Generating..." : `Generate ${label}`}
+      </button>
+    </div>
+  );
+}
+
 export default function ChapterPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [chapter, setChapter] = useState<Chapter | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState("notes");
+  const [generatingSection, setGeneratingSection] = useState<string | null>(null);
+  const [genError, setGenError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -50,6 +118,59 @@ export default function ChapterPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Lazy generation for Phase 2 sections
+  const generateSection = useCallback(async (sectionKey: string) => {
+    if (!chapter || generatingSection) return;
+    setGeneratingSection(sectionKey);
+    setGenError(null);
+    try {
+      let result: any;
+      const { text, subject, classNum, chapterName, language } = chapter;
+
+      if (sectionKey === "formulas") {
+        const data = await generateFormulas(text, subject, classNum, chapterName, language);
+        result = data.formulas || [];
+      } else if (sectionKey === "mindmap") {
+        const data = await generateMindmap(text, subject, chapterName);
+        result = data.mindmap || null;
+      } else if (sectionKey === "mistakes") {
+        const data = await generateMistakes(text, subject, classNum, chapterName, language);
+        result = data.mistakes || [];
+      } else if (sectionKey === "flashcards") {
+        const data = await generateFlashcards(text, subject, classNum, chapterName, language);
+        result = data.cards || [];
+      }
+
+      if (result !== undefined && chapter.id) {
+        await updateChapterSection(chapter.id, sectionKey, result);
+        setChapter(prev => prev ? { ...prev, [sectionKey]: result } : prev);
+      }
+    } catch (err: any) {
+      console.error(`Error generating ${sectionKey}:`, err);
+      setGenError(`Could not generate ${sectionKey}. Please try again.`);
+    } finally {
+      setGeneratingSection(null);
+    }
+  }, [chapter, generatingSection]);
+
+  // Auto-trigger generation when visiting a Phase 2 section for the first time
+  useEffect(() => {
+    if (!chapter || loading) return;
+    const phase2Sections = ["formulas", "mindmap", "mistakes", "flashcards"];
+    if (
+      phase2Sections.includes(activeSection) &&
+      !chapter[activeSection as keyof Chapter] &&
+      !generatingSection
+    ) {
+      generateSection(activeSection);
+    }
+  }, [activeSection, chapter, loading]);
+
+  const switchSection = (key: string) => {
+    setActiveSection(key);
+    setGenError(null);
   };
 
   if (loading) {
@@ -75,17 +196,94 @@ export default function ChapterPage() {
 
   const SubjectIcon = SUBJECT_ICONS[chapter.subject] || BookOpen;
   const createdDate = formatDate(chapter.createdAt);
-
-  // Count total questions across all types for display
   const questionCount = chapter.questions
     ? Object.entries(chapter.questions).reduce((sum: number, [key, arr]: [string, any]) => {
         if (!arr) return sum;
-        if (key === "caseBased") {
-          return sum + (arr as any[]).reduce((s: number, set: any) => s + (set.questions?.length || 0), 0);
-        }
+        if (key === "caseBased") return sum + (arr as any[]).reduce((s: number, set: any) => s + (set.questions?.length || 0), 0);
         return sum + (arr as any[]).length;
       }, 0)
     : 0;
+
+  const isGenerating = (key: string) => generatingSection === key;
+
+  function renderSection() {
+    switch (activeSection) {
+      case "notes":
+        return chapter?.notes ? <NotesView notes={chapter.notes} subject={chapter.subject} /> : <div className="text-gray-400 py-10 text-center text-sm">Notes not available.</div>;
+
+      case "questions":
+        return chapter?.questions ? <QuestionsView questions={chapter.questions} /> : <div className="text-gray-400 py-10 text-center text-sm">Questions not available.</div>;
+
+      case "formulas":
+        if (isGenerating("formulas")) return <SectionGenerating label="Formula Sheet" />;
+        if (!chapter.formulas || (chapter.formulas as any[]).length === 0) {
+          return (
+            <SectionEmpty
+              label="Formula Sheet"
+              description="AI will extract every formula from this chapter with variables, SI units, and derivation hints."
+              onGenerate={() => generateSection("formulas")}
+              generating={generatingSection === "formulas"}
+            />
+          );
+        }
+        return <FormulaSheet formulas={chapter.formulas as any[]} />;
+
+      case "mindmap":
+        if (isGenerating("mindmap")) return <SectionGenerating label="Concept Map" />;
+        if (!chapter.mindmap) {
+          return (
+            <SectionEmpty
+              label="Concept Map"
+              description="AI will create an interactive concept map showing how all topics in this chapter connect."
+              onGenerate={() => generateSection("mindmap")}
+              generating={generatingSection === "mindmap"}
+            />
+          );
+        }
+        return <MindMap mindmap={chapter.mindmap} />;
+
+      case "mistakes":
+        if (isGenerating("mistakes")) return <SectionGenerating label="Common Mistakes" />;
+        if (!chapter.mistakes || (chapter.mistakes as any[]).length === 0) {
+          return (
+            <SectionEmpty
+              label="Common Mistakes"
+              description="AI will identify the top 10 most common and costly mistakes Bihar Board students make in this chapter."
+              onGenerate={() => generateSection("mistakes")}
+              generating={generatingSection === "mistakes"}
+            />
+          );
+        }
+        return <MistakesView mistakes={chapter.mistakes as any[]} />;
+
+      case "flashcards":
+        if (isGenerating("flashcards")) return <SectionGenerating label="Flash Cards" />;
+        if (!chapter.flashcards || (chapter.flashcards as any[]).length === 0) {
+          return (
+            <SectionEmpty
+              label="Flash Cards"
+              description="AI will generate 25 flash cards for quick revision of all key concepts, formulas, and definitions."
+              onGenerate={() => generateSection("flashcards")}
+              generating={generatingSection === "flashcards"}
+            />
+          );
+        }
+        return <FlashCards cards={chapter.flashcards as any[]} />;
+
+      case "chat":
+        return (
+          <DoubtChat
+            chapterName={chapter.chapterName}
+            subject={chapter.subject}
+            language={chapter.language}
+            chapterText={chapter.text || ""}
+          />
+        );
+
+      default:
+        return null;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -93,15 +291,13 @@ export default function ChapterPage() {
       <div className="pt-14 flex">
 
         {/* ── Desktop Sidebar ── */}
-        <aside className="hidden md:flex flex-col w-60 fixed left-0 top-14 h-[calc(100vh-3.5rem)] bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 p-4">
-          <div className="mb-6">
-            <button
-              onClick={() => navigate("/dashboard")}
-              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-green-600 transition-colors mb-5">
+        <aside className="hidden md:flex flex-col w-64 fixed left-0 top-14 h-[calc(100vh-3.5rem)] bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 overflow-y-auto">
+          <div className="p-4">
+            <button onClick={() => navigate("/dashboard")} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-green-600 transition-colors mb-5">
               <ArrowLeft className="w-3 h-3" /> Back to Library
             </button>
 
-            {/* Subject + class badge */}
+            {/* Chapter meta */}
             <div className="flex items-center gap-2 mb-2">
               <div className="w-7 h-7 rounded-lg bg-green-100 dark:bg-green-900/40 flex items-center justify-center flex-shrink-0">
                 <SubjectIcon className="w-4 h-4 text-green-600 dark:text-green-400" />
@@ -110,75 +306,99 @@ export default function ChapterPage() {
                 {chapter.subject} · Class {chapter.classNum}
               </span>
             </div>
-
-            {/* Chapter name */}
             <p className="text-sm font-bold text-gray-900 dark:text-white leading-snug mb-3">
               {chapter.chapterName}
             </p>
-
-            {/* Meta info */}
-            <div className="space-y-1.5">
+            <div className="space-y-1 mb-4">
               {createdDate && (
                 <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
-                  <Calendar className="w-3 h-3" />
-                  <span>Added {createdDate}</span>
+                  <Calendar className="w-3 h-3" /><span>Added {createdDate}</span>
                 </div>
               )}
               {questionCount > 0 && (
                 <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
-                  <HelpCircle className="w-3 h-3" />
-                  <span>{questionCount} questions generated</span>
+                  <HelpCircle className="w-3 h-3" /><span>{questionCount} questions</span>
                 </div>
               )}
               {chapter.language && (
-                <div className="text-xs">
-                  <span className={`inline-block px-2 py-0.5 rounded-full font-medium ${chapter.language === "hindi" ? "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400" : "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"}`}>
-                    {chapter.language === "hindi" ? "हिंदी" : "English"}
-                  </span>
-                </div>
+                <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${chapter.language === "hindi" ? "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400" : "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"}`}>
+                  {chapter.language === "hindi" ? "हिंदी" : "English"}
+                </span>
               )}
             </div>
+
+            <div className="h-px bg-gray-100 dark:bg-gray-800 mb-3" />
+
+            {/* Phase 1 sections */}
+            <div className="mb-1">
+              <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-3 mb-1.5">Study</p>
+              {SIDEBAR_ITEMS.filter(s => s.phase === 1).map(item => (
+                <button key={item.key} onClick={() => switchSection(item.key)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-0.5 ${
+                    activeSection === item.key
+                      ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  }`}>
+                  <item.icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="flex-1 text-left">{item.label}</span>
+                  {item.key === "questions" && questionCount > 0 && (
+                    <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded-full">{questionCount}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="h-px bg-gray-100 dark:bg-gray-800 my-3" />
+
+            {/* Phase 2 sections */}
+            <div>
+              <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-3 mb-1.5">
+                AI Enrichment
+                <span className="ml-1.5 text-xs text-green-500 font-semibold normal-case">Phase 2</span>
+              </p>
+              {SIDEBAR_ITEMS.filter(s => s.phase === 2).map(item => {
+                const isReady = !!chapter[item.key as keyof Chapter];
+                const isCurrentlyGenerating = generatingSection === item.key;
+                return (
+                  <button key={item.key} onClick={() => switchSection(item.key)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-0.5 ${
+                      activeSection === item.key
+                        ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    }`}>
+                    {isCurrentlyGenerating
+                      ? <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin text-green-500" />
+                      : <item.icon className="w-4 h-4 flex-shrink-0" />
+                    }
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {isReady && !isCurrentlyGenerating && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" title="Ready" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gray-100 dark:bg-gray-800 mb-4" />
-
-          {/* Navigation */}
-          <nav className="space-y-1">
-            {SIDEBAR_ITEMS.map(item => (
-              <button key={item.key} onClick={() => setActiveSection(item.key)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  activeSection === item.key
-                    ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400"
-                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
-                }`}>
-                <item.icon className="w-4 h-4" />
-                {item.label}
-                {item.key === "questions" && questionCount > 0 && (
-                  <span className="ml-auto text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded-full">
-                    {questionCount}
-                  </span>
-                )}
-              </button>
-            ))}
-          </nav>
         </aside>
 
         {/* ── Mobile Bottom Tab Bar ── */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 flex">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 flex overflow-x-auto">
           {SIDEBAR_ITEMS.map(item => (
-            <button key={item.key} onClick={() => setActiveSection(item.key)}
-              className={`flex-1 flex flex-col items-center py-2 text-xs font-medium transition-colors ${
+            <button key={item.key} onClick={() => switchSection(item.key)}
+              className={`flex flex-col items-center py-2 px-3 text-xs font-medium transition-colors flex-shrink-0 ${
                 activeSection === item.key ? "text-green-600" : "text-gray-400"
               }`}>
-              <item.icon className="w-5 h-5 mb-0.5" />
-              {item.label}
+              {generatingSection === item.key
+                ? <Loader2 className="w-5 h-5 mb-0.5 animate-spin text-green-500" />
+                : <item.icon className="w-5 h-5 mb-0.5" />
+              }
+              <span className="truncate" style={{ maxWidth: "60px" }}>{item.label}</span>
             </button>
           ))}
         </div>
 
         {/* ── Main Content ── */}
-        <main className="flex-1 md:ml-60 p-4 md:p-8 pb-20 md:pb-8">
+        <main className="flex-1 md:ml-64 p-4 md:p-8 pb-24 md:pb-8">
           {/* Mobile chapter header */}
           <div className="md:hidden mb-4 pb-4 border-b border-gray-100 dark:border-gray-800">
             <button onClick={() => navigate("/dashboard")} className="flex items-center gap-1 text-xs text-gray-400 hover:text-green-600 mb-2">
@@ -196,14 +416,25 @@ export default function ChapterPage() {
             )}
           </div>
 
-          <motion.div key={activeSection} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
-            {activeSection === "notes" && chapter.notes && (
-              <NotesView notes={chapter.notes} subject={chapter.subject} />
-            )}
-            {activeSection === "questions" && chapter.questions && (
-              <QuestionsView questions={chapter.questions} />
-            )}
-          </motion.div>
+          {/* Generation error */}
+          {genError && (
+            <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl px-4 py-3 text-sm flex items-center justify-between">
+              <span>{genError}</span>
+              <button onClick={() => generateSection(activeSection)} className="ml-3 underline text-xs">Retry</button>
+            </div>
+          )}
+
+          {/* Section content */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeSection}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}>
+              {renderSection()}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
     </div>
