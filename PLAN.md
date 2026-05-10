@@ -5,7 +5,7 @@
 **Topper 2.0** is an AI-powered study platform built specifically for:
 - **Bihar Board** Class 11th and 12th students
 - **Hindi-medium** students (Hindi-first, English toggle available)
-- **Science stream** — Physics and Chemistry (NCERT syllabus)
+- **Science stream** — Physics, Chemistry, Mathematics, Biology (NCERT syllabus, all 4 subjects from Phase 1)
 
 The core idea: A student uploads a PDF of any NCERT chapter, and the platform instantly transforms it into a complete study package — structured notes, all types of practice questions, formula sheets, mind maps, interactive 3D simulations, and more. The goal is to take a beginner student and help them become a topper.
 
