@@ -508,4 +508,33 @@ FIREBASE_SERVICE_ACCOUNT_KEY=               # Backend service account JSON (for 
 
 ---
 
-*Last updated: Phase 0 — Planning complete. Ready to build.*
+---
+
+## Clarifications & Decisions Log (All Doubts Resolved)
+
+| # | Question | Decision |
+|---|---|---|
+| 1 | UI Language | English UI; all AI-generated content in Hindi (auto-detected from PDF) |
+| 2 | Data persistence | Firebase — saved per user account; requires login |
+| 3 | Auth provider | Firebase Authentication — Google OAuth + Email/Password with email verification |
+| 4 | Chapter processing | Full chapter generated automatically + topic-level filtering available |
+| 5 | Question modes | Both Practice Mode (reveal on click) and Timed Test Mode (reveal after time) |
+| 6 | Timed test input | No typing — all answers revealed at end; MCQ highlighted, subjective shows model answer |
+| 7 | Chapter library | Library with max 5 chapters per account in Phase 1 |
+| 8 | PDF download | Added in Phase 2 |
+| 9 | Loading experience | Fun animated screen with rotating study tips while AI generates |
+| 10 | Dark/Light mode | Both, with a toggle switch in navbar |
+| 11 | Language detection | Auto-detect from PDF — no manual bilingual toggle in Phase 1 |
+| 12 | Profile page | Phase 4 — Phase 1 only shows student name in navbar |
+| 13 | Firebase setup | Student already has Firebase project with credentials ready |
+| 14 | Dashboard layout | Sidebar navigation (left) + top navbar always visible; sidebar collapses on mobile |
+| 15 | Subjects | All 4: Physics, Chemistry, Mathematics, Biology — from Phase 1 |
+| 16 | Maths formatting | LaTeX math rendering via KaTeX; step-by-step solutions; no diagrams in Phase 1 |
+| 17 | Chapter input | Both: upload own PDF + built-in NCERT chapter browser (ncert.nic.in) |
+| 18 | Landing page | Separate marketing page for guests; upload/library page for logged-in students |
+| 19 | Navbar | Top navbar always visible on all pages |
+| 20 | Build approach | Build step by step internally, return only when Phase 1 is fully working and verified |
+
+---
+
+*Last updated: Phase 0 — All doubts resolved. Ready to build Phase 1.*
