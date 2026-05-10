@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: topper-backend
+    runtime: node
+    region: singapore
+    buildCommand: cd server && npm install && npm run build
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGIN
+        sync: false
