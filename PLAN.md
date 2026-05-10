@@ -448,9 +448,21 @@ All prompts must instruct the AI to:
 ## Environment Variables Required
 
 ```
-NVIDIA_API_KEY=nvapi-xxxxxxxxxxxxxxxx    # NVIDIA NIM API key
-PORT=3001                               # Backend port
-VITE_API_URL=http://localhost:3001      # Frontend → Backend URL
+# NVIDIA NIM
+NVIDIA_API_KEY=nvapi-xxxxxxxxxxxxxxxx       # NVIDIA NIM API key
+
+# Backend
+PORT=3001                                   # Backend port
+VITE_API_URL=http://localhost:3001          # Frontend → Backend URL
+
+# Firebase (student already has a project ready)
+VITE_FIREBASE_API_KEY=                      # Firebase web API key
+VITE_FIREBASE_AUTH_DOMAIN=                  # e.g. your-app.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=                   # Firebase project ID
+VITE_FIREBASE_STORAGE_BUCKET=               # e.g. your-app.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=          # Firebase sender ID
+VITE_FIREBASE_APP_ID=                       # Firebase app ID
+FIREBASE_SERVICE_ACCOUNT_KEY=               # Backend service account JSON (for Admin SDK)
 ```
 
 ---
