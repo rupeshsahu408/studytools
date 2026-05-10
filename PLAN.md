@@ -225,6 +225,7 @@ All prompts must instruct the AI to:
 - Structure output as **clean JSON** for easy frontend rendering
 - For notes: use markdown-style formatting (headings, bold, bullets)
 - For questions: include question, answer, and a short explanation
+- For **Mathematics**: generate step-by-step solutions with LaTeX math formatting (rendered using KaTeX on the frontend); no diagrams in Phase 1
 
 ---
 
