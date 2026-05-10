@@ -152,7 +152,7 @@ topper-2.0/
   - Important definitions
   - Real-world examples for each concept
 - [ ] Notes displayed beautifully on frontend
-- [ ] Bilingual toggle — switch any section between Hindi and English
+- [ ] Language auto-detected from PDF — no bilingual toggle in Phase 1 (added in a later phase)
 - [ ] Download notes as PDF option (added in Phase 2)
 
 ### 1.3 — Question Bank Generation
