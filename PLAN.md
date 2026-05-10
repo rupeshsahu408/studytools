@@ -138,6 +138,9 @@ topper-2.0/
 
 ### 1.2 — AI Notes Generation
 - [ ] Backend sends extracted text to NVIDIA NIM API
+- [ ] AI first identifies all topics/sections in the chapter and returns a topic list
+- [ ] Full chapter notes generated automatically for all topics
+- [ ] Student can then filter/focus on specific topics (topic-level filtering)
 - [ ] AI generates structured chapter notes in **Hindi** containing:
   - Chapter overview / introduction
   - All topics and subtopics with explanations
