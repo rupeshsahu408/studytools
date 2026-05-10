@@ -23,7 +23,9 @@ The core idea: A student uploads a PDF of any NCERT chapter, and the platform in
 | Primary LLM | `meta/llama-4-scout-17b-16e-instruct` (or Nemotron/Qwen for Hindi) |
 | PDF Parsing | `pdf-parse` (Node.js) |
 | 3D Simulations | Three.js + React Three Fiber |
-| Storage | Local filesystem (Phase 1), upgrade to cloud in later phases |
+| Auth | Firebase Authentication (Google OAuth + Email/Password with email verification) |
+| Database | Firebase Firestore (saves chapters, notes, questions per user) |
+| Storage | Firebase Storage (uploaded PDFs) |
 | Port | Frontend: 5000 / Backend: 3001 |
 
 ---
