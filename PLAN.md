@@ -177,7 +177,7 @@ topper-2.0/
 - [ ] Shows: Chapter name, subject, class, generation timestamp
 - [ ] Cards for each section: Notes, Questions, (future: Formulas, Mind Map, Simulations)
 - [ ] Shows count of questions generated per type
-- [ ] Smooth loading states while AI generates content (streaming responses preferred)
+- [ ] Fun animated loading screen while AI generates content — shows rotating study tips, facts, or motivational quotes for Bihar Board students in English (UI) while generation happens in background
 
 ### 1.5 — Landing Page (Non-logged-in users)
 - [ ] Proper marketing landing page for visitors who are not logged in
