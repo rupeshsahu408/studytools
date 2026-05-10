@@ -183,7 +183,12 @@ topper-2.0/
 - [ ] Shows count of questions generated per type in the Questions section
 - [ ] Fun animated loading screen while AI generates content — shows rotating study tips, facts, or motivational quotes for Bihar Board students in English (UI) while generation happens in background
 
-### 1.5 — Landing Page (Non-logged-in users)
+### 1.5 — Navigation Layout
+- [ ] **Top navbar always visible** on all pages — contains: Topper 2.0 logo (left), student name (right), dark/light mode toggle, logout button
+- [ ] Inside the chapter dashboard: top navbar + left sidebar together — navbar for global actions, sidebar for section navigation within a chapter
+- [ ] On mobile: sidebar collapses into a hamburger/drawer menu
+
+### 1.6 — Landing Page (Non-logged-in users)
 - [ ] Proper marketing landing page for visitors who are not logged in
 - [ ] Hero section with tagline, what Topper 2.0 does, who it's for (Bihar Board, Class 11/12)
 - [ ] Features section — what gets generated (notes, questions, simulations, etc.)
