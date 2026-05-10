@@ -2,6 +2,7 @@ import express from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import os from "os";
 import { v4 as uuidv4 } from "uuid";
 import { extractTextFromPDF, cleanText } from "../services/pdf";
 import { callNvidia } from "../services/nvidia";
@@ -9,13 +10,15 @@ import { detectLanguagePrompt } from "../services/prompts";
 
 const router = express.Router();
 
+// Use os.tmpdir() — guaranteed writable on all platforms including Render/cloud
+const UPLOAD_DIR = path.join(os.tmpdir(), "topper-uploads");
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, "../../uploads");
-    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-    cb(null, uploadDir);
+  destination: (_req, _file, cb) => {
+    cb(null, UPLOAD_DIR);
   },
-  filename: (req, file, cb) => {
+  filename: (_req, file, cb) => {
     cb(null, `${uuidv4()}-${file.originalname}`);
   },
 });
@@ -23,64 +26,81 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: { fileSize: 20 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
+  fileFilter: (_req, file, cb) => {
     if (file.mimetype === "application/pdf") cb(null, true);
     else cb(new Error("Only PDF files are allowed"));
   },
 });
 
+function safeUnlink(filePath: string) {
+  try {
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  } catch {}
+}
+
 // POST /api/upload — upload a PDF file directly
-router.post("/", upload.single("pdf"), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: "No PDF file uploaded" });
-  }
+router.post("/", (req, res, next) => {
+  upload.single("pdf")(req, res, async (err) => {
+    // Handle multer errors (file too large, wrong type, etc.)
+    if (err) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({ error: "File too large. Maximum size is 20MB." });
+      }
+      return res.status(400).json({ error: err.message });
+    }
 
-  const { subject, classNum, chapterName } = req.body;
-  if (!subject || !classNum || !chapterName) {
-    fs.unlinkSync(req.file.path);
-    return res.status(400).json({ error: "Subject, class, and chapter name are required" });
-  }
+    if (!req.file) {
+      return res.status(400).json({ error: "No PDF file uploaded" });
+    }
 
-  const rawText = await extractTextFromPDF(req.file.path);
-  const cleanedText = cleanText(rawText);
+    const { subject, classNum, chapterName } = req.body;
+    if (!subject || !classNum || !chapterName) {
+      safeUnlink(req.file.path);
+      return res.status(400).json({ error: "Subject, class, and chapter name are required" });
+    }
 
-  if (cleanedText.length < 100) {
-    fs.unlinkSync(req.file.path);
-    return res.status(400).json({ error: "Could not extract text from PDF. Please try a different file." });
-  }
+    try {
+      const rawText = await extractTextFromPDF(req.file.path);
+      const cleanedText = cleanText(rawText);
 
-  const langRaw = await callNvidia(
-    "You detect language. Respond with only 'hindi' or 'english'.",
-    detectLanguagePrompt(cleanedText)
-  );
-  const language = langRaw.toLowerCase().includes("hindi") ? "hindi" : "english";
+      if (cleanedText.length < 100) {
+        safeUnlink(req.file.path);
+        return res.status(400).json({ error: "Could not extract text from PDF. Please try a different file." });
+      }
 
-  const chapterId = uuidv4();
-  fs.unlinkSync(req.file.path);
+      const langRaw = await callNvidia(
+        "You detect language. Respond with only 'hindi' or 'english'.",
+        detectLanguagePrompt(cleanedText)
+      );
+      const language = langRaw.toLowerCase().includes("hindi") ? "hindi" : "english";
 
-  res.json({
-    chapterId,
-    subject,
-    classNum,
-    chapterName,
-    language,
-    textLength: cleanedText.length,
-    text: cleanedText,
+      safeUnlink(req.file.path);
+
+      return res.json({
+        chapterId: uuidv4(),
+        subject,
+        classNum,
+        chapterName,
+        language,
+        textLength: cleanedText.length,
+        text: cleanedText,
+      });
+    } catch (error: any) {
+      safeUnlink(req.file.path);
+      next(error);
+    }
   });
 });
 
 // POST /api/upload/url — fetch an NCERT PDF from a public URL and process it
-router.post("/url", async (req, res) => {
+router.post("/url", async (req, res, next) => {
   const { url, subject, classNum, chapterName } = req.body;
 
   if (!url || !subject || !classNum || !chapterName) {
     return res.status(400).json({ error: "URL, subject, class, and chapter name are required" });
   }
 
-  const uploadDir = path.join(__dirname, "../../uploads");
-  if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
-  const tempPath = path.join(uploadDir, `${uuidv4()}.pdf`);
+  const tempPath = path.join(UPLOAD_DIR, `${uuidv4()}.pdf`);
 
   try {
     const response = await fetch(url, {
@@ -111,7 +131,7 @@ router.post("/url", async (req, res) => {
     const cleanedText = cleanText(rawText);
 
     if (cleanedText.length < 100) {
-      fs.unlinkSync(tempPath);
+      safeUnlink(tempPath);
       return res.status(400).json({
         error: "Could not extract text from the NCERT PDF. Please download and upload it manually.",
       });
@@ -123,11 +143,10 @@ router.post("/url", async (req, res) => {
     );
     const language = langRaw.toLowerCase().includes("hindi") ? "hindi" : "english";
 
-    const chapterId = uuidv4();
-    fs.unlinkSync(tempPath);
+    safeUnlink(tempPath);
 
-    res.json({
-      chapterId,
+    return res.json({
+      chapterId: uuidv4(),
       subject,
       classNum,
       chapterName,
@@ -135,11 +154,9 @@ router.post("/url", async (req, res) => {
       textLength: cleanedText.length,
       text: cleanedText,
     });
-  } catch (err: any) {
-    if (fs.existsSync(tempPath)) {
-      try { fs.unlinkSync(tempPath); } catch {}
-    }
-    throw err;
+  } catch (error: any) {
+    safeUnlink(tempPath);
+    next(error);
   }
 });
 
