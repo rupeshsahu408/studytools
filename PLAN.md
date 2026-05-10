@@ -131,14 +131,15 @@ topper-2.0/
 
 ## Phase 1 — Features to Build
 
-### 1.1 — PDF Upload
-- [ ] Drag-and-drop + click-to-browse PDF upload UI
-- [ ] File size validation (max 20MB)
-- [ ] Show upload progress bar
-- [ ] Backend receives PDF, saves temporarily
+### 1.1 — PDF Upload & NCERT Chapter Browser
+- [ ] **Two ways to load a chapter:**
+  1. **Upload own PDF** — drag-and-drop or click-to-browse, file size max 20MB
+  2. **Built-in NCERT browser** — student picks Class (11/12) → Subject (Physics/Chemistry) → Chapter → auto-loads the official NCERT PDF (fetched from ncert.nic.in public URLs)
+- [ ] Show upload/fetch progress bar
+- [ ] Backend receives PDF, saves temporarily to Firebase Storage
 - [ ] `pdf-parse` extracts raw text from PDF
 - [ ] Text is cleaned and structured for AI processing
-- [ ] User selects: Subject (Physics / Chemistry) + Class (11 / 12) + Chapter name
+- [ ] User confirms: Subject, Class, Chapter name before generation starts
 
 ### 1.2 — AI Notes Generation
 - [ ] Backend sends extracted text to NVIDIA NIM API
