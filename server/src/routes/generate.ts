@@ -7,6 +7,7 @@ import {
   mindmapSystemPrompt, mindmapUserPrompt,
   mistakesSystemPrompt, mistakesUserPrompt,
   flashcardsSystemPrompt, flashcardsUserPrompt,
+  simulationCatalogSystemPrompt, simulationCatalogUserPrompt,
 } from "../services/prompts";
 
 const router = express.Router();
@@ -108,6 +109,21 @@ router.post("/flashcards", async (req, res) => {
   );
   const parsed = safeParseJSON(raw);
   res.json({ cards: parsed.cards || [], language: lang });
+});
+
+// ─── Phase 3 Endpoint ────────────────────────────────────────────────────
+
+router.post("/simulations", async (req, res) => {
+  const { text, subject, classNum, chapterName } = req.body;
+  if (!text || !subject || !chapterName) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+  const raw = await callNvidia(
+    simulationCatalogSystemPrompt(),
+    simulationCatalogUserPrompt(text, subject, classNum || "11", chapterName)
+  );
+  const parsed = safeParseJSON(raw);
+  res.json({ simulations: parsed.simulations || [] });
 });
 
 export default router;

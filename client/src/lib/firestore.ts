@@ -4,6 +4,14 @@ import {
   deleteDoc, query, where, orderBy, serverTimestamp,
 } from "firebase/firestore";
 
+export interface SimulationEntry {
+  id: string;
+  title: string;
+  description: string;
+  topic: string;
+  difficulty: "easy" | "medium" | "hard";
+}
+
 export interface Chapter {
   id: string;
   userId: string;
@@ -20,6 +28,8 @@ export interface Chapter {
   mindmap?: any;
   mistakes?: any[];
   flashcards?: any[];
+  // Phase 3 simulations
+  simulations?: SimulationEntry[];
 }
 
 const CHAPTERS_COLLECTION = "chapters";
@@ -65,7 +75,6 @@ export async function updateChapterContent(chapterId: string, notes: any, questi
   await setDoc(ref, { notes, questions }, { merge: true });
 }
 
-// Phase 2: save a single enrichment section lazily
 export async function updateChapterSection(chapterId: string, sectionKey: string, data: any): Promise<void> {
   const ref = doc(db, CHAPTERS_COLLECTION, chapterId);
   await setDoc(ref, { [sectionKey]: data }, { merge: true });

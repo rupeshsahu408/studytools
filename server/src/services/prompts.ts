@@ -358,6 +358,58 @@ Cover: all important definitions, key formulas, fundamental laws, important conc
 Spread cards across all major topics of the chapter.`;
 }
 
+// ─── Phase 3 Prompts ───────────────────────────────────────────────────────
+
+export function simulationCatalogSystemPrompt(): string {
+  return `You are an expert physics and chemistry professor who identifies which scientific concepts from an NCERT textbook chapter can be demonstrated through interactive simulations.
+You only choose from a predefined library of available simulations. You return only the most relevant ones.
+Always respond with valid JSON only — no markdown code blocks, no extra text.`;
+}
+
+export function simulationCatalogUserPrompt(chapterText: string, subject: string, classNum: string, chapterName: string): string {
+  return `Analyze this NCERT ${subject} chapter for Class ${classNum} and identify which interactive simulations from the library below are directly relevant.
+
+Chapter: ${chapterName}
+Content:
+${chapterText.slice(0, 8000)}
+
+Available Simulation Library (Physics):
+- "projectile-motion": Projectile trajectory — angle, velocity, gravity sliders, trajectory arc
+- "simple-harmonic-motion": SHM — pendulum and spring-mass oscillation with amplitude/period controls
+- "electric-field": Electric field lines — dipole, same charges, single charge configurations
+- "wave-interference": Wave optics — single/double slit diffraction patterns, wavelength slider
+- "lens-optics": Ray optics — converging/diverging lens, object distance, image formation ray diagram
+- "ohms-law": Ohm's Law circuit — voltage/resistance sliders, current calculation, bulb brightness
+- "magnetic-field": Magnetic field of a wire — current direction/magnitude, field circle visualization
+
+Available Simulation Library (Chemistry):
+- "atomic-orbitals": Atomic orbital shapes — s, p, d orbitals probability density visualization
+- "molecular-structure": 3D molecular structure — rotate H₂O, CO₂, CH₄, NH₃ molecules
+- "periodic-trends": Periodic table trends — heatmap for atomic radius, ionization energy, electronegativity
+- "electrochemical-cell": Electrochemical cell — electron flow, anode/cathode, EMF visualization
+
+Return ONLY a JSON array with the simulations that are directly relevant to THIS specific chapter:
+{
+  "simulations": [
+    {
+      "id": "simulation-id-from-library",
+      "title": "Human-readable simulation title",
+      "description": "One sentence explaining what this simulation demonstrates for this specific chapter",
+      "topic": "The specific chapter topic this simulation is most relevant to",
+      "difficulty": "easy | medium | hard"
+    }
+  ]
+}
+
+Rules:
+- Only include simulations directly relevant to this chapter's core concepts
+- For a Physics chapter: include 4-7 relevant simulations
+- For a Chemistry chapter: include 3-5 relevant simulations
+- Only use IDs from the library above (exact match)
+- Order by relevance (most relevant first)
+- Do NOT invent new simulation IDs`;
+}
+
 export function chatSystemPrompt(subject: string, chapterName: string, lang: string, chapterContext: string): string {
   if (lang === "hindi") {
     return `You are a friendly, expert ${subject} teacher who specializes in NCERT curriculum for Bihar Board Class 11 and 12.

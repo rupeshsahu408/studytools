@@ -68,3 +68,10 @@ export async function sendChatMessage(
   const res = await api.post("/api/chat", { messages, chapterContext, chapterName, subject, language });
   return res.data;
 }
+
+// ─── Phase 3 ──────────────────────────────────────────────────────────────
+
+export async function generateSimulationCatalog(text: string, subject: string, classNum: string, chapterName: string) {
+  const res = await api.post("/api/generate/simulations", { text, subject, classNum, chapterName });
+  return res.data;
+}

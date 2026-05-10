@@ -4,12 +4,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen, HelpCircle, ArrowLeft, Atom, FlaskConical,
   Calculator, Leaf, Calendar, Sigma, Network, AlertTriangle,
-  Layers, MessageCircle, HelpingHand, Loader2,
+  Layers, MessageCircle, HelpingHand, Loader2, Beaker,
 } from "lucide-react";
 import { getChapter, updateChapterSection } from "../lib/firestore";
 import type { Chapter } from "../lib/firestore";
 import {
-  generateFormulas, generateMindmap, generateMistakes, generateFlashcards,
+  generateFormulas, generateMindmap, generateMistakes,
+  generateFlashcards, generateSimulationCatalog,
 } from "../lib/api";
 import Navbar from "../components/Navbar";
 import NotesView from "../components/NotesView";
@@ -19,19 +20,21 @@ import MindMap from "../components/MindMap";
 import MistakesView from "../components/MistakesView";
 import FlashCards from "../components/FlashCards";
 import DoubtChat from "../components/DoubtChat";
+import SimulationsView from "../components/SimulationsView";
 
 const SUBJECT_ICONS: Record<string, any> = {
   Physics: Atom, Chemistry: FlaskConical, Mathematics: Calculator, Biology: Leaf,
 };
 
 const SIDEBAR_ITEMS = [
-  { key: "notes", label: "Notes", icon: BookOpen, phase: 1 },
-  { key: "questions", label: "Questions", icon: HelpCircle, phase: 1 },
-  { key: "formulas", label: "Formulas", icon: Sigma, phase: 2 },
-  { key: "mindmap", label: "Concept Map", icon: Network, phase: 2 },
-  { key: "mistakes", label: "Ye Galti Mat Karo", icon: AlertTriangle, phase: 2 },
-  { key: "flashcards", label: "Flash Cards", icon: Layers, phase: 2 },
-  { key: "chat", label: "Doubt Chat", icon: MessageCircle, phase: 2 },
+  { key: "notes",       label: "Notes",              icon: BookOpen,      phase: 1 },
+  { key: "questions",   label: "Questions",           icon: HelpCircle,   phase: 1 },
+  { key: "formulas",    label: "Formulas",            icon: Sigma,        phase: 2 },
+  { key: "mindmap",     label: "Concept Map",         icon: Network,      phase: 2 },
+  { key: "mistakes",    label: "Ye Galti Mat Karo",   icon: AlertTriangle,phase: 2 },
+  { key: "flashcards",  label: "Flash Cards",         icon: Layers,       phase: 2 },
+  { key: "chat",        label: "Doubt Chat",          icon: MessageCircle,phase: 2 },
+  { key: "simulations", label: "Simulations",         icon: Beaker,       phase: 3 },
 ];
 
 function formatDate(ts: any): string {
@@ -44,7 +47,6 @@ function formatDate(ts: any): string {
   }
 }
 
-// Animated loader shown while Phase 2 content is being generated
 function SectionGenerating({ label }: { label: string }) {
   const [dots, setDots] = useState(".");
   useEffect(() => {
@@ -54,8 +56,10 @@ function SectionGenerating({ label }: { label: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="relative w-16 h-16 mb-5">
-        <motion.div className="absolute inset-0 rounded-full border-4 border-green-200 dark:border-green-900" animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} />
-        <motion.div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-600" animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }} />
+        <motion.div className="absolute inset-0 rounded-full border-4 border-green-200 dark:border-green-900"
+          animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} />
+        <motion.div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-600"
+          animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }} />
         <div className="absolute inset-0 flex items-center justify-center">
           <Loader2 className="w-6 h-6 text-green-600 animate-spin" />
         </div>
@@ -70,7 +74,6 @@ function SectionGenerating({ label }: { label: string }) {
   );
 }
 
-// Empty state shown when there's nothing to display and it hasn't started generating yet
 function SectionEmpty({ label, description, onGenerate, generating }: {
   label: string;
   description: string;
@@ -86,7 +89,7 @@ function SectionEmpty({ label, description, onGenerate, generating }: {
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-xs">{description}</p>
       <button onClick={onGenerate} disabled={generating}
         className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold px-6 py-3 rounded-xl transition-colors flex items-center gap-2">
-        {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+        {generating && <Loader2 className="w-4 h-4 animate-spin" />}
         {generating ? "Generating..." : `Generate ${label}`}
       </button>
     </div>
@@ -120,7 +123,6 @@ export default function ChapterPage() {
     }
   };
 
-  // Lazy generation for Phase 2 sections
   const generateSection = useCallback(async (sectionKey: string) => {
     if (!chapter || generatingSection) return;
     setGeneratingSection(sectionKey);
@@ -141,6 +143,9 @@ export default function ChapterPage() {
       } else if (sectionKey === "flashcards") {
         const data = await generateFlashcards(text, subject, classNum, chapterName, language);
         result = data.cards || [];
+      } else if (sectionKey === "simulations") {
+        const data = await generateSimulationCatalog(text, subject, classNum, chapterName);
+        result = data.simulations || [];
       }
 
       if (result !== undefined && chapter.id) {
@@ -155,12 +160,12 @@ export default function ChapterPage() {
     }
   }, [chapter, generatingSection]);
 
-  // Auto-trigger generation when visiting a Phase 2 section for the first time
+  // Auto-trigger generation on first visit to Phase 2 / Phase 3 sections
   useEffect(() => {
     if (!chapter || loading) return;
-    const phase2Sections = ["formulas", "mindmap", "mistakes", "flashcards"];
+    const lazyKeys = ["formulas", "mindmap", "mistakes", "flashcards", "simulations"];
     if (
-      phase2Sections.includes(activeSection) &&
+      lazyKeys.includes(activeSection) &&
       !chapter[activeSection as keyof Chapter] &&
       !generatingSection
     ) {
@@ -204,15 +209,20 @@ export default function ChapterPage() {
       }, 0)
     : 0;
 
+  const simCount = Array.isArray(chapter.simulations) ? chapter.simulations.length : 0;
   const isGenerating = (key: string) => generatingSection === key;
 
   function renderSection() {
     switch (activeSection) {
       case "notes":
-        return chapter?.notes ? <NotesView notes={chapter.notes} subject={chapter.subject} /> : <div className="text-gray-400 py-10 text-center text-sm">Notes not available.</div>;
+        return chapter?.notes
+          ? <NotesView notes={chapter.notes} subject={chapter.subject} />
+          : <div className="text-gray-400 py-10 text-center text-sm">Notes not available.</div>;
 
       case "questions":
-        return chapter?.questions ? <QuestionsView questions={chapter.questions} /> : <div className="text-gray-400 py-10 text-center text-sm">Questions not available.</div>;
+        return chapter?.questions
+          ? <QuestionsView questions={chapter.questions} />
+          : <div className="text-gray-400 py-10 text-center text-sm">Questions not available.</div>;
 
       case "formulas":
         if (isGenerating("formulas")) return <SectionGenerating label="Formula Sheet" />;
@@ -280,6 +290,28 @@ export default function ChapterPage() {
           />
         );
 
+      case "simulations":
+        if (isGenerating("simulations")) return <SectionGenerating label="Interactive Simulations" />;
+        if (!chapter.simulations || simCount === 0) {
+          return (
+            <SectionEmpty
+              label="Interactive Simulations"
+              description="AI will analyze this chapter and identify all topics that can be visualized with interactive 2D/3D simulations."
+              onGenerate={() => generateSection("simulations")}
+              generating={generatingSection === "simulations"}
+            />
+          );
+        }
+        return (
+          <SimulationsView
+            simulations={chapter.simulations}
+            chapterName={chapter.chapterName}
+            subject={chapter.subject}
+            language={chapter.language}
+            chapterText={chapter.text || ""}
+          />
+        );
+
       default:
         return null;
     }
@@ -321,7 +353,11 @@ export default function ChapterPage() {
                 </div>
               )}
               {chapter.language && (
-                <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${chapter.language === "hindi" ? "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400" : "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"}`}>
+                <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${
+                  chapter.language === "hindi"
+                    ? "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
+                    : "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                }`}>
                   {chapter.language === "hindi" ? "हिंदी" : "English"}
                 </span>
               )}
@@ -342,7 +378,9 @@ export default function ChapterPage() {
                   <item.icon className="w-4 h-4 flex-shrink-0" />
                   <span className="flex-1 text-left">{item.label}</span>
                   {item.key === "questions" && questionCount > 0 && (
-                    <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded-full">{questionCount}</span>
+                    <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded-full">
+                      {questionCount}
+                    </span>
                   )}
                 </button>
               ))}
@@ -351,7 +389,7 @@ export default function ChapterPage() {
             <div className="h-px bg-gray-100 dark:bg-gray-800 my-3" />
 
             {/* Phase 2 sections */}
-            <div>
+            <div className="mb-1">
               <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-3 mb-1.5">
                 AI Enrichment
                 <span className="ml-1.5 text-xs text-green-500 font-semibold normal-case">Phase 2</span>
@@ -378,6 +416,42 @@ export default function ChapterPage() {
                 );
               })}
             </div>
+
+            <div className="h-px bg-gray-100 dark:bg-gray-800 my-3" />
+
+            {/* Phase 3 — Simulations */}
+            <div>
+              <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-3 mb-1.5">
+                Simulations
+                <span className="ml-1.5 text-xs text-blue-500 font-semibold normal-case">Phase 3</span>
+              </p>
+              {SIDEBAR_ITEMS.filter(s => s.phase === 3).map(item => {
+                const isReady = simCount > 0;
+                const isCurrentlyGenerating = generatingSection === item.key;
+                return (
+                  <button key={item.key} onClick={() => switchSection(item.key)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-0.5 ${
+                      activeSection === item.key
+                        ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    }`}>
+                    {isCurrentlyGenerating
+                      ? <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin text-blue-500" />
+                      : <item.icon className="w-4 h-4 flex-shrink-0" />
+                    }
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {isReady && !isCurrentlyGenerating && (
+                      <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded-full">
+                        {simCount}
+                      </span>
+                    )}
+                    {!isReady && !isCurrentlyGenerating && (
+                      <span className="text-xs text-blue-400 dark:text-blue-500 font-medium">New</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </aside>
 
@@ -386,13 +460,18 @@ export default function ChapterPage() {
           {SIDEBAR_ITEMS.map(item => (
             <button key={item.key} onClick={() => switchSection(item.key)}
               className={`flex flex-col items-center py-2 px-3 text-xs font-medium transition-colors flex-shrink-0 ${
-                activeSection === item.key ? "text-green-600" : "text-gray-400"
+                activeSection === item.key
+                  ? item.phase === 3 ? "text-blue-600" : "text-green-600"
+                  : "text-gray-400"
               }`}>
               {generatingSection === item.key
-                ? <Loader2 className="w-5 h-5 mb-0.5 animate-spin text-green-500" />
+                ? <Loader2 className={`w-5 h-5 mb-0.5 animate-spin ${item.phase === 3 ? "text-blue-500" : "text-green-500"}`} />
                 : <item.icon className="w-5 h-5 mb-0.5" />
               }
               <span className="truncate" style={{ maxWidth: "60px" }}>{item.label}</span>
+              {item.key === "simulations" && simCount > 0 && (
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-0.5" />
+              )}
             </button>
           ))}
         </div>
