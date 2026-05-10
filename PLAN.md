@@ -179,11 +179,19 @@ topper-2.0/
 - [ ] Shows count of questions generated per type
 - [ ] Smooth loading states while AI generates content (streaming responses preferred)
 
-### 1.5 — Home / Landing Page
-- [ ] Clean hero section explaining what Topper 2.0 does
-- [ ] Upload area prominent and central
-- [ ] Short list of what gets generated (notes, questions, simulations, etc.)
+### 1.5 — Landing Page (Non-logged-in users)
+- [ ] Proper marketing landing page for visitors who are not logged in
+- [ ] Hero section with tagline, what Topper 2.0 does, who it's for (Bihar Board, Class 11/12)
+- [ ] Features section — what gets generated (notes, questions, simulations, etc.)
+- [ ] "How it works" section — 3 simple steps
+- [ ] Call-to-action buttons: Sign Up / Login
 - [ ] Green color theme, subtle animations
+
+### 1.6 — Upload Page (Logged-in users)
+- [ ] Shown only after login — this is the student's home inside the app
+- [ ] Chapter library at the top (their saved chapters, max 5)
+- [ ] Prominent upload box to add a new chapter
+- [ ] Subject, Class, Chapter name selection before/after upload
 
 ---
 
