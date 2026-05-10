@@ -168,7 +168,11 @@ topper-2.0/
 - [ ] **Timed Test Mode** — student sets timer, answers all questions, submits and gets score + review
 - [ ] Download full question bank as PDF
 
-### 1.4 — Dashboard
+### 1.4 — Chapter Library & Dashboard
+- [ ] Each student has a personal chapter library (max 5 chapters in Phase 1)
+- [ ] Library page shows all uploaded chapters as cards (subject, class, chapter name, date)
+- [ ] Student can switch between any saved chapter anytime
+- [ ] Uploading a 6th chapter prompts the student to delete one first
 - [ ] After upload + generation, user lands on chapter dashboard
 - [ ] Shows: Chapter name, subject, class, generation timestamp
 - [ ] Cards for each section: Notes, Questions, (future: Formulas, Mind Map, Simulations)
