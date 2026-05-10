@@ -490,21 +490,49 @@ FIREBASE_SERVICE_ACCOUNT_KEY=               # Backend service account JSON (for 
 
 ## What Has Been Built
 
-> This section should be updated after each phase is completed.
+> This section is updated after each phase is completed.
 
-- [ ] Phase 1 — Not yet built
+- [x] Phase 1 — **COMPLETE** (built and verified working)
 - [ ] Phase 2 — Not yet built
 - [ ] Phase 3 — Not yet built
 - [ ] Phase 4 — Not yet built
 - [ ] Phase 5 — Not yet built
 
+### Phase 1 — What Was Built
+
+**Frontend (client/)** — React + Vite + TypeScript + Tailwind CSS v4
+- `src/App.tsx` — Router with protected/public routes
+- `src/contexts/AuthContext.tsx` — Firebase Auth (Google + Email/Password + email verification)
+- `src/contexts/ThemeContext.tsx` — Dark/light mode toggle with localStorage persistence
+- `src/lib/firebase.ts` — Firebase initialization
+- `src/lib/firestore.ts` — Firestore CRUD (save/get/delete chapters, 5-chapter limit)
+- `src/lib/api.ts` — Axios API client for backend
+- `src/pages/LandingPage.tsx` — Marketing landing page for non-logged-in users
+- `src/pages/AuthPage.tsx` — Signup + Login (Google OAuth, email/password, email verification)
+- `src/pages/DashboardPage.tsx` — Chapter library (shows saved chapters, max 5)
+- `src/pages/UploadPage.tsx` — PDF upload + NCERT browser + generation trigger
+- `src/pages/ChapterPage.tsx` — Chapter viewer with sidebar navigation
+- `src/components/Navbar.tsx` — Top navbar (always visible, dark mode toggle, logout)
+- `src/components/LoadingScreen.tsx` — Animated loading screen with rotating study tips
+- `src/components/NotesView.tsx` — Notes viewer (expandable topics, key points, terms, examples)
+- `src/components/QuestionsView.tsx` — Question bank (all 8 types, practice mode, timed test mode)
+
+**Backend (server/)** — Node.js + Express + TypeScript
+- `src/index.ts` — Express server on port 3001
+- `src/routes/upload.ts` — PDF upload, text extraction via pdf-parse, language detection
+- `src/routes/generate.ts` — Notes generation + question bank generation via NVIDIA NIM API
+- `src/routes/ncert.ts` — Built-in NCERT chapter browser (Class 11 & 12, all 4 subjects)
+- `src/services/nvidia.ts` — NVIDIA NIM API client (OpenAI-compatible)
+- `src/services/prompts.ts` — All AI prompts (notes, questions, language-aware)
+- `src/services/pdf.ts` — PDF text extraction and cleaning
+
 ---
 
 ## Current Status
 
-**Active Phase:** Ready to begin Phase 1
+**Active Phase:** Phase 1 complete. Ready to begin Phase 2.
 
-**Next Action:** Set up project structure, install dependencies, configure NVIDIA API, build PDF upload and AI generation pipeline.
+**Next Action:** Phase 2 — Formula sheets, Concept Mind Map, Common Mistakes, Flash Cards, Doubt Solver Chat.
 
 ---
 
