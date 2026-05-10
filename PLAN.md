@@ -213,7 +213,7 @@ topper-2.0/
 ## Phase 1 — AI Prompt Guidelines
 
 All prompts must instruct the AI to:
-- Respond in **Hindi** (Devanagari script) by default
+- **Auto-detect language** from the PDF content — if the chapter is in English, generate in English; if in Hindi, generate in Hindi
 - Follow **NCERT syllabus** and **Bihar Board exam pattern**
 - Use **simple language** appropriate for Class 11/12 students
 - Structure output as **clean JSON** for easy frontend rendering
