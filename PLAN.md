@@ -370,10 +370,10 @@ All prompts must instruct the AI to:
 
 ## Phase 4 — Features to Build
 
-### 4.1 — User Accounts
-- [ ] Simple signup/login (email + password)
-- [ ] Student profile: name, class (11/12), school, district (Bihar)
-- [ ] All generated content saved to account
+### 4.1 — User Accounts & Profile Page
+- [ ] Full student profile page added in Phase 4
+- [ ] Profile fields: name, class (11/12), school, district (Bihar)
+- [ ] In Phase 1: only student's name shown in navbar after login
 
 ### 4.2 — Progress Tracker
 - [ ] Dashboard showing all chapters uploaded and studied
