@@ -76,7 +76,10 @@ export default function UploadPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url: selectedNcert.url, subject, classNum, chapterName: selectedNcert.name }),
         });
-        if (!res.ok) throw new Error("Failed to fetch NCERT chapter");
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || "Failed to fetch NCERT chapter. Please try uploading the PDF manually.");
+        }
         uploadedData = await res.json();
       }
 
@@ -144,7 +147,7 @@ export default function UploadPage() {
                   <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Class</label>
                   <select value={classNum} onChange={e => { setClassNum(e.target.value); setNcertChapters([]); setSelectedNcert(null); }}
                     className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500">
-                    {CLASSES.map(c => <option key={c}>Class {c}</option>)}
+                    {CLASSES.map(c => <option key={c} value={c}>Class {c}</option>)}
                   </select>
                 </div>
               </div>

@@ -13,6 +13,7 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  resendVerificationEmail: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -24,7 +25,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u);
+      // Only set user if email is verified (or signed in via Google/other provider)
+      if (u && !u.emailVerified && u.providerData[0]?.providerId === "password") {
+        setUser(null);
+      } else {
+        setUser(u);
+      }
       setLoading(false);
     });
     return unsub;
@@ -33,15 +39,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (email: string, password: string) => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await sendEmailVerification(cred.user);
+    // Sign out immediately — user must verify email before using the app
+    await signOut(auth);
   };
 
   const signIn = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    if (!cred.user.emailVerified) {
+      await signOut(auth);
+      const err: any = new Error("Email not verified");
+      err.code = "auth/email-not-verified";
+      throw err;
+    }
   };
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
+    // Google accounts are always verified — no check needed
+  };
+
+  const resendVerificationEmail = async (email: string, password: string) => {
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    await sendEmailVerification(cred.user);
+    await signOut(auth);
   };
 
   const logout = async () => {
@@ -49,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signInWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signInWithGoogle, resendVerificationEmail, logout }}>
       {children}
     </AuthContext.Provider>
   );

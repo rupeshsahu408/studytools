@@ -122,6 +122,38 @@ Return ONLY this exact JSON structure with as many questions as possible:
       "explanation": "explanation"
     }
   ],
+  "caseBased": [
+    {
+      "id": "cb_1",
+      "paragraph": "A real-world scenario, situation, or problem paragraph of 4-6 sentences directly related to a key concept from this chapter. Make it practical and relatable for Bihar Board students.",
+      "questions": [
+        {
+          "id": "cb_1_q1",
+          "question": "A 1-mark question based on the paragraph",
+          "answer": "Concise 1-mark answer",
+          "marks": 1
+        },
+        {
+          "id": "cb_1_q2",
+          "question": "Another 1-mark question based on the paragraph",
+          "answer": "Concise 1-mark answer",
+          "marks": 1
+        },
+        {
+          "id": "cb_1_q3",
+          "question": "A 2-mark question requiring brief explanation",
+          "answer": "2-mark answer in 2-3 sentences",
+          "marks": 2
+        },
+        {
+          "id": "cb_1_q4",
+          "question": "A 2-mark application question based on the scenario",
+          "answer": "2-mark answer with key points",
+          "marks": 2
+        }
+      ]
+    }
+  ],
   "trueFalse": [
     {
       "id": "tf_1",
@@ -149,5 +181,5 @@ Return ONLY this exact JSON structure with as many questions as possible:
   ]
 }
 
-Generate at least: 20 MCQ, 15 one-mark, 15 two-mark, 10 five-mark, 8 assertion-reason, 10 true-false, 10 fill-blanks, 8 exam-important questions.`;
+Generate at least: 20 MCQ, 15 one-mark, 15 two-mark, 10 five-mark, 8 assertion-reason, 3 case-based sets (each with exactly 4 sub-questions), 10 true-false, 10 fill-blanks, 8 exam-important questions.`;
 }
