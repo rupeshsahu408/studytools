@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Upload, FileText, X, BookOpen } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { uploadPDF, generateNotes, generateQuestions, fetchNCERTChapters } from "../lib/api";
+import { api, uploadPDF, generateNotes, generateQuestions, fetchNCERTChapters } from "../lib/api";
 import { saveChapter } from "../lib/firestore";
 import LoadingScreen from "../components/LoadingScreen";
 import Navbar from "../components/Navbar";
@@ -71,16 +71,14 @@ export default function UploadPage() {
         uploadedData = await uploadPDF(file, subject, classNum, nameToUse);
       } else if (tab === "browse" && selectedNcert) {
         setLoadingStage(0);
-        const res = await fetch(`/api/upload/url`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: selectedNcert.url, subject, classNum, chapterName: selectedNcert.name }),
+        // Use api instance (not fetch) so the request goes to the Render backend in production
+        const res = await api.post("/api/upload/url", {
+          url: selectedNcert.url,
+          subject,
+          classNum,
+          chapterName: selectedNcert.name,
         });
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || "Failed to fetch NCERT chapter. Please try uploading the PDF manually.");
-        }
-        uploadedData = await res.json();
+        uploadedData = res.data;
       }
 
       setLoadingStage(2);

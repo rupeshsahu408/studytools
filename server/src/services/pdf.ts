@@ -1,4 +1,6 @@
 import fs from "fs";
+
+// pdf-parse v1 — exports a single function: pdf(buffer) => Promise<{text}>
 const pdfParse = require("pdf-parse");
 
 export async function extractTextFromPDF(filePath: string): Promise<string> {
