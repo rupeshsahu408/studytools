@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── chapters collection ──────────────────────────────────────────────────
+    // Each chapter document has a "userId" field.
+    // Only the owner (authenticated user whose UID matches userId) can access it.
+    match /chapters/{chapterId} {
+      // Read: only if you are the owner
+      allow read: if request.auth != null
+                  && request.auth.uid == resource.data.userId;
+
+      // Create: only if you are setting yourself as the owner
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.userId;
+
+      // Update / Delete: only if you are the owner
+      allow update, delete: if request.auth != null
+                             && request.auth.uid == resource.data.userId;
+    }
+
+    // ── users collection ─────────────────────────────────────────────────────
+    // Each user document's ID is the user's own Firebase Auth UID.
+    // Users can only read and write their own document.
+    match /users/{userId} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+    }
+  }
+}
