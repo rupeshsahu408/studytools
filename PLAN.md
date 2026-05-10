@@ -164,7 +164,8 @@ topper-2.0/
   - **Important Exam-Style Questions** — AI identifies the most likely board exam questions
 - [ ] Each question has: question text, answer, explanation
 - [ ] Questions filterable by type
-- [ ] "Practice Mode" — hide answers, reveal on click
+- [ ] **Practice Mode** — hide answers, reveal on click at own pace
+- [ ] **Timed Test Mode** — student sets timer, answers all questions, submits and gets score + review
 - [ ] Download full question bank as PDF
 
 ### 1.4 — Dashboard
