@@ -1,0 +1,33 @@
+2026-05-10T15:17:22.757434151Z ==> Cloning from https://github.com/rupeshsahu408/studytools
+2026-05-10T15:17:24.817516977Z ==> Checking out commit bab08c0aa0ad616a31e3144e10e5fc8a330b55f4 in branch main
+2026-05-10T15:17:33.760445502Z ==> Using Node.js version 24.14.1 (default)
+2026-05-10T15:17:33.795063289Z ==> Docs on specifying a Node.js version: https://render.com/docs/node-version
+2026-05-10T15:17:36.646417239Z ==> Running build command 'cd server && npm install && npm run build'...
+2026-05-10T15:17:41.672438332Z 
+2026-05-10T15:17:41.672463714Z added 90 packages, and audited 91 packages in 5s
+2026-05-10T15:17:41.672483586Z 
+2026-05-10T15:17:41.672488316Z 21 packages are looking for funding
+2026-05-10T15:17:41.672493347Z   run `npm fund` for details
+2026-05-10T15:17:41.672497287Z 
+2026-05-10T15:17:41.672503167Z found 0 vulnerabilities
+2026-05-10T15:17:42.099308092Z 
+2026-05-10T15:17:42.099334104Z > server@1.0.0 build
+2026-05-10T15:17:42.099339715Z > tsc
+2026-05-10T15:17:42.099344165Z 
+2026-05-10T15:17:42.945486935Z src/index.ts(14,14): error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+2026-05-10T15:17:42.945633866Z src/index.ts(18,24): error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+2026-05-10T15:17:42.945664859Z src/index.ts(19,5): error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+2026-05-10T15:17:42.945707032Z src/index.ts(40,68): error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+2026-05-10T15:17:42.945771527Z src/index.ts(49,3): error TS2584: Cannot find name 'console'. Do you need to change your target library? Try changing the 'lib' compiler option to include 'dom'.
+2026-05-10T15:17:42.945778907Z src/index.ts(54,3): error TS2584: Cannot find name 'console'. Do you need to change your target library? Try changing the 'lib' compiler option to include 'dom'.
+2026-05-10T15:17:42.945807339Z src/routes/upload.ts(3,18): error TS2591: Cannot find name 'path'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+2026-05-10T15:17:42.945837031Z src/routes/upload.ts(4,16): error TS2591: Cannot find name 'fs'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+2026-05-10T15:17:42.945850642Z src/routes/upload.ts(14,33): error TS2304: Cannot find name '__dirname'.
+2026-05-10T15:17:42.945907277Z src/routes/upload.ts(80,31): error TS2304: Cannot find name '__dirname'.
+2026-05-10T15:17:42.94595058Z src/routes/upload.ts(86,28): error TS2304: Cannot find name 'fetch'.
+2026-05-10T15:17:42.94595777Z src/routes/upload.ts(108,32): error TS2552: Cannot find name 'Buffer'. Did you mean 'buffer'?
+2026-05-10T15:17:42.946021595Z src/services/nvidia.ts(6,18): error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+2026-05-10T15:17:42.946055927Z src/services/pdf.ts(1,16): error TS2591: Cannot find name 'fs'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+2026-05-10T15:17:42.946131873Z src/services/pdf.ts(2,18): error TS2591: Cannot find name 'require'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+2026-05-10T15:17:43.035649698Z ==> Build failed 😞
+2026-05-10T15:17:43.062424967Z ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
