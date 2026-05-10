@@ -46,7 +46,7 @@ The core idea: A student uploads a PDF of any NCERT chapter, and the platform in
 - **Primary color:** Green (`#16a34a` / Tailwind `green-600`)
 - **Theme:** Clean, modern, distraction-free — students should focus on studying
 - **Animations:** Smooth but minimal — page transitions, loading states, card reveals
-- **Language:** Hindi-first UI labels and generated content; English toggle per section
+- **Language:** English UI (buttons, menus, navigation); all AI-generated content (notes, questions, explanations) in Hindi by default with English toggle
 - **Typography:** Clear, readable — larger font sizes for content areas
 - **Responsive:** Mobile-friendly (many Bihar students use phones)
 
