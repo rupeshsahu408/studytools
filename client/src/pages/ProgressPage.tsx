@@ -291,7 +291,7 @@ export default function ProgressPage() {
                         },
                         { icon: Layers, label: "Cards", done: !!chapter.flashcardsDone },
                         { icon: Beaker, label: "Sims", done: !!chapter.simulationsSeen },
-                      ].map(({ icon: ItemIcon, label, done, sub }) => (
+                      ].map(({ label, done, sub }) => (
                         <div key={label} className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl text-center ${
                           done
                             ? "bg-green-50 dark:bg-green-900/10"

@@ -20,11 +20,11 @@ interface Notes {
 
 interface NotesViewProps {
   notes: Notes;
-  subject: string;
+  subject?: string;
   onRead?: () => void;
 }
 
-export default function NotesView({ notes, subject, onRead }: NotesViewProps) {
+export default function NotesView({ notes, onRead }: NotesViewProps) {
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set([notes.topics?.[0]?.id]));
   const calledOnRead = useRef(false);
 

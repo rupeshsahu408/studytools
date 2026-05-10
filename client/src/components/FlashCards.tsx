@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, RotateCcw, CheckCircle, AlertCircle, Layers, RefreshCw } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle, AlertCircle, Layers, RefreshCw } from "lucide-react";
 
 interface FlashCard {
   id: string;

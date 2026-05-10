@@ -111,7 +111,7 @@ export default function SimpleHarmonicMotion({ onContextChange }: Props) {
     ctx.setLineDash([]);
   }
 
-  function drawSpring(ctx: CanvasRenderingContext2D, simW: number, displacement: number, maxDisp: number) {
+  function drawSpring(ctx: CanvasRenderingContext2D, simW: number, displacement: number, _maxDisp: number) {
     const cx = simW / 2;
     const ceilY = 30;
     const restLength = 130;
@@ -177,7 +177,7 @@ export default function SimpleHarmonicMotion({ onContextChange }: Props) {
     }
   }
 
-  function drawGraph(ctx: CanvasRenderingContext2D, t: number, pos: number, amp: number) {
+  function drawGraph(ctx: CanvasRenderingContext2D, _t: number, pos: number, amp: number) {
     const gx = W / 2 + 20, gy = H / 2, gw = W / 2 - 40, gh = H / 2 - 40;
 
     // Graph background

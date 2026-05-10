@@ -155,7 +155,6 @@ export default function ProjectileMotion({ onContextChange }: Props) {
   }, [angle, velocity]);
 
   useEffect(() => {
-    const s = stateRef.current;
     if (!isRunning) {
       cancelAnimationFrame(animRef.current);
       return;

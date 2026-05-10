@@ -18,7 +18,7 @@ export default function ElectrochemicalCell({ onContextChange }: Props) {
   const tRef = useRef(0);
   const lastRef = useRef<number | null>(null);
   const [cellIdx, setCellIdx] = useState(0);
-  const [showCurrent, setShowCurrent] = useState(true);
+  const [showCurrent] = useState(true);
   const cellIdxRef = useRef(0);
   cellIdxRef.current = cellIdx;
   const showCurrentRef = useRef(true);

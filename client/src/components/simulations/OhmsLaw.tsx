@@ -26,7 +26,6 @@ export default function OhmsLaw({ onContextChange }: Props) {
     ctx.fillRect(0, 0, W, H);
 
     // ── Circuit layout ──
-    const pad = 60;
     const top = 80, bottom = H - 80;
     const left = 120, right = W - 150;
     const mid = (top + bottom) / 2;

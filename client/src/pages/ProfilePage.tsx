@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  UserCircle, Flame, Target, Calendar, Trophy, Brain,
+  Flame, Target, Calendar, Trophy, Brain,
   Edit2, Check, X, ChevronRight, AlertTriangle, Loader2,
   BookOpen, Zap, Star,
 } from "lucide-react";

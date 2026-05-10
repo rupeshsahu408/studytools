@@ -226,6 +226,7 @@ export default function ChapterPage() {
   const isGenerating = (key: string) => generatingSection === key;
 
   function renderSection() {
+    if (!chapter) return null;
     switch (activeSection) {
       case "notes":
         return chapter?.notes

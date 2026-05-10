@@ -102,9 +102,7 @@ export default function LensOptics({ onContextChange }: Props) {
 
     // Lens formula: 1/v = 1/f + 1/u (where u is negative for real object)
     const u = -objectDist; // object distance (negative for real object on left)
-    const v = 1 / (1 / f - 1 / u); // actually: 1/v = 1/f - 1/u gives... let me use: 1/v = 1/f + 1/u with sign convention
-    // Using: 1/v - 1/u = 1/f (Cartesian), u = -objectDist (negative)
-    // 1/v = 1/f + 1/u = 1/f - 1/objectDist
+    // Lens formula (Cartesian sign convention): 1/v - 1/u = 1/f
     const vCalc = 1 / (1 / f + 1 / u);
     const magnification = vCalc / u; // m = v/u
 
@@ -127,16 +125,6 @@ export default function LensOptics({ onContextChange }: Props) {
       ctx.font = "bold 11px sans-serif";
       ctx.fillText(`Image (${isReal ? "Real" : "Virtual"})`, imgX + 6, CY - imgH / 2);
     }
-
-    // Three principal rays
-    const rays = [
-      // Ray 1: parallel to axis → through focal point (converging) / appears from focal point (diverging)
-      { color: "#f59e0b", label: "Ray 1" },
-      // Ray 2: through center of lens (undeviated)
-      { color: "#3b82f6", label: "Ray 2" },
-      // Ray 3: through front focal point → emerges parallel
-      { color: "#ec4899", label: "Ray 3" },
-    ];
 
     ctx.lineWidth = 1.5;
 

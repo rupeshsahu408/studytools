@@ -1,8 +1,8 @@
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Upload, FileText, X, ChevronDown, BookOpen } from "lucide-react";
+import { motion } from "framer-motion";
+import { Upload, FileText, X, BookOpen } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { uploadPDF, generateNotes, generateQuestions, fetchNCERTChapters } from "../lib/api";
 import { saveChapter } from "../lib/firestore";

@@ -110,7 +110,7 @@ export default function MolecularStructure({ onContextChange }: Props) {
   const molKeyRef = useRef("H2O");
   molKeyRef.current = molKey;
 
-  function draw(t: number) {
+  function draw(_t: number) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d")!;
@@ -145,8 +145,6 @@ export default function MolecularStructure({ onContextChange }: Props) {
     for (const bond of mol.bonds) {
       const pa = projected[bond.a];
       const pb = projected[bond.b];
-      const midX = (pa.sx + pb.sx) / 2;
-      const midY = (pa.sy + pb.sy) / 2;
       const dx = pb.sx - pa.sx, dy = pb.sy - pa.sy;
       const len = Math.sqrt(dx * dx + dy * dy);
       const nx = -dy / len, ny = dx / len;

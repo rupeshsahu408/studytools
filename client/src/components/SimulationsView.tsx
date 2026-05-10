@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Beaker, Zap, Waves, Eye, Lightbulb, Magnet, FlaskConical,
-  Atom, Network, BarChart2, Battery, X, Sparkles, ChevronRight,
+  Atom, BarChart2, Battery, X, Sparkles, ChevronRight,
   Play, BookOpen, AlertCircle,
 } from "lucide-react";
 import { sendChatMessage } from "../lib/api";

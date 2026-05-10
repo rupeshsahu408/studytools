@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { BookOpen, Zap, Brain, BarChart2, ArrowRight, CheckCircle, Star } from "lucide-react";
+import { BookOpen, Zap, Brain, BarChart2, ArrowRight } from "lucide-react";
 
 const features = [
   { icon: BookOpen, title: "Smart Notes", desc: "AI generates complete, structured notes from any NCERT chapter instantly." },
@@ -15,13 +15,6 @@ const steps = [
   { num: "03", title: "Study Smart", desc: "Use notes, practice questions, and test yourself — all in one place." },
 ];
 
-const tips = [
-  "Bihar Board toppers revise each chapter at least 3 times",
-  "5-mark questions carry 30% of total marks in board exams",
-  "Practicing MCQs daily improves speed and accuracy",
-  "Writing answers instead of just reading boosts memory by 60%",
-  "Understanding concepts is more important than rote learning",
-];
 
 export default function LandingPage() {
   return (

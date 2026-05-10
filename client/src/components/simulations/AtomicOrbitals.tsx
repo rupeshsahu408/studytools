@@ -89,8 +89,6 @@ export default function AtomicOrbitals({ onContextChange }: Props) {
       const hexColor = color;
       ctx.fillStyle = hexColor.replace(")", `,${alpha})`).replace("rgb", "rgba").replace("#", "rgba(").replace(/([0-9a-f]{2})/gi, (m) => parseInt(m, 16) + ",").replace(/,$/, ")");
 
-      // Parse color for dots
-      const colorFill = color;
       for (let i = 0; i < numDots; i++) {
         const angle = Math.random() * 2 * Math.PI;
         const rr = Math.random() * r;

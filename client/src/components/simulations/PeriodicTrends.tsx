@@ -56,14 +56,6 @@ const TRENDS: { key: TrendKey; label: string; unit: string; periodTrend: string;
   { key: "electronAffinity", label: "Electron Affinity", unit: "kJ/mol", periodTrend: "Generally increases →", groupTrend: "Decreases ↓", color: "#10b981" },
 ];
 
-// Color mapping: value 0→1 → blue → green → yellow → red
-function valueToColor(normalized: number, hex: string): string {
-  const r = Math.round(10 + normalized * 220);
-  const g = Math.round(80 + normalized * 80);
-  const b = Math.round(200 - normalized * 180);
-  return `rgb(${r},${g},${b})`;
-}
-
 function heatColor(norm: number): string {
   // blue (0) → teal → green → yellow → orange → red (1)
   const colors = [
@@ -167,7 +159,7 @@ export default function PeriodicTrends({ onContextChange }: Props) {
                   }}
                   onMouseLeave={() => setHovered(null)}>
                   <span className="text-white font-bold leading-none" style={{ fontSize: "11px" }}>{el.symbol}</span>
-                  <span className="text-white/80 leading-none" style={{ fontSize: "8px" }}>{val > 0 ? val.toFixed(el.key === "electronegativity" ? 2 : 0) : "-"}</span>
+                  <span className="text-white/80 leading-none" style={{ fontSize: "8px" }}>{val > 0 ? val.toFixed(trend === "electronegativity" ? 2 : 0) : "-"}</span>
                 </div>
               );
             })
