@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronUp, Star, Lightbulb, BookOpen } from "lucide-react";
-import ReactMarkdown from "react-markdown";
 
 interface Topic {
   id: string;
@@ -19,8 +18,25 @@ interface Notes {
   examTips: string[];
 }
 
-export default function NotesView({ notes, subject }: { notes: Notes; subject: string }) {
+interface NotesViewProps {
+  notes: Notes;
+  subject: string;
+  onRead?: () => void;
+}
+
+export default function NotesView({ notes, subject, onRead }: NotesViewProps) {
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set([notes.topics?.[0]?.id]));
+  const calledOnRead = useRef(false);
+
+  // Mark notes as read on first mount
+  useEffect(() => {
+    if (onRead && !calledOnRead.current) {
+      calledOnRead.current = true;
+      // Small delay to ensure it's intentional (not a quick navigation away)
+      const t = setTimeout(() => onRead(), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [onRead]);
 
   const toggleTopic = (id: string) => {
     setExpandedTopics(prev => {

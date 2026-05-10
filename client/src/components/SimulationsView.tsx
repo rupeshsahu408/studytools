@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Beaker, Zap, Waves, Eye, Lightbulb, Magnet, FlaskConical,
@@ -52,6 +52,7 @@ interface SimulationsViewProps {
   subject: string;
   language: string;
   chapterText: string;
+  onSimLaunched?: () => void;
 }
 
 interface ExplainState {
@@ -61,13 +62,13 @@ interface ExplainState {
 }
 
 export default function SimulationsView({
-  simulations, chapterName, subject, language, chapterText,
+  simulations, chapterName, subject, language, chapterText, onSimLaunched,
 }: SimulationsViewProps) {
   const [activeSim, setActiveSim] = useState<SimulationEntry | null>(null);
   const [simContext, setSimContext] = useState<string>("");
   const [explain, setExplain] = useState<ExplainState>({ loading: false, text: "", error: "" });
+  const calledLaunched = useRef(false);
 
-  // Filter to only simulations we have components for
   const available = simulations.filter(s => SIM_REGISTRY[s.id]);
 
   const handleExplain = useCallback(async () => {
@@ -99,6 +100,11 @@ export default function SimulationsView({
     setActiveSim(sim);
     setExplain({ loading: false, text: "", error: "" });
     setSimContext("");
+    // Fire onSimLaunched once per session (first simulation launch)
+    if (onSimLaunched && !calledLaunched.current) {
+      calledLaunched.current = true;
+      onSimLaunched();
+    }
   };
 
   const handleClose = () => {
@@ -130,13 +136,11 @@ export default function SimulationsView({
 
     return (
       <div className="max-w-4xl">
-        {/* Back button */}
         <button onClick={handleClose}
           className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors mb-5">
           <X className="w-4 h-4" /> Back to Catalog
         </button>
 
-        {/* Simulation header */}
         <div className="flex items-start justify-between gap-4 mb-5">
           <div className="flex items-start gap-3">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${reg.bgColor}`}>
@@ -158,7 +162,6 @@ export default function SimulationsView({
             </div>
           </div>
 
-          {/* Explain This button */}
           <button
             onClick={handleExplain}
             disabled={explain.loading}
@@ -171,12 +174,10 @@ export default function SimulationsView({
           </button>
         </div>
 
-        {/* The simulation */}
         <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-4 mb-4">
           <SimComponent onContextChange={handleContextChange} />
         </div>
 
-        {/* AI Explanation panel */}
         <AnimatePresence>
           {(explain.text || explain.error || explain.loading) && (
             <motion.div
@@ -232,7 +233,6 @@ export default function SimulationsView({
         AI has identified the following simulations relevant to <strong>{chapterName}</strong>. Launch any simulation and interact with it — then tap <strong>"Explain This"</strong> to get an AI explanation.
       </p>
 
-      {/* Simulation cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {available.map((sim, i) => {
           const reg = SIM_REGISTRY[sim.id];
@@ -277,7 +277,6 @@ export default function SimulationsView({
         })}
       </div>
 
-      {/* Info bar */}
       <div className="mt-5 bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-800/30 rounded-xl px-4 py-3 flex items-start gap-2.5">
         <Sparkles className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
         <p className="text-sm text-gray-600 dark:text-gray-300">

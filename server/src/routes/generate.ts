@@ -8,6 +8,7 @@ import {
   mistakesSystemPrompt, mistakesUserPrompt,
   flashcardsSystemPrompt, flashcardsUserPrompt,
   simulationCatalogSystemPrompt, simulationCatalogUserPrompt,
+  weakAreasSystemPrompt, weakAreasUserPrompt,
 } from "../services/prompts";
 
 const router = express.Router();
@@ -124,6 +125,31 @@ router.post("/simulations", async (req, res) => {
   );
   const parsed = safeParseJSON(raw);
   res.json({ simulations: parsed.simulations || [] });
+});
+
+// ─── Phase 4 Endpoint ────────────────────────────────────────────────────
+
+router.post("/weakareas", async (req, res) => {
+  const { chapters } = req.body;
+  if (!chapters || !Array.isArray(chapters) || chapters.length === 0) {
+    return res.status(400).json({ error: "chapters array is required" });
+  }
+
+  // Only analyze chapters with enough attempts
+  const eligible = chapters.filter((ch: any) =>
+    ch.totalAttempted >= 3 && ch.wrongQuestions?.length > 0
+  );
+
+  if (eligible.length === 0) {
+    return res.json({ weakAreas: [] });
+  }
+
+  const raw = await callNvidia(
+    weakAreasSystemPrompt(),
+    weakAreasUserPrompt(eligible)
+  );
+  const parsed = safeParseJSON(raw);
+  res.json({ weakAreas: parsed.weakAreas || [] });
 });
 
 export default router;

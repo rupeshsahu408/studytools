@@ -445,3 +445,54 @@ Instructions:
 - Keep answers focused on the NCERT curriculum.
 - Be encouraging and patient.`;
 }
+
+// ─── Phase 4 Prompts ───────────────────────────────────────────────────────
+
+export function weakAreasSystemPrompt(): string {
+  return `You are an expert educational analyst for Bihar Board Class 11 and 12 students.
+A student has been practicing questions and getting some wrong.
+Based on their wrong answers, you identify their specific weak topics and give actionable advice.
+Be specific, empathetic, and encouraging. Write in a mix of Hindi phrases and English.
+Always respond with valid JSON only — no markdown code blocks, no extra text.`;
+}
+
+export function weakAreasUserPrompt(chapters: Array<{
+  chapterName: string;
+  subject: string;
+  classNum: string;
+  totalAttempted: number;
+  totalWrong: number;
+  wrongQuestions: Array<{ id: string; question: string; type: string }>;
+}>): string {
+  const chapterSummaries = chapters.map(ch => `
+Chapter: ${ch.chapterName}
+Subject: ${ch.subject}, Class: ${ch.classNum}
+Questions Attempted: ${ch.totalAttempted}, Wrong: ${ch.totalWrong} (${Math.round((ch.totalWrong / Math.max(ch.totalAttempted, 1)) * 100)}% error rate)
+Sample Wrong Questions:
+${ch.wrongQuestions.slice(0, 5).map(q => `  - [${q.type}] ${q.question.slice(0, 120)}`).join("\n")}
+`).join("\n---\n");
+
+  return `Analyze this Bihar Board student's practice performance and identify their weak areas.
+
+${chapterSummaries}
+
+Return ONLY this exact JSON:
+{
+  "weakAreas": [
+    {
+      "chapterName": "exact chapter name from above",
+      "subject": "Physics/Chemistry/Mathematics/Biology",
+      "weakTopics": ["Specific topic 1 within this chapter", "Specific topic 2"],
+      "advice": "2-3 sentence specific advice in simple language (mix of Hindi encouragement and English explanation) about what the student should focus on to improve in this chapter",
+      "priority": "high (>50% wrong) | medium (30-50% wrong) | low (<30% wrong)"
+    }
+  ]
+}
+
+Rules:
+- Only include chapters where totalAttempted >= 3
+- Identify specific TOPICS within each chapter (not just 'practice more')
+- Give actionable, specific advice
+- Be encouraging, not discouraging
+- Priority: high if wrongRate > 50%, medium if 30-50%, low if < 30%`;
+}

@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, BookOpen, Trash2, ChevronRight, FlaskConical, Calculator, Leaf, Atom } from "lucide-react";
+import {
+  Plus, BookOpen, Trash2, ChevronRight, FlaskConical,
+  Calculator, Leaf, Atom, Flame, Target, BarChart2,
+  UserCircle, TrendingUp,
+} from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { getUserChapters, deleteChapter } from "../lib/firestore";
+import { useProgress } from "../contexts/ProgressContext";
+import { deleteChapter } from "../lib/firestore";
 import type { Chapter } from "../lib/firestore";
 import Navbar from "../components/Navbar";
 
 const SUBJECT_ICONS: Record<string, any> = {
-  Physics: Atom,
-  Chemistry: FlaskConical,
-  Mathematics: Calculator,
-  Biology: Leaf,
+  Physics: Atom, Chemistry: FlaskConical, Mathematics: Calculator, Biology: Leaf,
 };
 
 const SUBJECT_COLORS: Record<string, string> = {
@@ -23,30 +25,26 @@ const SUBJECT_COLORS: Record<string, string> = {
 
 const MAX_CHAPTERS = 5;
 
+function getChapterCompletion(chapter: Chapter): number {
+  const flags = [
+    chapter.notesRead ? 1 : 0,
+    (chapter.questionsAttempted || 0) > 0 ? 1 : 0,
+    chapter.flashcardsDone ? 1 : 0,
+    chapter.simulationsSeen ? 1 : 0,
+  ];
+  return Math.round((flags.reduce((a, b) => a + b, 0) / 4) * 100);
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { userData, chapters, loadingUser, refreshChapters } = useProgress();
+
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) return;
-    loadChapters();
-  }, [user]);
-
-  const loadChapters = async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const data = await getUserChapters(user.uid);
-      setChapters(data);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+    refreshChapters();
+  }, []);
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -54,7 +52,7 @@ export default function DashboardPage() {
     setDeletingId(id);
     try {
       await deleteChapter(id);
-      setChapters(prev => prev.filter(c => c.id !== id));
+      await refreshChapters();
     } catch (e) {
       console.error(e);
     } finally {
@@ -63,23 +61,112 @@ export default function DashboardPage() {
   };
 
   const canAddMore = chapters.length < MAX_CHAPTERS;
+  const loading = loadingUser;
+
+  const streak = userData?.streak?.current || 0;
+  const today = new Date().toISOString().split("T")[0];
+  const dailyDone = userData?.dailyProgress?.date === today ? userData.dailyProgress.questionsAnswered : 0;
+  const dailyTarget = userData?.dailyGoalTarget || 10;
+  const totalAnswered = userData?.totalQuestionsAnswered || 0;
+  const totalWrong = userData?.totalQuestionsWrong || 0;
+  const accuracy = totalAnswered > 0 ? Math.round(((totalAnswered - totalWrong) / totalAnswered) * 100) : null;
+  const displayName = userData?.profile?.name || user?.displayName || user?.email?.split("@")[0] || "Student";
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navbar />
       <div className="pt-14 max-w-4xl mx-auto px-4 py-8">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Chapter Library</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-            {chapters.length}/{MAX_CHAPTERS} chapters used
-            {!canAddMore && " — Delete a chapter to add a new one"}
-          </p>
+
+        {/* Welcome + Stats strip */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+          <div className="flex items-start justify-between mb-5">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Namaste, {displayName.split(" ")[0]}! 👋
+              </h1>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                {chapters.length}/{MAX_CHAPTERS} chapters
+                {!canAddMore && " — Delete a chapter to add new"}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => navigate("/progress")}
+                className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-green-600 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-3 py-2 rounded-xl transition-colors">
+                <BarChart2 className="w-3.5 h-3.5" /> Progress
+              </button>
+              <button onClick={() => navigate("/profile")}
+                className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-green-600 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-3 py-2 rounded-xl transition-colors">
+                <UserCircle className="w-3.5 h-3.5" /> Profile
+              </button>
+            </div>
+          </div>
+
+          {/* Quick stats row */}
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            {/* Streak */}
+            <div className={`bg-white dark:bg-gray-900 rounded-2xl border p-4 ${
+              streak > 0 ? "border-orange-100 dark:border-orange-800/40" : "border-gray-100 dark:border-gray-800"
+            }`}>
+              <div className="flex items-center gap-2 mb-1">
+                <Flame className={`w-4 h-4 ${streak > 0 ? "text-orange-500" : "text-gray-300 dark:text-gray-700"}`} />
+                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Streak</span>
+              </div>
+              <div className={`text-2xl font-black ${streak > 0 ? "text-orange-500" : "text-gray-400 dark:text-gray-600"}`}>
+                {streak}
+                <span className="text-xs font-normal text-gray-400 ml-1">days</span>
+              </div>
+            </div>
+
+            {/* Today's questions */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <Target className="w-4 h-4 text-green-600" />
+                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Today</span>
+              </div>
+              <div className="text-2xl font-black text-green-600 dark:text-green-400">
+                {dailyDone}
+                <span className="text-xs font-normal text-gray-400 ml-1">/{dailyTarget} Q</span>
+              </div>
+              <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1 mt-2 overflow-hidden">
+                <div
+                  className="h-full bg-green-500 rounded-full transition-all"
+                  style={{ width: `${Math.min(100, Math.round((dailyDone / dailyTarget) * 100))}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Accuracy */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingUp className="w-4 h-4 text-blue-500" />
+                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Accuracy</span>
+              </div>
+              <div className={`text-2xl font-black ${
+                accuracy === null ? "text-gray-400 dark:text-gray-600"
+                : accuracy >= 70 ? "text-blue-600 dark:text-blue-400"
+                : accuracy >= 50 ? "text-orange-500"
+                : "text-red-500"
+              }`}>
+                {accuracy !== null ? `${accuracy}%` : "—"}
+              </div>
+              {totalAnswered > 0 && (
+                <p className="text-xs text-gray-400 mt-1">{totalAnswered} answered</p>
+              )}
+            </div>
+          </div>
         </motion.div>
+
+        {/* Chapter Library */}
+        <div className="mb-4">
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+            Chapter Library
+          </h2>
+        </div>
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-32 bg-gray-100 dark:bg-gray-800 rounded-2xl animate-pulse" />
+              <div key={i} className="h-40 bg-gray-100 dark:bg-gray-800 rounded-2xl animate-pulse" />
             ))}
           </div>
         ) : (
@@ -87,6 +174,7 @@ export default function DashboardPage() {
             {chapters.map((ch, i) => {
               const Icon = SUBJECT_ICONS[ch.subject] || BookOpen;
               const colorClass = SUBJECT_COLORS[ch.subject] || "bg-gray-100 text-gray-600";
+              const completion = getChapterCompletion(ch);
               return (
                 <motion.div key={ch.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                   onClick={() => navigate(`/chapter/${ch.id}`)}
@@ -104,12 +192,24 @@ export default function DashboardPage() {
                       <ChevronRight className="w-4 h-4 text-green-600" />
                     </div>
                   </div>
-                  <p className="font-semibold text-gray-900 dark:text-white text-sm leading-snug mb-1 line-clamp-2">{ch.chapterName}</p>
-                  <div className="flex items-center gap-2 mt-2">
+                  <p className="font-semibold text-gray-900 dark:text-white text-sm leading-snug mb-2 line-clamp-2">{ch.chapterName}</p>
+                  <div className="flex items-center gap-2 mb-3 flex-wrap">
                     <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">{ch.subject}</span>
                     <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">Class {ch.classNum}</span>
                     {ch.notes && <span className="text-xs bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 px-2 py-0.5 rounded-full">Ready</span>}
                   </div>
+                  {/* Completion bar */}
+                  <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        completion === 100 ? "bg-green-500"
+                        : completion >= 50 ? "bg-orange-400"
+                        : "bg-gray-300 dark:bg-gray-600"
+                      }`}
+                      style={{ width: `${completion}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">{completion}% complete</p>
                 </motion.div>
               );
             })}
@@ -117,7 +217,7 @@ export default function DashboardPage() {
             {canAddMore && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 onClick={() => navigate("/upload")}
-                className="bg-white dark:bg-gray-900 rounded-2xl p-5 border-2 border-dashed border-gray-200 dark:border-gray-700 cursor-pointer hover:border-green-400 dark:hover:border-green-600 hover:bg-green-50/30 dark:hover:bg-green-900/10 transition-all flex flex-col items-center justify-center gap-2 min-h-[120px]">
+                className="bg-white dark:bg-gray-900 rounded-2xl p-5 border-2 border-dashed border-gray-200 dark:border-gray-700 cursor-pointer hover:border-green-400 dark:hover:border-green-600 hover:bg-green-50/30 dark:hover:bg-green-900/10 transition-all flex flex-col items-center justify-center gap-2 min-h-[140px]">
                 <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
                   <Plus className="w-5 h-5 text-green-600 dark:text-green-400" />
                 </div>

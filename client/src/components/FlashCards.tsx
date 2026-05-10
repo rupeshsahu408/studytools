@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, RotateCcw, CheckCircle, AlertCircle, Layers, RefreshCw } from "lucide-react";
 
@@ -11,23 +11,25 @@ interface FlashCard {
 
 interface FlashCardsProps {
   cards: FlashCard[];
+  onAllDone?: () => void;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Formula: "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400",
-  Concept: "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400",
-  Definition: "bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400",
-  Law: "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400",
+  Formula:     "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400",
+  Concept:     "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400",
+  Definition:  "bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400",
+  Law:         "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400",
   Application: "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400",
 };
 
-export default function FlashCards({ cards }: FlashCardsProps) {
+export default function FlashCards({ cards, onAllDone }: FlashCardsProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [knownIds, setKnownIds] = useState<Set<string>>(new Set());
   const [reviewIds, setReviewIds] = useState<Set<string>>(new Set());
   const [filterMode, setFilterMode] = useState<"all" | "review" | "known">("all");
   const [direction, setDirection] = useState<"left" | "right">("right");
+  const calledDone = useRef(false);
 
   // Get active deck based on filter
   const activeDeck = cards.filter(c => {
@@ -44,6 +46,19 @@ export default function FlashCards({ cards }: FlashCardsProps) {
     setCurrentIndex(0);
     setIsFlipped(false);
   }, [filterMode]);
+
+  // Fire onAllDone when all cards are marked as known
+  useEffect(() => {
+    if (
+      onAllDone &&
+      !calledDone.current &&
+      cards.length > 0 &&
+      knownIds.size === cards.length
+    ) {
+      calledDone.current = true;
+      onAllDone();
+    }
+  }, [knownIds, cards.length, onAllDone]);
 
   const goNext = (dir: "left" | "right" = "right") => {
     setDirection(dir);
@@ -77,10 +92,10 @@ export default function FlashCards({ cards }: FlashCardsProps) {
     setKnownIds(new Set());
     setReviewIds(new Set());
     setFilterMode("all");
+    calledDone.current = false;
   };
 
   const catStyle = card ? (CATEGORY_COLORS[card.category] || "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400") : "";
-
   const progressPct = total > 0 ? ((knownIds.size / cards.length) * 100) : 0;
 
   if (cards.length === 0) {
@@ -123,6 +138,15 @@ export default function FlashCards({ cards }: FlashCardsProps) {
           />
         </div>
       </div>
+
+      {/* All-done celebration */}
+      {knownIds.size === cards.length && cards.length > 0 && (
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+          className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-4 mb-4 text-center">
+          <p className="text-green-700 dark:text-green-300 font-bold text-sm">🎉 Shabash! Saare cards complete ho gaye!</p>
+          <p className="text-green-600 dark:text-green-400 text-xs mt-1">All {cards.length} flashcards marked as known.</p>
+        </motion.div>
+      )}
 
       {/* Filter tabs */}
       <div className="flex gap-2 mb-5">
@@ -168,7 +192,6 @@ export default function FlashCards({ cards }: FlashCardsProps) {
                 transition={{ duration: 0.2 }}
                 style={{ transformStyle: "preserve-3d" }}
                 className="w-full h-full">
-                {/* Front face */}
                 <motion.div
                   animate={{ rotateY: isFlipped ? 180 : 0 }}
                   transition={{ duration: 0.35, ease: "easeInOut" }}
@@ -185,7 +208,6 @@ export default function FlashCards({ cards }: FlashCardsProps) {
                     )}
                     <p className="text-lg font-bold text-gray-900 dark:text-white leading-relaxed">{card?.front}</p>
                     <p className="text-xs text-gray-400 mt-4">Tap to reveal answer</p>
-                    {/* Status indicator */}
                     {card && (knownIds.has(card.id) || reviewIds.has(card.id)) && (
                       <div className="absolute top-3 right-3">
                         {knownIds.has(card.id)
@@ -232,7 +254,6 @@ export default function FlashCards({ cards }: FlashCardsProps) {
             </button>
           </div>
 
-          {/* Keyboard hint */}
           <p className="text-center text-xs text-gray-300 dark:text-gray-700">
             Tap card to flip · Use arrows to navigate
           </p>

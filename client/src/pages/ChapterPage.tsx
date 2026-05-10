@@ -12,6 +12,7 @@ import {
   generateFormulas, generateMindmap, generateMistakes,
   generateFlashcards, generateSimulationCatalog,
 } from "../lib/api";
+import { useProgress } from "../contexts/ProgressContext";
 import Navbar from "../components/Navbar";
 import NotesView from "../components/NotesView";
 import QuestionsView from "../components/QuestionsView";
@@ -27,14 +28,14 @@ const SUBJECT_ICONS: Record<string, any> = {
 };
 
 const SIDEBAR_ITEMS = [
-  { key: "notes",       label: "Notes",              icon: BookOpen,      phase: 1 },
-  { key: "questions",   label: "Questions",           icon: HelpCircle,   phase: 1 },
-  { key: "formulas",    label: "Formulas",            icon: Sigma,        phase: 2 },
-  { key: "mindmap",     label: "Concept Map",         icon: Network,      phase: 2 },
-  { key: "mistakes",    label: "Ye Galti Mat Karo",   icon: AlertTriangle,phase: 2 },
-  { key: "flashcards",  label: "Flash Cards",         icon: Layers,       phase: 2 },
-  { key: "chat",        label: "Doubt Chat",          icon: MessageCircle,phase: 2 },
-  { key: "simulations", label: "Simulations",         icon: Beaker,       phase: 3 },
+  { key: "notes",       label: "Notes",              icon: BookOpen,       phase: 1 },
+  { key: "questions",   label: "Questions",           icon: HelpCircle,    phase: 1 },
+  { key: "formulas",    label: "Formulas",            icon: Sigma,         phase: 2 },
+  { key: "mindmap",     label: "Concept Map",         icon: Network,       phase: 2 },
+  { key: "mistakes",    label: "Ye Galti Mat Karo",   icon: AlertTriangle, phase: 2 },
+  { key: "flashcards",  label: "Flash Cards",         icon: Layers,        phase: 2 },
+  { key: "chat",        label: "Doubt Chat",          icon: MessageCircle, phase: 2 },
+  { key: "simulations", label: "Simulations",         icon: Beaker,        phase: 3 },
 ];
 
 function formatDate(ts: any): string {
@@ -42,9 +43,7 @@ function formatDate(ts: any): string {
   try {
     const date = ts.toDate ? ts.toDate() : new Date(ts);
     return date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-  } catch {
-    return "";
-  }
+  } catch { return ""; }
 }
 
 function SectionGenerating({ label }: { label: string }) {
@@ -64,21 +63,14 @@ function SectionGenerating({ label }: { label: string }) {
           <Loader2 className="w-6 h-6 text-green-600 animate-spin" />
         </div>
       </div>
-      <p className="text-base font-semibold text-gray-800 dark:text-white mb-1">
-        Generating {label}{dots}
-      </p>
-      <p className="text-sm text-gray-400 dark:text-gray-500 max-w-xs">
-        AI is analyzing your chapter. This takes 20–40 seconds.
-      </p>
+      <p className="text-base font-semibold text-gray-800 dark:text-white mb-1">Generating {label}{dots}</p>
+      <p className="text-sm text-gray-400 dark:text-gray-500 max-w-xs">AI is analyzing your chapter. This takes 20–40 seconds.</p>
     </div>
   );
 }
 
 function SectionEmpty({ label, description, onGenerate, generating }: {
-  label: string;
-  description: string;
-  onGenerate: () => void;
-  generating: boolean;
+  label: string; description: string; onGenerate: () => void; generating: boolean;
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -105,6 +97,9 @@ export default function ChapterPage() {
   const [generatingSection, setGeneratingSection] = useState<string | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
 
+  // Phase 4: progress tracking
+  const { markNotesRead, trackQuestionAnswer, markFlashcardsDone, markSimulationSeen } = useProgress();
+
   useEffect(() => {
     if (!id) return;
     loadChapter();
@@ -130,7 +125,6 @@ export default function ChapterPage() {
     try {
       let result: any;
       const { text, subject, classNum, chapterName, language } = chapter;
-
       if (sectionKey === "formulas") {
         const data = await generateFormulas(text, subject, classNum, chapterName, language);
         result = data.formulas || [];
@@ -147,7 +141,6 @@ export default function ChapterPage() {
         const data = await generateSimulationCatalog(text, subject, classNum, chapterName);
         result = data.simulations || [];
       }
-
       if (result !== undefined && chapter.id) {
         await updateChapterSection(chapter.id, sectionKey, result);
         setChapter(prev => prev ? { ...prev, [sectionKey]: result } : prev);
@@ -160,7 +153,7 @@ export default function ChapterPage() {
     }
   }, [chapter, generatingSection]);
 
-  // Auto-trigger generation on first visit to Phase 2 / Phase 3 sections
+  // Auto-trigger generation on first visit to Phase 2/3 sections
   useEffect(() => {
     if (!chapter || loading) return;
     const lazyKeys = ["formulas", "mindmap", "mistakes", "flashcards", "simulations"];
@@ -177,6 +170,26 @@ export default function ChapterPage() {
     setActiveSection(key);
     setGenError(null);
   };
+
+  // Progress tracking callbacks
+  const handleNotesRead = useCallback(() => {
+    if (id) markNotesRead(id);
+  }, [id, markNotesRead]);
+
+  const handleQuestionAnswered = useCallback((
+    isWrong: boolean,
+    question: { id: string; question: string; type: string }
+  ) => {
+    if (id) trackQuestionAnswer(id, isWrong, question);
+  }, [id, trackQuestionAnswer]);
+
+  const handleFlashcardsDone = useCallback(() => {
+    if (id) markFlashcardsDone(id);
+  }, [id, markFlashcardsDone]);
+
+  const handleSimLaunched = useCallback(() => {
+    if (id) markSimulationSeen(id);
+  }, [id, markSimulationSeen]);
 
   if (loading) {
     return (
@@ -216,12 +229,12 @@ export default function ChapterPage() {
     switch (activeSection) {
       case "notes":
         return chapter?.notes
-          ? <NotesView notes={chapter.notes} subject={chapter.subject} />
+          ? <NotesView notes={chapter.notes} subject={chapter.subject} onRead={handleNotesRead} />
           : <div className="text-gray-400 py-10 text-center text-sm">Notes not available.</div>;
 
       case "questions":
         return chapter?.questions
-          ? <QuestionsView questions={chapter.questions} />
+          ? <QuestionsView questions={chapter.questions} onQuestionAnswered={handleQuestionAnswered} />
           : <div className="text-gray-400 py-10 text-center text-sm">Questions not available.</div>;
 
       case "formulas":
@@ -278,7 +291,7 @@ export default function ChapterPage() {
             />
           );
         }
-        return <FlashCards cards={chapter.flashcards as any[]} />;
+        return <FlashCards cards={chapter.flashcards as any[]} onAllDone={handleFlashcardsDone} />;
 
       case "chat":
         return (
@@ -309,6 +322,7 @@ export default function ChapterPage() {
             subject={chapter.subject}
             language={chapter.language}
             chapterText={chapter.text || ""}
+            onSimLaunched={handleSimLaunched}
           />
         );
 
@@ -329,7 +343,6 @@ export default function ChapterPage() {
               <ArrowLeft className="w-3 h-3" /> Back to Library
             </button>
 
-            {/* Chapter meta */}
             <div className="flex items-center gap-2 mb-2">
               <div className="w-7 h-7 rounded-lg bg-green-100 dark:bg-green-900/40 flex items-center justify-center flex-shrink-0">
                 <SubjectIcon className="w-4 h-4 text-green-600 dark:text-green-400" />
@@ -410,7 +423,7 @@ export default function ChapterPage() {
                     }
                     <span className="flex-1 text-left">{item.label}</span>
                     {isReady && !isCurrentlyGenerating && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" title="Ready" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
                     )}
                   </button>
                 );
@@ -495,7 +508,6 @@ export default function ChapterPage() {
             )}
           </div>
 
-          {/* Generation error */}
           {genError && (
             <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl px-4 py-3 text-sm flex items-center justify-between">
               <span>{genError}</span>
@@ -503,7 +515,6 @@ export default function ChapterPage() {
             </div>
           )}
 
-          {/* Section content */}
           <AnimatePresence mode="wait">
             <motion.div
               key={activeSection}

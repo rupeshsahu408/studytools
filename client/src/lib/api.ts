@@ -75,3 +75,27 @@ export async function generateSimulationCatalog(text: string, subject: string, c
   const res = await api.post("/api/generate/simulations", { text, subject, classNum, chapterName });
   return res.data;
 }
+
+// ─── Phase 4 ──────────────────────────────────────────────────────────────
+
+export interface WeakAreaChapterInput {
+  chapterName: string;
+  subject: string;
+  classNum: string;
+  totalAttempted: number;
+  totalWrong: number;
+  wrongQuestions: Array<{ id: string; question: string; type: string }>;
+}
+
+export interface WeakAreaResult {
+  chapterName: string;
+  subject: string;
+  weakTopics: string[];
+  advice: string;
+  priority: "high" | "medium" | "low";
+}
+
+export async function analyzeWeakAreas(chapters: WeakAreaChapterInput[]): Promise<{ weakAreas: WeakAreaResult[] }> {
+  const res = await api.post("/api/generate/weakareas", { chapters }, { timeout: 90000 });
+  return res.data;
+}
