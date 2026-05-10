@@ -50,7 +50,11 @@ The core idea: A student uploads a PDF of any NCERT chapter, and the platform in
 - **Animations:** Smooth but minimal — page transitions, loading states, card reveals
 - **Language:** English UI (buttons, menus, navigation); all AI-generated content (notes, questions, explanations) in Hindi by default with English toggle
 - **Typography:** Clear, readable — larger font sizes for content areas
-- **Responsive:** Mobile-friendly (many Bihar students use phones)
+- **Responsive:** Fully mobile-friendly and responsive — every screen works perfectly on phones
+- **Content Tone:** Natural, conversational Hindi — feels like a real human wrote it, not a machine; complex words only where absolutely necessary
+- **Notes Quality:** Extremely high-quality, detailed, well-structured — better than any available study material
+- **Simulations Quality:** Excellent, visually impressive, interactive — students should feel amazed
+- **AI Output Standard:** Natural and neutral tone — even better than Claude in terms of readability and student-friendliness
 
 ---
 
@@ -165,7 +169,7 @@ topper-2.0/
 - [ ] Each question has: question text, answer, explanation
 - [ ] Questions filterable by type
 - [ ] **Practice Mode** — hide answers, reveal on click at own pace
-- [ ] **Timed Test Mode** — student sets timer, answers all questions, submits and gets score + review
+- [ ] **Timed Test Mode** — student sets timer, goes through all questions, time runs out → all answers revealed with model answers; MCQ/True-False show correct option highlighted, subjective show full model answer
 - [ ] Download full question bank as PDF
 
 ### 1.4 — Chapter Library & Dashboard
