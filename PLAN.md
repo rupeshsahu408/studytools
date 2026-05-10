@@ -149,7 +149,7 @@ topper-2.0/
   - Real-world examples for each concept
 - [ ] Notes displayed beautifully on frontend
 - [ ] Bilingual toggle — switch any section between Hindi and English
-- [ ] Download notes as PDF option
+- [ ] Download notes as PDF option (added in Phase 2)
 
 ### 1.3 — Question Bank Generation
 - [ ] AI generates the following question types from the chapter:
