@@ -178,9 +178,9 @@ topper-2.0/
 - [ ] Student can switch between any saved chapter anytime
 - [ ] Uploading a 6th chapter prompts the student to delete one first
 - [ ] After upload + generation, user lands on chapter dashboard
-- [ ] Shows: Chapter name, subject, class, generation timestamp
-- [ ] Cards for each section: Notes, Questions, (future: Formulas, Mind Map, Simulations)
-- [ ] Shows count of questions generated per type
+- [ ] **Layout: Sidebar navigation** — left sidebar lists all sections (Notes, Questions, Formulas, Simulations etc.), clicking loads that section in the main content area on the right; best for studying as students can jump between sections without losing their place
+- [ ] Shows: Chapter name, subject, class, generation timestamp in a top header bar
+- [ ] Shows count of questions generated per type in the Questions section
 - [ ] Fun animated loading screen while AI generates content — shows rotating study tips, facts, or motivational quotes for Bihar Board students in English (UI) while generation happens in background
 
 ### 1.5 — Landing Page (Non-logged-in users)
