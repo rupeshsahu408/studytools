@@ -27,6 +27,7 @@ import SimulationsView from "../components/SimulationsView";
 import DiscussionView from "../components/DiscussionView";
 import SummaryView from "../components/SummaryView";
 import ExamPaperView from "../components/ExamPaperView";
+import ExamPaperGenerating from "../components/ExamPaperGenerating";
 
 const SUBJECT_ICONS: Record<string, any> = {
   Physics: Atom, Chemistry: FlaskConical, Mathematics: Calculator, Biology: Leaf,
@@ -495,7 +496,7 @@ export default function ChapterPage() {
         );
 
       case "exampaper":
-        if (generatingExamPaper) return <SectionGenerating label="Exam Paper" />;
+        if (generatingExamPaper) return <ExamPaperGenerating />;
         return (
           <ExamPaperView
             subject={chapter.subject}

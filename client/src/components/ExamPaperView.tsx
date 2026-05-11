@@ -405,33 +405,6 @@ export default function ExamPaperView({ subject, classNum, chapterName, paper, g
     );
   }
 
-  if (generating) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="relative w-20 h-20 mb-6">
-          <div className="absolute inset-0 rounded-full border-4 border-amber-100 dark:border-amber-900/40" />
-          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-amber-500 animate-spin" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <FileText className="w-8 h-8 text-amber-500" />
-          </div>
-        </div>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Generating Exam Paper…</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs mb-1">
-          AI is creating 100 MCQs + 20 short answers + 5–6 long answers.
-        </p>
-        <p className="text-xs text-gray-400 dark:text-gray-500">This takes 30–60 seconds. Please wait.</p>
-        <div className="mt-6 flex gap-2">
-          {["MCQ Batch 1", "MCQ Batch 2", "2-Mark", "5-Mark"].map((label, i) => (
-            <div key={i} className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full">
-              <Loader2 className="w-3 h-3 text-amber-500 animate-spin" style={{ animationDelay: `${i * 0.2}s` }} />
-              <span className="text-xs text-gray-600 dark:text-gray-400">{label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   if (!paper) return null;
 
   const maxMarks = paper.mcq.length + paper.twoMarks.length * 2 + paper.fiveMarks.length * 5;
