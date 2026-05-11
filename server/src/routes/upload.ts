@@ -5,8 +5,16 @@ import fs from "fs";
 import os from "os";
 import { v4 as uuidv4 } from "uuid";
 import { extractTextFromPDF, cleanText } from "../services/pdf";
-import { callNvidia } from "../services/nvidia";
-import { detectLanguagePrompt } from "../services/prompts";
+
+// ─── Pure-backend language detection ─────────────────────────────────────────
+// Counts Devanagari Unicode characters in a sample of the text.
+// No AI call needed — character counting is instant and highly reliable.
+function detectLanguage(text: string): "hindi" | "english" {
+  const sample = text.slice(0, 4000);
+  const devanagariCount = (sample.match(/[\u0900-\u097F]/g) || []).length;
+  // If more than 5% of characters are Devanagari, it's Hindi
+  return devanagariCount / sample.length > 0.05 ? "hindi" : "english";
+}
 
 const router = express.Router();
 
@@ -68,11 +76,7 @@ router.post("/", (req, res, next) => {
         return res.status(400).json({ error: "Could not extract text from PDF. Please try a different file." });
       }
 
-      const langRaw = await callNvidia(
-        "You detect language. Respond with only 'hindi' or 'english'.",
-        detectLanguagePrompt(cleanedText)
-      );
-      const language = langRaw.toLowerCase().includes("hindi") ? "hindi" : "english";
+      const language = detectLanguage(cleanedText);
 
       safeUnlink(req.file.path);
 
@@ -138,11 +142,7 @@ router.post("/url", async (req, res, next) => {
       });
     }
 
-    const langRaw = await callNvidia(
-      "You detect language. Respond with only 'hindi' or 'english'.",
-      detectLanguagePrompt(cleanedText)
-    );
-    const language = langRaw.toLowerCase().includes("hindi") ? "hindi" : "english";
+    const language = detectLanguage(cleanedText);
 
     safeUnlink(tempPath);
 

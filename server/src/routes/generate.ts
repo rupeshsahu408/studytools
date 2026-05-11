@@ -11,6 +11,7 @@ import {
   simulationCatalogSystemPrompt, simulationCatalogUserPrompt,
   weakAreasSystemPrompt, weakAreasUserPrompt,
 } from "../services/prompts";
+import { keywordMatchSimulations, mergeSimulations } from "../services/simulations";
 
 const router = express.Router();
 
@@ -275,12 +276,28 @@ router.post("/simulations", async (req, res) => {
   if (!text || !subject || !chapterName) {
     return res.status(400).json({ error: "Missing required fields" });
   }
-  const parsed = await callNvidiaWithRetry(
-    simulationCatalogSystemPrompt(),
-    simulationCatalogUserPrompt(text, subject, classNum || "11", chapterName),
-    { maxTokens: 4096 }
-  );
-  res.json({ simulations: parsed.simulations || [] });
+
+  // Run keyword matching immediately (pure backend, instant)
+  const keywordPicks = keywordMatchSimulations(chapterName, text, subject, 2);
+
+  // Run AI selection in parallel — if it fails, keyword picks are the fallback
+  let aiPicks: any[] = [];
+  try {
+    const parsed = await callNvidiaWithRetry(
+      simulationCatalogSystemPrompt(),
+      simulationCatalogUserPrompt(text, subject, classNum || "11", chapterName),
+      { maxTokens: 4096 }
+    );
+    aiPicks = parsed.simulations || [];
+  } catch (err: any) {
+    console.warn("[generate/simulations] AI selection failed — using keyword matches only:", err?.message);
+  }
+
+  // Merge: AI picks first (richer descriptions), keyword fills guarantee ≥2
+  const final = mergeSimulations(aiPicks, keywordPicks, 2);
+  console.log(`[generate/simulations] AI: ${aiPicks.length} | Keyword: ${keywordPicks.length} | Final: ${final.length}`);
+
+  res.json({ simulations: final });
 });
 
 // ─── Phase 4 Endpoint ────────────────────────────────────────────────────
