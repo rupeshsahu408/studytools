@@ -57,7 +57,7 @@ Chapter: ${chapterName}
 ${langInstruction}
 
 Chapter Content:
-${chapterText.slice(0, 12000)}
+${chapterText.slice(0, 40000)}
 
 Return ONLY this exact JSON structure:
 {
@@ -103,7 +103,7 @@ Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
 ${langInstruction}
 
 Chapter Content:
-${chapterText.slice(0, 8000)}
+${chapterText.slice(0, 20000)}
 
 Return ONLY this exact JSON (no extra text):
 {
@@ -140,7 +140,7 @@ Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
 ${langInstruction}
 
 Chapter Content:
-${chapterText.slice(0, 8000)}
+${chapterText.slice(0, 20000)}
 
 Return ONLY this exact JSON (no extra text):
 {
@@ -192,7 +192,7 @@ ${langInst}
 Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
 
 Chapter Content:
-${chapterText.slice(0, 12000)}
+${chapterText.slice(0, 35000)}
 
 Return ONLY this exact JSON — extract ALL formulas without missing any:
 {
@@ -230,7 +230,7 @@ export function mindmapUserPrompt(chapterText: string, subject: string, chapterN
 Subject: ${subject}, Chapter: ${chapterName}
 
 Chapter Content:
-${chapterText.slice(0, 10000)}
+${chapterText.slice(0, 25000)}
 
 Return ONLY this exact JSON. Structure it as a hierarchical tree (max 3 levels deep, max 6 children per node):
 {
@@ -288,7 +288,7 @@ ${langInst}
 Subject: ${subject}, Chapter: ${chapterName}
 
 Chapter Content:
-${chapterText.slice(0, 10000)}
+${chapterText.slice(0, 25000)}
 
 Return ONLY this exact JSON with exactly 10 mistakes:
 {
@@ -337,7 +337,7 @@ ${langInst}
 Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
 
 Chapter Content:
-${chapterText.slice(0, 10000)}
+${chapterText.slice(0, 25000)}
 
 Return ONLY this exact JSON with exactly 25 cards:
 {
@@ -366,7 +366,7 @@ export function simulationCatalogUserPrompt(chapterText: string, subject: string
 
 Chapter: ${chapterName}
 Content:
-${chapterText.slice(0, 8000)}
+${chapterText.slice(0, 15000)}
 
 Available Simulation Library (Physics):
 - "projectile-motion": Projectile trajectory — angle, velocity, gravity sliders, trajectory arc
@@ -413,7 +413,7 @@ export function chatSystemPrompt(subject: string, chapterName: string, lang: str
 
 Chapter की सामग्री:
 ---
-${chapterContext.slice(0, 4000)}
+${chapterContext.slice(0, 30000)}
 ---
 
 आपके उत्तर देने के नियम:
@@ -433,7 +433,7 @@ You are currently helping a student understand: "${chapterName}"
 
 Chapter context:
 ---
-${chapterContext.slice(0, 4000)}
+${chapterContext.slice(0, 30000)}
 ---
 
 Your response rules:
