@@ -654,7 +654,7 @@ router.post("/summary", async (req, res) => {
     const parsed = await callNvidiaWithRetry(
       summarySystemPrompt(lang),
       summaryUserPrompt(text, subject, classNum || "11", chapterName, lang),
-      { maxTokens: 8192 }
+      { maxTokens: 20000 }
     );
     const summary = cleanSummaryObject(parsed);
     res.json({ summary });
