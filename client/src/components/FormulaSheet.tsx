@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp, Sigma, Info, BookOpen } from "lucide-react";
+import { ChevronDown, ChevronUp, Sigma, Info, BookOpen, Copy, Check } from "lucide-react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 
@@ -134,12 +134,47 @@ function FormulaCard({ formula, index }: { formula: Formula; index: number }) {
   );
 }
 
+function buildPlainText(formulas: Formula[]): string {
+  const lines: string[] = ["━━━ FORMULA SHEET ━━━", ""];
+  formulas.forEach((f, i) => {
+    lines.push(`${i + 1}. ${f.name}`);
+    lines.push(`   ${f.plain_text || f.latex}`);
+    if (f.variables && f.variables.length > 0) {
+      const vars = f.variables.map(v => `${v.symbol} = ${v.meaning}${v.unit ? ` (${v.unit})` : ""}`).join(", ");
+      lines.push(`   Variables: ${vars}`);
+    }
+    if (f.si_unit) lines.push(`   SI Unit: ${f.si_unit}`);
+    if (f.derivation_hint) lines.push(`   Hint: ${f.derivation_hint}`);
+    lines.push("");
+  });
+  return lines.join("\n").trim();
+}
+
 export default function FormulaSheet({ formulas }: FormulaSheetProps) {
   const [filter, setFilter] = useState<string>("All");
+  const [copied, setCopied] = useState(false);
 
   // Group by chapter_section
   const sections = ["All", ...Array.from(new Set(formulas.map(f => f.chapter_section || "General").filter(Boolean)))];
   const filtered = filter === "All" ? formulas : formulas.filter(f => (f.chapter_section || "General") === filter);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(buildPlainText(filtered));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback for older browsers
+      const ta = document.createElement("textarea");
+      ta.value = buildPlainText(filtered);
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   return (
     <div className="max-w-3xl">
@@ -148,6 +183,27 @@ export default function FormulaSheet({ formulas }: FormulaSheetProps) {
           <Sigma className="w-5 h-5 text-green-600" /> Formula Sheet
           <span className="text-sm font-normal text-gray-400 ml-1">{formulas.length} formulas</span>
         </h2>
+        <motion.button
+          onClick={handleCopy}
+          whileTap={{ scale: 0.95 }}
+          className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl border transition-all ${
+            copied
+              ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400"
+              : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-green-300 dark:hover:border-green-700 hover:text-green-600 dark:hover:text-green-400"
+          }`}
+        >
+          <AnimatePresence mode="wait" initial={false}>
+            {copied ? (
+              <motion.span key="check" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5" /> Copied!
+              </motion.span>
+            ) : (
+              <motion.span key="copy" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-1.5">
+                <Copy className="w-3.5 h-3.5" /> Copy as Text
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </motion.button>
       </div>
 
       {/* Section filter */}
