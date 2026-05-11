@@ -103,6 +103,12 @@ export async function getUserChapters(userId: string): Promise<Chapter[]> {
   });
 }
 
+// Firestore documents have a 1MB hard limit.
+// Hindi Unicode text uses 3 bytes/char in UTF-8. A 300K-char Hindi chapter = 900KB alone.
+// We cap stored text at 80K chars — enough for all AI features (max prompt slice is 150K,
+// but the most important sections are well under 80K). Doubt Chat will use this capped text.
+const FIRESTORE_TEXT_CAP = 80000;
+
 export async function saveChapter(userId: string, chapterData: Omit<Chapter, "id" | "userId" | "createdAt">): Promise<string> {
   const existing = await getUserChapters(userId);
   if (existing.length >= MAX_CHAPTERS) {
@@ -111,6 +117,8 @@ export async function saveChapter(userId: string, chapterData: Omit<Chapter, "id
   const ref = doc(collection(db, CHAPTERS_COLLECTION));
   await setDoc(ref, {
     ...chapterData,
+    // Cap text to prevent Firestore 1MB document limit errors on large Hindi PDFs
+    text: (chapterData.text || "").slice(0, FIRESTORE_TEXT_CAP),
     userId,
     createdAt: serverTimestamp(),
   });

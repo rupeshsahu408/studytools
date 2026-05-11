@@ -150,12 +150,16 @@ router.post("/questions", async (req, res) => {
   const runA = !batch || batch === "A";
   const runB = !batch || batch === "B";
 
+  // Hindi questions need 2-3× more output tokens than English (BPE tokenization is
+  // less efficient for Devanagari). 16384 tokens gives safe headroom for full output.
+  const QUESTION_MAX_TOKENS = 16384;
+
   const [batchAResult, batchBResult] = await Promise.allSettled([
     runA
       ? callNvidiaWithRetry(
           sysPrompt,
           questionsBatchAPrompt(text, subject, classNum, chapterName, lang),
-          { maxTokens: 8192 },
+          { maxTokens: QUESTION_MAX_TOKENS },
           3
         )
       : Promise.resolve(null),
@@ -163,7 +167,7 @@ router.post("/questions", async (req, res) => {
       ? callNvidiaWithRetry(
           sysPrompt,
           questionsBatchBPrompt(text, subject, classNum, chapterName, lang),
-          { maxTokens: 8192 },
+          { maxTokens: QUESTION_MAX_TOKENS },
           3
         )
       : Promise.resolve(null),
@@ -208,6 +212,25 @@ router.post("/questions", async (req, res) => {
   const failedBatches: string[] = [];
   if (requestedAFailed) failedBatches.push("A");
   if (requestedBFailed) failedBatches.push("B");
+
+  // Log question counts for diagnosing generation quality
+  const countA = runA ? (
+    (questions.mcq?.length || 0) +
+    (questions.oneMarks?.length || 0) +
+    (questions.twoMarks?.length || 0) +
+    (questions.trueFalse?.length || 0) +
+    (questions.fillBlanks?.length || 0)
+  ) : 0;
+  const countB = runB ? (
+    (questions.fiveMarks?.length || 0) +
+    (questions.assertionReason?.length || 0) +
+    (questions.examImportant?.length || 0) +
+    (questions.caseBased?.reduce((s: number, cb: any) => s + (cb.questions?.length || 0), 0) || 0)
+  ) : 0;
+  console.log(`[generate/questions] lang=${lang} | BatchA=${countA} | BatchB=${countB} | Total=${countA + countB} | Failed=[${failedBatches.join(",")}]`);
+  if (countA + countB < 20 && !requestedAFailed && !requestedBFailed) {
+    console.warn(`[generate/questions] ⚠️ LOW QUESTION COUNT (${countA + countB}) — AI may have truncated output. Consider retrying.`);
+  }
 
   res.json({ questions, language: lang, failedBatches });
 });

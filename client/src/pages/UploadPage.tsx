@@ -1,27 +1,35 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, FileText, X, BookOpen, CheckCircle, FileDigit, ChevronRight, RotateCcw } from "lucide-react";
+import {
+  Upload, FileText, X, BookOpen, CheckCircle, FileDigit,
+  ChevronRight, RotateCcw, Loader2, Cpu, Sparkles, Database,
+  FileSearch, Layers, Zap,
+} from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { api, uploadPDF, generateNotes, generateQuestions, fetchNCERTChapters } from "../lib/api";
 import { saveChapter } from "../lib/firestore";
-import LoadingScreen from "../components/LoadingScreen";
 import Navbar from "../components/Navbar";
 
 const SUBJECTS = ["Physics", "Chemistry", "Mathematics", "Biology"];
 const CLASSES = ["11", "12"];
 
-// Limits used in prompts.ts — must stay in sync with server
-const PROMPT_LIMITS = {
-  Notes: 150000,
-  Questions: 100000,
-  Formulas: 150000,
-  "Mind Map": 120000,
-  Mistakes: 120000,
-  "Flash Cards": 120000,
-  Simulations: 80000,
+const PROMPT_LIMITS: Record<string, number> = {
+  Notes: 150000, Questions: 100000, Formulas: 150000,
+  "Mind Map": 120000, Mistakes: 120000, "Flash Cards": 120000, Simulations: 80000,
 };
+
+const TOPPER_TIPS = [
+  "Bihar Board toppers revise each chapter at least 3 times before the exam.",
+  "Writing answers by hand improves memory retention by up to 60%.",
+  "5-mark questions carry nearly 30% of total board exam marks.",
+  "Practicing MCQs daily for 20 minutes improves accuracy significantly.",
+  "Understanding concepts is more powerful than memorizing answers.",
+  "Attempt all questions in the board exam — never leave any blank.",
+  "Draw neat diagrams — they can fetch full marks even with a simple explanation.",
+  "Revising notes 24 hours after reading helps you remember 80% longer.",
+];
 
 function getCoverage(textLength: number, limit: number): number {
   if (textLength === 0) return 0;
@@ -29,29 +37,15 @@ function getCoverage(textLength: number, limit: number): number {
 }
 
 function CoverageBar({ label, pct }: { label: string; pct: number }) {
-  const color =
-    pct >= 100 ? "bg-green-500" :
-    pct >= 80  ? "bg-yellow-400" :
-                 "bg-orange-400";
-  const textColor =
-    pct >= 100 ? "text-green-600 dark:text-green-400" :
-    pct >= 80  ? "text-yellow-600 dark:text-yellow-400" :
-                 "text-orange-600 dark:text-orange-400";
-
+  const color = pct >= 100 ? "bg-green-500" : pct >= 80 ? "bg-yellow-400" : "bg-orange-400";
+  const textColor = pct >= 100 ? "text-green-600 dark:text-green-400" : pct >= 80 ? "text-yellow-600 dark:text-yellow-400" : "text-orange-600 dark:text-orange-400";
   return (
     <div className="flex items-center gap-3">
       <span className="text-xs text-gray-500 dark:text-gray-400 w-24 shrink-0">{label}</span>
       <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-        <motion.div
-          className={`h-full rounded-full ${color}`}
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        />
+        <motion.div className={`h-full rounded-full ${color}`} initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, ease: "easeOut" }} />
       </div>
-      <span className={`text-xs font-semibold w-10 text-right ${textColor}`}>
-        {pct === 100 ? "100%" : `${pct}%`}
-      </span>
+      <span className={`text-xs font-semibold w-10 text-right ${textColor}`}>{pct === 100 ? "100%" : `${pct}%`}</span>
     </div>
   );
 }
@@ -64,6 +58,260 @@ interface UploadResult {
 }
 
 type Stage = "form" | "uploading" | "confirming" | "generating";
+type StepStatus = "waiting" | "running" | "done" | "error";
+
+interface GenStep {
+  id: string;
+  label: string;
+  sublabel: string;
+  status: StepStatus;
+  icon: any;
+}
+
+// ─── Upload Animation Screen ─────────────────────────────────────────────────
+
+function UploadingScreen({ fileName, fileSize }: { fileName: string; fileSize: number }) {
+  const [stepIdx, setStepIdx] = useState(0);
+  const [tipIdx, setTipIdx] = useState(0);
+  const [progress, setProgress] = useState(0);
+
+  const steps = [
+    { msg: "Uploading your PDF securely...", icon: Upload, color: "text-blue-500" },
+    { msg: "Reading document structure...", icon: FileSearch, color: "text-purple-500" },
+    { msg: "Extracting text from all pages...", icon: FileText, color: "text-orange-500" },
+    { msg: "Cleaning & processing text...", icon: Cpu, color: "text-green-500" },
+    { msg: "Detecting language...", icon: Layers, color: "text-pink-500" },
+    { msg: "Almost ready...", icon: Zap, color: "text-green-600" },
+  ];
+
+  useEffect(() => {
+    // Advance through steps based on estimated upload+extraction time
+    // Larger files take longer — estimate 1s per 500KB
+    const totalMs = Math.max(4000, (fileSize / 500000) * 1000);
+    const stepMs = totalMs / steps.length;
+
+    const stepTimer = setInterval(() => {
+      setStepIdx(i => Math.min(i + 1, steps.length - 1));
+    }, stepMs);
+
+    // Smooth progress bar
+    const startTime = Date.now();
+    const progTimer = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min(92, (elapsed / totalMs) * 92);
+      setProgress(pct);
+    }, 80);
+
+    const tipTimer = setInterval(() => {
+      setTipIdx(i => (i + 1) % TOPPER_TIPS.length);
+    }, 3500);
+
+    return () => { clearInterval(stepTimer); clearInterval(progTimer); clearInterval(tipTimer); };
+  }, []);
+
+  const StepIcon = steps[stepIdx].icon;
+
+  return (
+    <div className="fixed inset-0 bg-white dark:bg-gray-950 z-50 flex flex-col items-center justify-center px-4">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm text-center">
+
+        {/* Animated icon */}
+        <div className="relative w-24 h-24 mx-auto mb-6">
+          <motion.div className="absolute inset-0 rounded-full border-4 border-green-100 dark:border-green-900/40"
+            animate={{ rotate: 360 }} transition={{ duration: 6, repeat: Infinity, ease: "linear" }} />
+          <motion.div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-500"
+            animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} />
+          <motion.div className="absolute inset-2 rounded-full border-2 border-transparent border-b-green-300 dark:border-b-green-700"
+            animate={{ rotate: -360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <AnimatePresence mode="wait">
+              <motion.div key={stepIdx} initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.25 }}>
+                <StepIcon className={`w-8 h-8 ${steps[stepIdx].color}`} />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* File info */}
+        <div className="bg-gray-50 dark:bg-gray-900 rounded-xl px-4 py-2.5 mb-5 flex items-center gap-3 text-left">
+          <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">{fileName}</p>
+            <p className="text-xs text-gray-400">{(fileSize / 1024 / 1024).toFixed(2)} MB</p>
+          </div>
+        </div>
+
+        {/* Current step message */}
+        <AnimatePresence mode="wait">
+          <motion.p key={stepIdx} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+            className="text-base font-semibold text-gray-800 dark:text-white mb-4">
+            {steps[stepIdx].msg}
+          </motion.p>
+        </AnimatePresence>
+
+        {/* Progress bar */}
+        <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 mb-1.5 overflow-hidden">
+          <motion.div className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full"
+            animate={{ width: `${progress}%` }} transition={{ duration: 0.3, ease: "easeOut" }} />
+        </div>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-6">{Math.round(progress)}% complete</p>
+
+        {/* Tip box */}
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/40 rounded-2xl p-4">
+          <p className="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide mb-1.5">Topper Tip</p>
+          <AnimatePresence mode="wait">
+            <motion.p key={tipIdx} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+              className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+              {TOPPER_TIPS[tipIdx]}
+            </motion.p>
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── Generation Animation Screen ──────────────────────────────────────────────
+
+function GeneratingScreen({
+  steps, chapterName, subject, classNum, pageCount, textLength, language,
+}: {
+  steps: GenStep[];
+  chapterName: string;
+  subject: string;
+  classNum: string;
+  pageCount: number;
+  textLength: number;
+  language: string;
+}) {
+  const [tipIdx, setTipIdx] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
+
+  const doneCount = steps.filter(s => s.status === "done").length;
+  const totalSteps = steps.length;
+  const overallProgress = Math.round((doneCount / totalSteps) * 85) + 5;
+
+  useEffect(() => {
+    const tipTimer = setInterval(() => setTipIdx(i => (i + 1) % TOPPER_TIPS.length), 3500);
+    const elapsedTimer = setInterval(() => setElapsed(e => e + 1), 1000);
+    return () => { clearInterval(tipTimer); clearInterval(elapsedTimer); };
+  }, []);
+
+  const formatElapsed = (s: number) => s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`;
+
+  return (
+    <div className="fixed inset-0 bg-white dark:bg-gray-950 z-50 flex flex-col items-center justify-center px-4">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
+
+        {/* Header */}
+        <div className="text-center mb-6">
+          <div className="relative w-20 h-20 mx-auto mb-4">
+            <motion.div className="absolute inset-0 rounded-full border-4 border-green-100 dark:border-green-900/40"
+              animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: "linear" }} />
+            <motion.div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-500"
+              animate={{ rotate: 360 }} transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Sparkles className="w-8 h-8 text-green-600" />
+            </div>
+          </div>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Creating Your Chapter</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate px-4">{chapterName} · {subject} · Class {classNum}</p>
+        </div>
+
+        {/* PDF stats strip */}
+        <div className="flex gap-2 mb-5 text-center">
+          {[
+            { label: "Pages", value: pageCount || "—" },
+            { label: "Characters", value: textLength >= 1000 ? `${(textLength / 1000).toFixed(0)}K` : textLength },
+            { label: "Language", value: language === "hindi" ? "हिंदी" : "English" },
+          ].map(stat => (
+            <div key={stat.label} className="flex-1 bg-gray-50 dark:bg-gray-900 rounded-xl py-2 px-1">
+              <p className="text-sm font-bold text-gray-800 dark:text-white">{stat.value}</p>
+              <p className="text-xs text-gray-400">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Steps list */}
+        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden mb-4">
+          {steps.map((step, i) => {
+            const StepIcon = step.icon;
+            const isLast = i === steps.length - 1;
+            return (
+              <div key={step.id} className={`flex items-start gap-3 px-4 py-3.5 ${!isLast ? "border-b border-gray-50 dark:border-gray-800" : ""}`}>
+                {/* Status icon */}
+                <div className="mt-0.5 flex-shrink-0">
+                  {step.status === "done" ? (
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    </motion.div>
+                  ) : step.status === "running" ? (
+                    <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+                      <Loader2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 animate-spin" />
+                    </div>
+                  ) : step.status === "error" ? (
+                    <div className="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center">
+                      <X className="w-3.5 h-3.5 text-red-500" />
+                    </div>
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                      <StepIcon className="w-3.5 h-3.5 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                {/* Text */}
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium leading-tight ${step.status === "done" ? "text-green-700 dark:text-green-400" : step.status === "running" ? "text-gray-900 dark:text-white" : "text-gray-400 dark:text-gray-500"}`}>
+                    {step.label}
+                  </p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{step.sublabel}</p>
+                </div>
+                {/* Duration badge */}
+                {step.status === "running" && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-shrink-0">
+                    <span className="text-xs text-blue-500 dark:text-blue-400 font-medium">Working...</span>
+                  </motion.div>
+                )}
+                {step.status === "done" && (
+                  <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex-shrink-0">
+                    <span className="text-xs text-green-600 dark:text-green-400 font-semibold">✓ Done</span>
+                  </motion.div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Overall progress bar */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-xs text-gray-500 dark:text-gray-400">{doneCount}/{totalSteps} steps complete</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">{formatElapsed(elapsed)}</span>
+          </div>
+          <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 overflow-hidden">
+            <motion.div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full"
+              animate={{ width: `${overallProgress}%` }} transition={{ duration: 0.8, ease: "easeInOut" }} />
+          </div>
+        </div>
+
+        {/* Tip box */}
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/40 rounded-xl px-4 py-3">
+          <p className="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide mb-1">Topper Tip</p>
+          <AnimatePresence mode="wait">
+            <motion.p key={tipIdx} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+              {TOPPER_TIPS[tipIdx]}
+            </motion.p>
+          </AnimatePresence>
+        </div>
+
+        <p className="text-xs text-gray-400 dark:text-gray-600 mt-4 text-center">Please don't close this tab — AI is working on your chapter.</p>
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── Main UploadPage ──────────────────────────────────────────────────────────
 
 export default function UploadPage() {
   const { user } = useAuth();
@@ -74,13 +322,23 @@ export default function UploadPage() {
   const [classNum, setClassNum] = useState("11");
   const [chapterName, setChapterName] = useState("");
   const [stage, setStage] = useState<Stage>("form");
-  const [loadingStage, setLoadingStage] = useState(0);
   const [error, setError] = useState("");
   const [ncertChapters, setNcertChapters] = useState<{ name: string; url: string }[]>([]);
   const [selectedNcert, setSelectedNcert] = useState<{ name: string; url: string } | null>(null);
   const [loadingChapters, setLoadingChapters] = useState(false);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [resolvedChapterName, setResolvedChapterName] = useState("");
+
+  // Generation step tracking
+  const [genSteps, setGenSteps] = useState<GenStep[]>([
+    { id: "notes", label: "Writing Study Notes", sublabel: "AI crafting detailed notes from your chapter", status: "waiting", icon: BookOpen },
+    { id: "questions", label: "Building Question Bank", sublabel: "Generating MCQs, long answers, case-based & more", status: "waiting", icon: FileText },
+    { id: "save", label: "Saving to Your Library", sublabel: "Storing chapter and all generated content", status: "waiting", icon: Database },
+  ]);
+
+  const updateStep = (id: string, status: StepStatus) => {
+    setGenSteps(prev => prev.map(s => s.id === id ? { ...s, status } : s));
+  };
 
   const onDrop = useCallback((accepted: File[]) => {
     if (accepted[0]) {
@@ -116,19 +374,14 @@ export default function UploadPage() {
     if (tab === "browse" && !selectedNcert) { setError("Please select a chapter from the list."); return; }
 
     setStage("uploading");
-    setLoadingStage(0);
 
     try {
       let data: any;
-
       if (tab === "upload" && file) {
         data = await uploadPDF(file, subject, classNum, nameToUse);
       } else if (tab === "browse" && selectedNcert) {
         const res = await api.post("/api/upload/url", {
-          url: selectedNcert.url,
-          subject,
-          classNum,
-          chapterName: selectedNcert.name,
+          url: selectedNcert.url, subject, classNum, chapterName: selectedNcert.name,
         });
         data = res.data;
       }
@@ -151,26 +404,47 @@ export default function UploadPage() {
   const handleGenerate = async () => {
     if (!user || !uploadResult) return;
     setError("");
+
+    // Reset step statuses
+    setGenSteps(prev => prev.map(s => ({ ...s, status: "waiting" as StepStatus })));
     setStage("generating");
-    setLoadingStage(2);
+
+    // Mark notes + questions as running simultaneously
+    updateStep("notes", "running");
+    updateStep("questions", "running");
 
     try {
-      const [notesRes, questionsRes] = await Promise.all([
-        generateNotes(uploadResult.text, subject, classNum, resolvedChapterName, uploadResult.language),
-        (setLoadingStage(3), generateQuestions(uploadResult.text, subject, classNum, resolvedChapterName, uploadResult.language)),
-      ]);
+      // Run notes and questions in parallel, updating steps as each completes
+      let notesRes: any = null;
+      let questionsRes: any = null;
 
-      setLoadingStage(5);
+      const notesPromise = generateNotes(
+        uploadResult.text, subject, classNum, resolvedChapterName, uploadResult.language
+      ).then(r => { notesRes = r; updateStep("notes", "done"); return r; })
+        .catch(() => { updateStep("notes", "error"); return { notes: null }; });
+
+      const questionsPromise = generateQuestions(
+        uploadResult.text, subject, classNum, resolvedChapterName, uploadResult.language
+      ).then(r => { questionsRes = r; updateStep("questions", "done"); return r; })
+        .catch(() => { updateStep("questions", "error"); return { questions: {} }; });
+
+      await Promise.all([notesPromise, questionsPromise]);
+
+      // Save step
+      updateStep("save", "running");
       const chapterId = await saveChapter(user.uid, {
         chapterName: resolvedChapterName,
         subject,
         classNum,
         language: uploadResult.language,
         text: uploadResult.text,
-        notes: notesRes.notes,
-        questions: questionsRes.questions,
+        notes: notesRes?.notes ?? null,
+        questions: questionsRes?.questions ?? {},
       });
+      updateStep("save", "done");
 
+      // Brief pause so user sees all steps done
+      await new Promise(r => setTimeout(r, 600));
       navigate(`/chapter/${chapterId}`);
     } catch (e: any) {
       const serverMsg = e?.response?.data?.error;
@@ -184,9 +458,32 @@ export default function UploadPage() {
     }
   };
 
-  if (stage === "uploading") return <LoadingScreen stage={0} />;
-  if (stage === "generating") return <LoadingScreen stage={loadingStage} />;
+  // ── Uploading stage ──
+  if (stage === "uploading") {
+    return (
+      <UploadingScreen
+        fileName={file?.name || (selectedNcert?.name ? `${selectedNcert.name}.pdf` : "chapter.pdf")}
+        fileSize={file?.size || 1024 * 1024}
+      />
+    );
+  }
 
+  // ── Generating stage ──
+  if (stage === "generating" && uploadResult) {
+    return (
+      <GeneratingScreen
+        steps={genSteps}
+        chapterName={resolvedChapterName}
+        subject={subject}
+        classNum={classNum}
+        pageCount={uploadResult.pageCount}
+        textLength={uploadResult.textLength}
+        language={uploadResult.language}
+      />
+    );
+  }
+
+  // ── Confirmation stage ──
   if (stage === "confirming" && uploadResult) {
     const { textLength, pageCount, language } = uploadResult;
     const coverageEntries = Object.entries(PROMPT_LIMITS) as [string, number][];
@@ -227,12 +524,14 @@ export default function UploadPage() {
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Characters</p>
                   </div>
                   <div className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-center">
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white capitalize">{language}</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white capitalize">
+                      {language === "hindi" ? "हिंदी" : "English"}
+                    </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Language</p>
                   </div>
                 </div>
 
-                {/* Coverage section */}
+                {/* Coverage */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -261,19 +560,16 @@ export default function UploadPage() {
                   </div>
                 )}
 
-                {/* Action buttons */}
                 <div className="flex gap-3">
                   <button
                     onClick={() => { setStage("form"); setUploadResult(null); setError(""); }}
-                    className="flex items-center gap-1.5 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                  >
+                    className="flex items-center gap-1.5 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                     <RotateCcw className="w-3.5 h-3.5" />
                     Change PDF
                   </button>
                   <button
                     onClick={handleGenerate}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
-                  >
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
                     Generate Notes & Questions
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -286,6 +582,7 @@ export default function UploadPage() {
     );
   }
 
+  // ── Form stage ──
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navbar />
@@ -386,6 +683,7 @@ export default function UploadPage() {
 
               <button onClick={handleUpload}
                 className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+                <Upload className="w-4 h-4" />
                 Upload & Process PDF
               </button>
             </div>
