@@ -458,6 +458,8 @@ export default function ChapterPage() {
             subject={chapter.subject}
             language={chapter.language}
             chapterText={chapter.text || ""}
+            chapterId={chapter.id}
+            userId={user?.uid || ""}
           />
         );
 

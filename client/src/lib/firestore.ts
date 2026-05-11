@@ -677,3 +677,97 @@ export async function submitFeedback(entry: Omit<FeedbackEntry, "createdAt">): P
   const ref = doc(collection(db, "feedback"));
   await setDoc(ref, { ...entry, createdAt: serverTimestamp() });
 }
+
+// ─── Chat Session Types ───────────────────────────────────────────────────────
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ChatSession {
+  id: string;
+  userId: string;
+  chapterId: string;
+  chapterName: string;
+  subject: string;
+  title: string;
+  isPinned: boolean;
+  messages: ChatMessage[];
+  createdAt: any;
+  updatedAt: any;
+}
+
+const CHAT_SESSIONS = "chatSessions";
+const MAX_MESSAGES = 100;
+
+// Sort helper: pinned first, then by updatedAt desc
+function sortSessions(sessions: ChatSession[]): ChatSession[] {
+  return sessions.sort((a, b) => {
+    if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+    const at = a.updatedAt?.toMillis?.() ?? 0;
+    const bt = b.updatedAt?.toMillis?.() ?? 0;
+    return bt - at;
+  });
+}
+
+// Real-time subscription — returns unsubscribe function
+export function subscribeChatSessions(
+  userId: string,
+  chapterId: string,
+  callback: (sessions: ChatSession[]) => void
+): () => void {
+  const q = query(
+    collection(db, CHAT_SESSIONS),
+    where("userId", "==", userId),
+    where("chapterId", "==", chapterId)
+  );
+  return onSnapshot(q, snap => {
+    const sessions = snap.docs.map(d => ({ id: d.id, ...d.data() } as ChatSession));
+    callback(sortSessions(sessions));
+  });
+}
+
+// Create a new session (lazy — only called when first message is sent)
+export async function createChatSession(
+  userId: string,
+  chapterId: string,
+  chapterName: string,
+  subject: string,
+  title: string
+): Promise<string> {
+  const ref = doc(collection(db, CHAT_SESSIONS));
+  await setDoc(ref, {
+    userId, chapterId, chapterName, subject,
+    title, isPinned: false, messages: [],
+    createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+// Save/update messages (and optionally title) for a session
+export async function saveChatMessages(
+  sessionId: string,
+  messages: ChatMessage[],
+  title?: string
+): Promise<void> {
+  const ref = doc(db, CHAT_SESSIONS, sessionId);
+  const payload: any = {
+    messages: messages.slice(-MAX_MESSAGES),
+    updatedAt: serverTimestamp(),
+  };
+  if (title !== undefined) payload.title = title;
+  await setDoc(ref, payload, { merge: true });
+}
+
+export async function renameChatSession(sessionId: string, title: string): Promise<void> {
+  await setDoc(doc(db, CHAT_SESSIONS, sessionId), { title, updatedAt: serverTimestamp() }, { merge: true });
+}
+
+export async function toggleChatPin(sessionId: string, isPinned: boolean): Promise<void> {
+  await setDoc(doc(db, CHAT_SESSIONS, sessionId), { isPinned }, { merge: true });
+}
+
+export async function deleteChatSession(sessionId: string): Promise<void> {
+  await deleteDoc(doc(db, CHAT_SESSIONS, sessionId));
+}
