@@ -404,7 +404,232 @@ Return ONLY this exact JSON (no extra text, no markdown):
 🔴 REMEMBER: Minimum 50–60 MCQs. Every answer must be 100% correct. Use all available tokens.`;
 }
 
-// Batch A: oneMarks + twoMarks + trueFalse + fillBlanks (MCQ handled separately)
+// ─── Dedicated 2-Mark Question Batches ────────────────────────────────────────
+// Two parallel calls, each targeting 25-30 questions → combined total 50-60+
+// 2M-P1 = Theoretical (definitions, laws, concepts) + Reasoning-Based (why/how)
+// 2M-P2 = Application-Based (real-world, scenario) + very limited Derivation
+
+export function questionsTwoMarkP1Prompt(
+  chapterText: string, subject: string, classNum: string,
+  chapterName: string, lang: string
+): string {
+  if (lang === "hindi") {
+    return `तुम Bihar Board Class ${classNum} के सबसे अनुभवी शिक्षक हो। तुम्हें इस NCERT chapter से केवल 2-अंक के प्रश्न तैयार करने हैं — Batch 1 (Theoretical + Reasoning).
+
+विषय: ${subject}, कक्षा: ${classNum}, अध्याय: ${chapterName}
+${UNICODE_ENFORCEMENT_SHORT}
+${FORMULA_PROTECTION_SHORT}
+
+🎯 इस batch में केवल ये दो प्रकार के 2-अंक प्रश्न बनाओ:
+
+⭐ प्रकार 1 — Theoretical Questions (सबसे ज़्यादा — लगभग 60-65% प्रश्न):
+   • परिभाषा आधारित: "______ को परिभाषित कीजिए।", "______ क्या है? समझाइए।"
+   • सिद्धांत/नियम आधारित: "______ का नियम क्या है?", "______ का सिद्धांत बताइए।"
+   • अंतर आधारित: "______ और ______ में अंतर बताइए।" (2 key differences)
+   • विशेषताएं/गुण: "______ की कोई दो विशेषताएं लिखिए।"
+   • महत्व/उपयोग: "______ का क्या महत्व है? दो कारण बताइए।"
+
+⭐ प्रकार 2 — Reasoning-Based Questions (बहुत महत्वपूर्ण — लगभग 35-40% प्रश्न):
+   • कारण: "______ ऐसा क्यों होता है? समझाइए।"
+   • व्याख्या: "जब ______ होता है तो ______ क्यों होता है?"
+   • तुलना कारण: "______ की तुलना में ______ अधिक/कम क्यों होता है?"
+   • परिणाम: "यदि ______ हो जाए तो क्या होगा और क्यों?"
+
+🔴 अनिवार्य गुणवत्ता नियम:
+• हर उत्तर NCERT के अनुसार 100% सही हो — कोई भी गलत जानकारी नहीं
+• उत्तर 2-3 सरल, स्पष्ट वाक्यों में हो — जैसे एक अच्छा शिक्षक समझाता है
+• भाषा सरल और student-friendly हो — कोई जटिल वाक्य नहीं
+• explanation में बताओ कि Bihar Board examiner इस प्रश्न में क्या देखता है
+• chapter के हर section और subtopic को cover करो
+• कोई भी दो प्रश्न एक ही concept को repeat न करें
+
+🔴 मात्रा नियम — यह सबसे महत्वपूर्ण है:
+• कम से कम 25-30 प्रश्न generate करो — यह minimum है, इससे ज़्यादा भी generate कर सकते हो
+• Chapter के हर important topic से कम से कम 1-2 प्रश्न ज़रूर हों
+• अगर chapter बड़ा है तो और ज़्यादा प्रश्न बनाओ
+
+Chapter Content:
+${chapterText.slice(0, 120000)}
+
+केवल यह exact JSON return करो (कोई extra text नहीं, कोई markdown नहीं):
+{
+  "twoMarks": [
+    {
+      "id": "2m_p1_1",
+      "question": "हिंदी में 2-अंक का Theoretical या Reasoning प्रश्न",
+      "answer": "2-3 सरल, स्पष्ट वाक्यों में complete उत्तर जो Bihar Board में पूरे 2 अंक दिलाए। उत्तर इतना अच्छा हो कि छात्र को book दोबारा खोलने की ज़रूरत न पड़े।",
+      "explanation": "यह प्रश्न Bihar Board के लिए क्यों महत्वपूर्ण है और examiner क्या देखता है",
+      "type": "Theoretical या Reasoning"
+    }
+  ]
+}
+
+🔴 याद रखो: कम से कम 25-30 प्रश्न। सभी उत्तर NCERT के अनुसार। सरल भाषा। पूरे chapter को cover करो।`;
+  }
+
+  return `You are the most experienced Bihar Board Class ${classNum} teacher. Generate ONLY 2-mark questions from this NCERT chapter — Batch 1 (Theoretical + Reasoning).
+
+Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
+${FORMULA_PROTECTION_SHORT}
+
+🎯 This batch covers ONLY these two 2-mark question types:
+
+⭐ Type 1 — Theoretical Questions (majority — ~60-65% of questions):
+   • Definition-based: "Define ______.", "What is ______? Explain."
+   • Law/Principle-based: "State ______ law/theorem.", "What does ______ state?"
+   • Difference-based: "Distinguish between ______ and ______." (2 key differences)
+   • Properties/Characteristics: "State any two properties of ______."
+   • Significance/Uses: "State any two uses/applications of ______."
+
+⭐ Type 2 — Reasoning-Based Questions (very high priority — ~35-40%):
+   • Cause: "Why does ______ happen? Explain."
+   • Explanation: "When ______ occurs, why does ______ happen?"
+   • Comparison reasoning: "Why is ______ greater/lesser than ______?"
+   • Consequence: "What would happen if ______ and why?"
+
+🔴 QUALITY RULES — Non-negotiable:
+• Every answer must be 100% NCERT-accurate — zero tolerance for wrong information
+• Answer in 2-3 simple, clear sentences — as a good teacher would explain to a student
+• Language must be student-friendly and easy to understand
+• explanation: what the Bihar Board examiner specifically looks for in this answer
+• Cover every section and subtopic of the chapter
+• No two questions should test the same concept
+
+🔴 QUANTITY RULE — This is the most critical requirement:
+• Generate MINIMUM 25-30 questions — this is the floor, generate more if possible
+• Every major topic in the chapter must have at least 1-2 questions
+• If the chapter is long and content-rich, generate even more
+
+Chapter Content:
+${chapterText.slice(0, 120000)}
+
+Return ONLY this exact JSON (no extra text, no markdown):
+{
+  "twoMarks": [
+    {
+      "id": "2m_p1_1",
+      "question": "Clear, precise 2-mark Theoretical or Reasoning question",
+      "answer": "Complete model answer in 2-3 clear sentences that earns full 2 marks in Bihar Board. Student must need no other source after reading this.",
+      "explanation": "Why this is important for Bihar Board and what the examiner checks",
+      "type": "Theoretical or Reasoning"
+    }
+  ]
+}
+
+🔴 REMEMBER: Minimum 25-30 questions. All answers NCERT-accurate. Cover the full chapter.`;
+}
+
+export function questionsTwoMarkP2Prompt(
+  chapterText: string, subject: string, classNum: string,
+  chapterName: string, lang: string
+): string {
+  if (lang === "hindi") {
+    return `तुम Bihar Board Class ${classNum} के सबसे अनुभवी शिक्षक हो। तुम्हें इस NCERT chapter से केवल 2-अंक के प्रश्न तैयार करने हैं — Batch 2 (Application + Derivation).
+
+विषय: ${subject}, कक्षा: ${classNum}, अध्याय: ${chapterName}
+${UNICODE_ENFORCEMENT_SHORT}
+${FORMULA_PROTECTION_SHORT}
+
+🎯 इस batch में केवल ये दो प्रकार के 2-अंक प्रश्न बनाओ:
+
+⭐ प्रकार 1 — Application-Based Questions (सबसे ज़्यादा — लगभग 80% प्रश्न):
+   • वास्तविक जीवन में उपयोग: "______ का उपयोग ______ में कैसे होता है?"
+   • Numerical/Formula application: "यदि ______ हो तो ______ की गणना करो।" (simple 2-step calculation)
+   • Situation-based: "एक छात्र ने ______ किया। इसमें ______ का सिद्धांत कैसे काम करता है?"
+   • Device/Phenomenon: "______ device में ______ का concept कैसे apply होता है?"
+   • Observation-based: "______ प्रयोग में हम ______ क्यों observe करते हैं?"
+
+⚠️ प्रकार 2 — Derivation-Based Questions (बहुत कम — केवल 20% प्रश्न):
+   • Important derivation के 2 main steps: "______ formula किन दो assumptions पर based है?"
+   • Result significance: "______ formula में ______ quantity का क्या भौतिक अर्थ है?"
+   • केवल वे derivations जो Bihar Board में बार-बार पूछे जाते हैं
+
+🔴 अनिवार्य गुणवत्ता नियम:
+• हर उत्तर NCERT के अनुसार 100% सही हो
+• Application questions के उत्तर practical और relatable हों
+• Numerical answers में: formula लिखो → values डालो → answer दो (सरल steps में)
+• उत्तर 2-3 सरल, स्पष्ट वाक्यों में हो
+• explanation में Bihar Board examiner की expectation बताओ
+• कोई भी दो प्रश्न एक ही concept को repeat न करें
+• Batch 1 के प्रश्नों से बिल्कुल अलग topic cover करो
+
+🔴 मात्रा नियम — यह सबसे महत्वपूर्ण है:
+• कम से कम 25-30 प्रश्न generate करो
+• Chapter के हर topic से Application questions बनाओ
+• Derivation questions कम रखो (कुल का 20% से ज़्यादा नहीं)
+
+Chapter Content:
+${chapterText.slice(0, 120000)}
+
+केवल यह exact JSON return करो (कोई extra text नहीं, कोई markdown नहीं):
+{
+  "twoMarks": [
+    {
+      "id": "2m_p2_1",
+      "question": "हिंदी में 2-अंक का Application या Derivation प्रश्न",
+      "answer": "2-3 सरल, स्पष्ट वाक्यों में complete उत्तर। Numerical हो तो step-by-step। Bihar Board में पूरे 2 अंक मिलें।",
+      "explanation": "यह प्रश्न Bihar Board के लिए क्यों महत्वपूर्ण है और examiner क्या देखता है",
+      "type": "Application या Derivation"
+    }
+  ]
+}
+
+🔴 याद रखो: कम से कम 25-30 प्रश्न। 80% Application, 20% Derivation। सभी उत्तर NCERT के अनुसार।`;
+  }
+
+  return `You are the most experienced Bihar Board Class ${classNum} teacher. Generate ONLY 2-mark questions from this NCERT chapter — Batch 2 (Application + Derivation).
+
+Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
+${FORMULA_PROTECTION_SHORT}
+
+🎯 This batch covers ONLY these two 2-mark question types:
+
+⭐ Type 1 — Application-Based Questions (majority — ~80% of questions):
+   • Real-world use: "How is ______ used/applied in ______?"
+   • Numerical/Formula application: "If ______, calculate ______." (simple 2-step calculation)
+   • Situation-based: "A student observed ______. Which concept explains this and how?"
+   • Device/Phenomenon: "How does ______ apply to the working of ______?"
+   • Observation-based: "Why do we observe ______ in ______ experiment?"
+
+⚠️ Type 2 — Derivation-Based Questions (very limited — ~20% only):
+   • Key assumptions: "State the two main assumptions on which ______ formula is derived."
+   • Physical meaning: "What is the physical significance of ______ in the ______ formula?"
+   • Only derivations that repeatedly appear in Bihar Board exams
+
+🔴 QUALITY RULES — Non-negotiable:
+• Every answer must be 100% NCERT-accurate
+• Application answers must be practical and relatable
+• Numerical: write formula → substitute values → give answer with unit (simple clear steps)
+• Answer in 2-3 simple, clear sentences
+• explanation: what Bihar Board examiner specifically expects
+• No two questions should test the same concept
+• Cover different topics than Batch 1
+
+🔴 QUANTITY RULE — Most critical:
+• Generate MINIMUM 25-30 questions — generate more if chapter is content-rich
+• Application questions from every major topic in the chapter
+• Derivation questions kept minimal (no more than 20% of total)
+
+Chapter Content:
+${chapterText.slice(0, 120000)}
+
+Return ONLY this exact JSON (no extra text, no markdown):
+{
+  "twoMarks": [
+    {
+      "id": "2m_p2_1",
+      "question": "Clear, precise 2-mark Application or Derivation question",
+      "answer": "Complete model answer in 2-3 clear sentences. For numericals: formula → values → answer with unit. Earns full 2 marks.",
+      "explanation": "Why this is important for Bihar Board and what the examiner checks",
+      "type": "Application or Derivation"
+    }
+  ]
+}
+
+🔴 REMEMBER: Minimum 25-30 questions. 80% Application, 20% Derivation. All NCERT-accurate.`;
+}
+
+// Batch A: oneMarks + trueFalse + fillBlanks (twoMarks now handled by dedicated 2M-P1/P2 batches, MCQ handled separately)
 export function questionsBatchAPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
   const langInstruction = lang === "hindi"
     ? `सभी प्रश्न और उत्तर शुद्ध हिंदी (Unicode Devanagari) में लिखें। ${UNICODE_ENFORCEMENT_SHORT}`
@@ -423,9 +648,6 @@ Return ONLY this exact JSON (no extra text):
   "oneMarks": [
     {"id":"1m_1","question":"Direct, precise 1-mark question","answer":"Concise but complete answer that earns full marks","explanation":"Brief reasoning behind the answer"}
   ],
-  "twoMarks": [
-    {"id":"2m_1","question":"Conceptual 2-mark question","answer":"Well-structured 2-3 sentence answer with all key points","explanation":"What the examiner expects in a 2-mark answer"}
-  ],
   "trueFalse": [
     {"id":"tf_1","statement":"A clear statement about a concept from this chapter","answer":true,"explanation":"Precise reason why this is true or false"}
   ],
@@ -434,7 +656,7 @@ Return ONLY this exact JSON (no extra text):
   ]
 }
 
-Generate exactly: 10 one-mark, 10 two-mark, 8 true-false, 8 fill-blanks.
+Generate exactly: 10 one-mark, 8 true-false, 8 fill-blanks.
 Cover all important topics. Questions must reflect real Bihar Board patterns.`;
 }
 
