@@ -2,6 +2,8 @@ import express from "express";
 import { callNvidia } from "../services/nvidia";
 import {
   notesSystemPrompt, notesUserPrompt,
+  notesOutlineSystemPrompt, notesOutlineUserPrompt,
+  notesContentBatchSystemPrompt, notesContentBatchUserPrompt,
   questionsSystemPrompt,
   questionsBatchAPrompt, questionsBatchBPrompt,
   formulasSystemPrompt, formulasUserPrompt,
@@ -123,19 +125,125 @@ async function callNvidiaWithRetry(
 
 // ─── Phase 1 Endpoints ────────────────────────────────────────────────────
 
+// ── Helper: chunk an array into batches of size n ──
+function chunkArray<T>(arr: T[], n: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
+  return out;
+}
+
 router.post("/notes", async (req, res) => {
   const { text, subject, classNum, chapterName, language } = req.body;
   if (!text || !subject || !classNum || !chapterName) {
     return res.status(400).json({ error: "Missing required fields" });
   }
   const lang = language || "english";
-  const notes = await callNvidiaWithRetry(
-    notesSystemPrompt(lang),
-    notesUserPrompt(text, subject, classNum, chapterName, lang),
-    { maxTokens: 16384 },
-    3
-  );
-  res.json({ notes, language: lang });
+
+  // ── TWO-PHASE NOTES GENERATION ──────────────────────────────────────────
+  // Phase 1: Extract chapter outline (section titles + metadata) — fast call
+  // Phase 2: Generate rich 300-word content per section in parallel batches
+  // This produces far more detailed notes than a single large call because
+  // each batch call can focus on only 3-4 sections at full depth.
+
+  try {
+    // ── PHASE 1: Get outline ──────────────────────────────────────────────
+    console.log(`[notes] Phase 1 starting — extracting outline for "${chapterName}"`);
+    const outlineRaw = await callNvidiaWithRetry(
+      notesOutlineSystemPrompt(),
+      notesOutlineUserPrompt(text, subject, classNum, chapterName, lang),
+      { maxTokens: 4096 },
+      3
+    );
+
+    const sections: Array<{
+      id: string;
+      title: string;
+      hasDerivation: boolean;
+      hasDiagram: boolean;
+      hasExperiment: boolean;
+      importance: string;
+    }> = outlineRaw.sections || [];
+
+    if (sections.length === 0) {
+      throw new Error("Phase 1 returned no sections — falling back to single-call");
+    }
+
+    console.log(`[notes] Phase 1 done — ${sections.length} sections found`);
+
+    // ── PHASE 2: Generate rich content per section in batches of 3 ────────
+    const BATCH_SIZE = 3;
+    const batches = chunkArray(sections, BATCH_SIZE);
+
+    console.log(`[notes] Phase 2 starting — ${batches.length} parallel batches of ≤${BATCH_SIZE} sections each`);
+
+    const batchResults = await Promise.allSettled(
+      batches.map((batch, i) =>
+        callNvidiaWithRetry(
+          notesContentBatchSystemPrompt(lang),
+          notesContentBatchUserPrompt(batch, text, subject, classNum, chapterName, lang),
+          { maxTokens: 16384 },
+          3
+        ).then(parsed => {
+          const topics = parsed.topics || [];
+          console.log(`[notes] Batch ${i + 1}/${batches.length} done — ${topics.length} topics`);
+          return topics;
+        })
+      )
+    );
+
+    // Collect all topics across batches (preserve order)
+    const allTopics: any[] = [];
+    let failedBatches = 0;
+    for (const result of batchResults) {
+      if (result.status === "fulfilled") {
+        allTopics.push(...result.value);
+      } else {
+        failedBatches++;
+        console.error(`[notes] A content batch failed:`, result.reason?.message);
+      }
+    }
+
+    if (allTopics.length === 0) {
+      throw new Error("All content batches failed — falling back to single-call");
+    }
+
+    console.log(`[notes] Phase 2 done — ${allTopics.length} topics total (${failedBatches} batches failed)`);
+
+    // Validate content depth — warn if topics are short (may indicate truncation)
+    const avgWords = allTopics.reduce((sum: number, t: any) => {
+      const words = (t.content || "").split(/\s+/).filter(Boolean).length;
+      return sum + words;
+    }, 0) / allTopics.length;
+    console.log(`[notes] Average content length: ${Math.round(avgWords)} words/section`);
+    if (avgWords < 100) {
+      console.warn(`[notes] ⚠️ LOW CONTENT DEPTH (avg ${Math.round(avgWords)} words) — notes may be shallow`);
+    }
+
+    const notes = {
+      chapterOverview: outlineRaw.chapterOverview || "",
+      topics: allTopics,
+      summary: outlineRaw.summary || "",
+      examTips: outlineRaw.examTips || [],
+    };
+
+    return res.json({ notes, language: lang });
+
+  } catch (phaseErr: any) {
+    // ── FALLBACK: single-call if two-phase fails ──────────────────────────
+    console.warn(`[notes] Two-phase failed (${phaseErr.message}) — attempting single-call fallback`);
+    try {
+      const notes = await callNvidiaWithRetry(
+        notesSystemPrompt(lang),
+        notesUserPrompt(text, subject, classNum, chapterName, lang),
+        { maxTokens: 32768 },
+        3
+      );
+      return res.json({ notes, language: lang });
+    } catch (fallbackErr: any) {
+      console.error(`[notes] Fallback also failed:`, fallbackErr.message);
+      return res.status(500).json({ error: "Could not generate notes. Please try again." });
+    }
+  }
 });
 
 router.post("/questions", async (req, res) => {

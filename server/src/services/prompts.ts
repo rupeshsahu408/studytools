@@ -18,115 +18,231 @@ export function notesSystemPrompt(lang: string): string {
   if (lang === "hindi") {
     return `आप एक अत्यंत अनुभवी और समर्पित NCERT शिक्षक हैं जिन्हें Physics, Chemistry, Mathematics और Biology पढ़ाने का 25+ वर्षों का अनुभव है। आपने Bihar Board Class 11 और 12 के हजारों छात्रों को top marks दिलाए हैं।
 
-आपका उद्देश्य: ऐसे notes तैयार करना जो इतने complete और detailed हों कि छात्र को दोबारा PDF खोलने की जरूरत न पड़े। एक student जो सिर्फ आपके notes पढ़ ले, उसे पूरा chapter revise हो जाए।
+आपका एकमात्र उद्देश्य: ऐसे notes तैयार करना जो इतने complete और detailed हों कि छात्र को दोबारा PDF खोलने की जरूरत न पड़े। हर concept को classroom जैसी गहराई से समझाएं।
 
-आपकी teaching style:
-- हर concept को पूरी गहराई से explain करें — जैसे classroom में whiteboard पर समझाते हैं
-- हर section को proper paragraph form में लिखें — कोई shortcut नहीं
-- Real-world examples, analogies और step-by-step derivations दें
-- Bihar Board examiner जो देखता है वो हर point cover करें
-- Technical terms को English में लिखें, साथ में Hindi में bracket में explain करें
-- Minimum 150-200 words प्रति topic — कम नहीं
+आपकी अनिवार्य teaching standards:
+- प्रत्येक section का "content" minimum 300 words — कम लिखना स्वीकार्य नहीं है
+- Concepts को flowing paragraphs में explain करें जैसे whiteboard पर पढ़ाते हैं
+- हर formula के साथ complete derivation hints और variable explanation दें
+- Real-world examples और analogies जरूर दें जो students समझ सकें
+- Bihar Board examiner की नज़र से हर important point cover करें
+- Technical terms English में, साथ में Hindi में bracket में समझाएं
 
 ${UNICODE_ENFORCEMENT}
 Always respond with valid JSON only — no markdown code blocks, no extra text.`;
   }
-  return `You are a dedicated, highly experienced NCERT master teacher with 25+ years of expertise in Physics, Chemistry, Mathematics, and Biology for Bihar Board Class 11 and 12. You have guided thousands of students to top scores.
+  return `You are a dedicated, highly experienced NCERT master teacher with 25+ years of expertise in Physics, Chemistry, Mathematics, and Biology for Bihar Board Class 11 and 12.
 
-YOUR CORE MISSION: Produce notes so complete, detailed, and well-structured that a student who reads ONLY your notes can fully revise the entire chapter — they should NEVER need to reopen the PDF again.
+YOUR ABSOLUTE MISSION: Write notes so thorough, clear, and complete that a student reading ONLY your notes can fully revise the entire chapter and never needs to reopen the PDF.
 
-Your non-negotiable standards:
-- Cover EVERY section, sub-section, concept, law, principle, derivation, and example from the chapter
-- Write each topic's content as a full, flowing explanation — minimum 150-200 words per topic
-- Explain concepts the way a master teacher explains on a whiteboard: What is it? Why does it happen? How does it work? What is its significance?
-- Include all formulas with complete explanation of each variable
-- Include derivations step by step where the chapter has them
-- Describe any important diagrams or experiments clearly
-- Write in natural, human language — not bullet-point dumps
-- Every key point must be specific and exam-grade precise
+Your non-negotiable writing standards:
+- Every "content" field: MINIMUM 300 words of rich, flowing explanation — no exceptions
+- Write exactly like a master teacher at a whiteboard: What is it? Why does it exist? How does it work? What is its significance? What are its conditions and limitations?
+- Every formula must be explained variable by variable with SI units and conditions
+- Every derivation in the chapter must appear step-by-step in derivationSteps
+- Every diagram, experiment, or apparatus must be described clearly in diagramDescription
+- Write in natural human language — flowing paragraphs that build understanding
+- Include real-world analogies and examples that make abstract concepts concrete
+- Every key point must be specific, precise, and exam-grade accurate
 
 Always respond with valid JSON only — no markdown code blocks, no extra text.`;
 }
 
+// ─── Phase 1: Extract chapter outline (section titles + metadata) ─────────────
+// Fast, low-token call — just gets the structure, not the content.
+export function notesOutlineSystemPrompt(): string {
+  return `You are an expert NCERT curriculum analyst. Your job is to carefully read a chapter and extract its complete structural outline — every section, sub-section, and heading — along with metadata about what each section contains (derivations, diagrams, experiments).
+Always respond with valid JSON only — no markdown code blocks, no extra text.`;
+}
+
+export function notesOutlineUserPrompt(
+  chapterText: string,
+  subject: string,
+  classNum: string,
+  chapterName: string,
+  lang: string
+): string {
+  const langNote = lang === "hindi"
+    ? `chapterOverview, summary, examTips को शुद्ध Unicode Hindi में लिखें। ${UNICODE_ENFORCEMENT_SHORT}`
+    : "Write chapterOverview, summary, and examTips in clear English.";
+
+  return `Carefully read this NCERT chapter and extract its COMPLETE structural outline.
+
+Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
+${langNote}
+
+Chapter Content:
+${chapterText.slice(0, 60000)}
+
+Return ONLY this exact JSON (no extra text, no markdown):
+{
+  "chapterOverview": "5-6 rich sentences: what this chapter covers, its importance in Bihar Board syllabus, the core concepts and principles introduced, and what mastering it will give the student",
+  "sections": [
+    {
+      "id": "topic_1",
+      "title": "Exact section/sub-section heading as it appears (e.g. '14.1 Electric Charges and their Properties')",
+      "hasDerivation": true,
+      "hasDiagram": false,
+      "hasExperiment": false,
+      "importance": "high"
+    }
+  ],
+  "summary": "10-12 sentences covering ALL major concepts of the chapter — a complete quick-revision paragraph for the night before the exam. Do not leave out any important concept.",
+  "examTips": [
+    "Most important topic for 5-mark Bihar Board questions from this chapter and what the examiner looks for",
+    "Second most important area with specific advice on how to answer",
+    "Most common mistake students make in this chapter and the exact correction",
+    "Key derivations or proofs that MUST be memorized with step-count hint",
+    "How to write definitions for full marks — specific advice for this chapter",
+    "Memory trick or mnemonic for a difficult concept in this chapter"
+  ]
+}
+
+RULES:
+- Include EVERY numbered section and every important sub-section as a separate entry
+- A typical full NCERT chapter has 10-20 sections — do not miss any
+- hasDerivation: true if the section involves any mathematical derivation or proof
+- hasDiagram: true if the section has a figure, circuit diagram, ray diagram, or any apparatus
+- hasExperiment: true if the section describes a laboratory experiment or observation
+- importance: "high" for topics that frequently appear in Bihar Board exams, "medium" or "low" otherwise`;
+}
+
+// ─── Phase 2: Generate rich content for a batch of sections ──────────────────
+// Run multiple of these in parallel, each covering 3-4 sections.
+export function notesContentBatchSystemPrompt(lang: string): string {
+  if (lang === "hindi") {
+    return `आप एक master NCERT teacher हैं जो Bihar Board Class 11 और 12 के लिए exceptionally detailed study notes लिखते हैं।
+
+आपका नियम: हर section का "content" MINIMUM 300 words — इससे कम कभी नहीं। हर concept को whiteboard पर पढ़ाने की तरह समझाएं।
+
+${UNICODE_ENFORCEMENT}
+Always respond with valid JSON only — no markdown code blocks, no extra text.`;
+  }
+  return `You are a master NCERT teacher writing exceptionally detailed study notes for Bihar Board Class 11 and 12 students.
+
+YOUR RULE: Every section's "content" field must be MINIMUM 300 words of rich, flowing explanation. This is non-negotiable. You are writing for students who need to revise the entire chapter from your notes alone — every concept must be fully explained.
+
+Always respond with valid JSON only — no markdown code blocks, no extra text.`;
+}
+
+export function notesContentBatchUserPrompt(
+  sections: Array<{ id: string; title: string; hasDerivation: boolean; hasDiagram: boolean; hasExperiment: boolean }>,
+  chapterText: string,
+  subject: string,
+  classNum: string,
+  chapterName: string,
+  lang: string
+): string {
+  const langInstruction = lang === "hindi"
+    ? `सभी content शुद्ध Unicode Hindi में। Technical terms English में brackets में दें। Formulas standard notation में। ${UNICODE_ENFORCEMENT_SHORT}`
+    : "Write all content in clear, flowing English. Formulas in standard mathematical notation.";
+
+  const sectionList = sections
+    .map(s => `  - id: "${s.id}" | title: "${s.title}" | derivation: ${s.hasDerivation} | diagram: ${s.hasDiagram} | experiment: ${s.hasExperiment}`)
+    .join("\n");
+
+  const topicTemplates = sections.map(s => `    {
+      "id": "${s.id}",
+      "title": "${s.title}",
+      "content": "WRITE MINIMUM 300 WORDS HERE — rich teacher-style explanation in flowing paragraphs. Explain: what this topic is, why it exists, how it works, its physical/chemical/mathematical significance, conditions and limitations, how it connects to other concepts in the chapter. Build the student's understanding from the ground up. Do NOT summarize — TEACH.",
+      "subTopics": [
+        {"title": "Sub-section name (if applicable)", "content": "120+ word detailed explanation of this sub-section covering all its key ideas, formulas, and significance. If no sub-sections exist for this topic, return empty array."}
+      ],
+      "keyPoints": [
+        "Complete exam-ready sentence stating a specific fact, law, value, or principle the student must remember",
+        "Another precise point — include the exact numerical value, formula, or statement Bihar Board examiners expect",
+        "A third key point covering an important aspect of this section",
+        "Fourth point if applicable"
+      ],
+      "importantTerms": [
+        {"term": "Technical term from this section", "definition": "Complete, precise definition written at exam level — this answer should earn full marks if written in Bihar Board"}
+      ],
+      "formulasUsed": [
+        {"name": "Full name of formula or law", "formula": "Mathematical expression in standard notation (e.g. F = qE)", "explanation": "Each variable explained: F = force in Newtons (N), q = charge in Coulombs (C), E = electric field in N/C. State the condition under which this formula applies."}
+      ],
+      "derivationSteps": ${s.hasDerivation ? `[
+        "Step 1: State the starting assumption, condition, or initial equation",
+        "Step 2: Apply the relevant law or principle with reasoning",
+        "Step 3: Perform algebraic/calculus manipulation — show every intermediate step",
+        "Step 4: Continue until the final expression is reached",
+        "Final Result: State the derived formula and what it represents physically"
+      ]` : "[]"},
+      "diagramDescription": ${(s.hasDiagram || s.hasExperiment) ? `"Describe the diagram/experiment clearly: what it shows, all labeled components, what the arrows or lines represent, what observation or result is shown, and what a student should focus on when drawing or describing this in an exam."` : `""`},
+      "examples": [
+        "Worked Example: State the problem exactly as it appears or would appear in Bihar Board, then give the complete step-by-step solution with all calculations",
+        "Real-World Application: Describe a concrete everyday example that illustrates this concept — make it relatable and memorable for a Bihar student"
+      ]
+    }`).join(",\n");
+
+  return `Write complete, detailed study notes for the following ${sections.length} section(s) from the NCERT chapter "${chapterName}".
+
+Subject: ${subject}, Class: ${classNum}
+${langInstruction}
+
+Sections to write notes for:
+${sectionList}
+
+Full Chapter Text (use this as your source — extract every concept, formula, example, and detail):
+${chapterText.slice(0, 150000)}
+
+CRITICAL DEPTH REQUIREMENTS:
+1. "content" field: MINIMUM 300 words per section. Write in 3-5 flowing paragraphs. Cover EVERYTHING in the section — not just a summary.
+2. Teach each concept step by step: introduce it → build intuition → explain the physics/chemistry/math → give significance → state conditions.
+3. Every formula, law, constant, or principle in the section MUST appear in formulasUsed.
+4. If hasDerivation=true, write EVERY step of the derivation in derivationSteps — students lose marks for missing steps.
+5. If hasDiagram=true or hasExperiment=true, describe it fully in diagramDescription.
+6. subTopics: if the section has clearly defined sub-sections (e.g. 14.2.1, 14.2.2), list each as a separate subTopic with 120+ words.
+7. examples: always include at least one worked numerical/conceptual example AND one real-world application.
+
+Return ONLY this exact JSON (no extra text, no markdown fences):
+{
+  "topics": [
+${topicTemplates}
+  ]
+}
+
+FINAL REMINDER: The "content" field is where most marks are made or lost. Write it as if you are the best teacher in Bihar standing at a whiteboard. Minimum 300 words. No shortcuts.`;
+}
+
+// ─── Legacy single-call notes prompt (kept as fallback) ──────────────────────
 export function notesUserPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
   const langInstruction = lang === "hindi"
     ? `सभी notes शुद्ध हिंदी (Unicode Devanagari) में लिखें। Technical terms के साथ English term brackets में दें। Formulas English/LaTeX में रहेंगे। ${UNICODE_ENFORCEMENT_SHORT}`
     : "Write all notes in clear, flowing English. Formulas in standard notation.";
 
   const depthRule = lang === "hindi"
-    ? `\n\nगहराई का नियम: प्रत्येक topic का "content" कम से कम 150 words का होना चाहिए। हर sub-section को उसके full explanation के साथ cover करें। Chapter के हर numbered section और heading को एक topic बनाएं।`
-    : `\n\nDEPTH RULE: Every topic's "content" field must be at minimum 150-200 words of flowing explanation. Do NOT summarize — EXPLAIN fully. Create one topic per major section/heading of the chapter.`;
+    ? `\n\nगहराई का नियम: प्रत्येक topic का "content" कम से कम 300 words का होना चाहिए। हर sub-section को उसके full explanation के साथ cover करें।`
+    : `\n\nDEPTH RULE: Every topic's "content" field must be at minimum 300 words of flowing explanation. Do NOT summarize — EXPLAIN fully.`;
 
-  return `You are converting the following NCERT chapter into complete, professional study notes. A student must be able to fully revise the ENTIRE chapter just by reading these notes — they should never need to open the PDF again.
+  return `Convert this NCERT chapter into complete, professional study notes. A student must be able to fully revise the ENTIRE chapter just by reading these notes.
 ${depthRule}
 
-Subject: ${subject}
-Class: ${classNum}
-Chapter: ${chapterName}
+Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
 ${langInstruction}
-
-COVERAGE RULES (MANDATORY):
-1. Read through the ENTIRE chapter text carefully before writing.
-2. Identify EVERY numbered section and sub-section heading in the chapter.
-3. Create one topic entry for EACH major section — do not skip any.
-4. For chapters with many sub-sections, group closely related sub-sections under one topic with subTopics array.
-5. Every formula, law, principle, derivation, and experiment in the chapter MUST appear in the notes.
-6. Every worked example or numerical in the chapter should appear in the examples array.
-7. The "content" field must be a full teacher-style explanation — minimum 150 words. No short summaries.
-8. derivationSteps: If the section has a derivation, list every step clearly.
-9. diagramDescription: If there's a diagram or experiment setup, describe it clearly enough to visualize.
 
 Chapter Content:
 ${chapterText.slice(0, 150000)}
 
-Return ONLY this exact JSON structure (no extra text, no markdown fences):
+Return ONLY this exact JSON (no extra text, no markdown fences):
 {
-  "chapterOverview": "4-5 rich sentences: what this chapter is about, its importance in the Bihar Board syllabus, the key concepts covered, and what the student will gain by mastering it",
+  "chapterOverview": "5-6 rich sentences about this chapter",
   "topics": [
     {
       "id": "topic_1",
-      "title": "Section title exactly as it appears in the chapter (e.g. '14.1 Introduction to Electric Charges')",
-      "content": "FULL teacher-style explanation of this entire section — minimum 150 words. Explain the concept as if talking to a student in class. Cover what it is, why it matters, how it works, its conditions, its significance. Include all important statements, laws, and principles from this section. Write in natural flowing paragraphs.",
-      "subTopics": [
-        {
-          "title": "Sub-section name",
-          "content": "Detailed explanation of this sub-section — at least 80 words. Include all key ideas, formulas mentioned, and their significance."
-        }
-      ],
-      "keyPoints": [
-        "Specific, exam-ready point — complete sentence with the exact fact, law, or formula a student must remember",
-        "Bihar Board often asks about this specific aspect — include it precisely"
-      ],
-      "importantTerms": [
-        {"term": "Term name", "definition": "Complete, precise definition that would earn full marks if written in an exam"}
-      ],
-      "formulasUsed": [
-        {"name": "Formula or Law name", "formula": "F = ma (use standard notation)", "explanation": "F = Net force (N), m = mass (kg), a = acceleration (m/s²). State the condition under which this applies."}
-      ],
-      "derivationSteps": [
-        "Step 1: Starting point — state the assumption or initial equation",
-        "Step 2: Apply the relevant law or principle",
-        "Step 3: Continue mathematical steps clearly",
-        "Final Result: State the derived formula/expression"
-      ],
-      "diagramDescription": "If this section contains a diagram, experiment, or apparatus — describe it clearly: what it shows, what the key components are, and what the student should observe or note. Leave empty string if no diagram.",
-      "examples": [
-        "Example 1: [Full worked example from the chapter — state the problem, the approach, and the solution with all steps]",
-        "Real-world connection: [How this concept appears in everyday life or practical applications]"
-      ]
+      "title": "Section title",
+      "content": "MINIMUM 300 words of flowing explanation",
+      "subTopics": [{"title": "sub-section", "content": "detailed explanation"}],
+      "keyPoints": ["exam-ready point 1", "exam-ready point 2"],
+      "importantTerms": [{"term": "term", "definition": "precise definition"}],
+      "formulasUsed": [{"name": "formula name", "formula": "F = ma", "explanation": "variable explanations"}],
+      "derivationSteps": ["Step 1: ...", "Step 2: ..."],
+      "diagramDescription": "description or empty string",
+      "examples": ["Worked example...", "Real-world application..."]
     }
   ],
-  "summary": "8-10 sentence comprehensive summary covering ALL major concepts of the chapter — this should serve as a complete quick-revision paragraph for the night before the exam",
-  "examTips": [
-    "Specific Bihar Board tip: which exact topic from this chapter carries the most marks and what the examiner specifically looks for in the answer",
-    "Common mistake: what most students write wrong and the exact correct approach",
-    "Memory trick or mnemonic if applicable",
-    "Which derivations or proofs are most likely to appear in the 5-mark section",
-    "How to write definitions to get full marks in Bihar Board"
-  ]
-}
-
-FINAL REMINDER: Create one topic for EACH major section of the chapter. Do not merge multiple different sections into one topic. The notes must be so complete that the student never needs to open the PDF again.`;
+  "summary": "10-12 sentence comprehensive summary of ALL major concepts",
+  "examTips": ["tip 1", "tip 2", "tip 3", "tip 4", "tip 5"]
+}`;
 }
 
 export function questionsSystemPrompt(lang: string): string {
