@@ -204,6 +204,51 @@ function cleanNotesObject(notes: any): any {
   };
 }
 
+function cleanQuestionItem(q: any): any {
+  if (!q || typeof q !== "object") return q;
+  const cs = (s: any): string => stripLatex(String(s || ""));
+  const ca = (arr: any): string[] => Array.isArray(arr) ? arr.map(cs) : arr;
+  return {
+    ...q,
+    ...(q.question    !== undefined && { question:    cs(q.question) }),
+    ...(q.answer      !== undefined && { answer:      cs(q.answer) }),
+    ...(q.explanation !== undefined && { explanation: cs(q.explanation) }),
+    ...(q.statement   !== undefined && { statement:   cs(q.statement) }),
+    ...(q.assertion   !== undefined && { assertion:   cs(q.assertion) }),
+    ...(q.reason      !== undefined && { reason:      cs(q.reason) }),
+    ...(q.blank       !== undefined && { blank:       cs(q.blank) }),
+    ...(q.context     !== undefined && { context:     cs(q.context) }),
+    ...(q.options     !== undefined && { options:     ca(q.options) }),
+    // case-based sub-questions
+    ...(Array.isArray(q.questions) && { questions: q.questions.map(cleanQuestionItem) }),
+  };
+}
+
+function cleanQuestionsObject(questions: Record<string, any[]>): Record<string, any[]> {
+  const out: Record<string, any[]> = {};
+  for (const [key, arr] of Object.entries(questions)) {
+    out[key] = Array.isArray(arr) ? arr.map(cleanQuestionItem) : arr;
+  }
+  const latex = (JSON.stringify(out).match(/\$/g) || []).length;
+  if (latex > 0) console.log(`[questions] Stripped ${latex} LaTeX delimiter(s)`);
+  return out;
+}
+
+function cleanFlashcardsArray(cards: any[]): any[] {
+  if (!Array.isArray(cards)) return cards;
+  const cs = (s: any): string => stripLatex(String(s || ""));
+  const cleaned = cards.map(c => ({
+    ...c,
+    ...(c.front   !== undefined && { front:   cs(c.front) }),
+    ...(c.back    !== undefined && { back:    cs(c.back) }),
+    ...(c.hint    !== undefined && { hint:    cs(c.hint) }),
+    ...(c.example !== undefined && { example: cs(c.example) }),
+  }));
+  const latex = (JSON.stringify(cleaned).match(/\$/g) || []).length;
+  if (latex > 0) console.log(`[flashcards] Stripped ${latex} LaTeX delimiter(s)`);
+  return cleaned;
+}
+
 // ─── Phase 1 Endpoints ────────────────────────────────────────────────────
 
 // ── Helper: chunk an array into batches of size n ──
@@ -424,7 +469,7 @@ router.post("/questions", async (req, res) => {
     console.warn(`[generate/questions] ⚠️ LOW QUESTION COUNT (${countA + countB}) — AI may have truncated output. Consider retrying.`);
   }
 
-  res.json({ questions, language: lang, failedBatches });
+  res.json({ questions: cleanQuestionsObject(questions), language: lang, failedBatches });
 });
 
 // ─── Phase 2 Endpoints ────────────────────────────────────────────────────
@@ -481,7 +526,7 @@ router.post("/flashcards", async (req, res) => {
     flashcardsUserPrompt(text, subject, classNum || "11", chapterName, lang),
     { maxTokens: 6144 }
   );
-  res.json({ cards: parsed.cards || [], language: lang });
+  res.json({ cards: cleanFlashcardsArray(parsed.cards || []), language: lang });
 });
 
 // ─── Phase 3 Endpoint ────────────────────────────────────────────────────
