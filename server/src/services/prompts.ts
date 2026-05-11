@@ -289,13 +289,93 @@ Your questions are precise, well-structured, and your model answers would earn f
 Always respond with valid JSON only — no markdown code blocks, no extra text.`;
 }
 
-// Batch A: MCQ + oneMarks + twoMarks + trueFalse + fillBlanks
+// ─── Dedicated MCQ Batch ──────────────────────────────────────────────────────
+// Runs as a separate parallel call to generate a massive MCQ bank
+export function questionsMCQPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
+  if (lang === "hindi") {
+    return `इस NCERT chapter से एक विशाल MCQ प्रश्न बैंक तैयार करें। आपका लक्ष्य है: chapter के हर section, हर topic, और हर concept से अधिक से अधिक MCQ प्रश्न generate करना।
+
+विषय: ${subject}, कक्षा: ${classNum}, अध्याय: ${chapterName}
+${UNICODE_ENFORCEMENT_SHORT}
+${FORMULA_PROTECTION_SHORT}
+
+🔴 अनिवार्य नियम:
+1. Chapter को systematically scan करें — हर section और subtopic से MCQs बनाएं
+2. कम से कम 60-80 MCQ प्रश्न generate करें। जितना हो सके उतना ज़्यादा।
+3. MCQ के प्रकार (इस distribution को follow करें):
+   - Conceptual/theoretical (40%): परिभाषाएं, नियम, सिद्धांत पर आधारित
+   - Reasoning-based (25%): "क्यों होता है?", "कौन सा सही कारण है?" — सोचने वाले प्रश्न
+   - Application-based (20%): दी गई situation में concept apply करना
+   - Formula/numerical-based (10%): formula use करके value find करना
+   - Derivation-related (5%): derivation के किसी step से जुड़े प्रश्न
+4. हर MCQ में exactly 4 options हों (A, B, C, D) — केवल एक सही उत्तर
+5. Distractors realistic हों — common misconceptions पर based
+6. सभी प्रश्न और उत्तर हिंदी (Unicode Devanagari) में। Formulas और variables English में।
+
+Chapter Content:
+${chapterText.slice(0, 120000)}
+
+केवल यह exact JSON return करें (कोई extra text नहीं, कोई markdown नहीं):
+{
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "हिंदी में precise MCQ प्रश्न",
+      "options": ["A) विकल्प1", "B) विकल्प2", "C) विकल्प3", "D) विकल्प4"],
+      "correctAnswer": "A",
+      "explanation": "हिंदी में: यह उत्तर सही क्यों है और बाकी गलत क्यों हैं"
+    }
+  ]
+}
+
+🔴 याद रखें: जितने ज़्यादा high-quality MCQ, उतना बेहतर। Chapter के हर कोने को cover करें। कम से कम 60 MCQ ज़रूरी हैं।`;
+  }
+
+  return `Generate a MASSIVE MCQ question bank from this NCERT chapter. Your goal: systematically scan every section, every concept, and every topic in the chapter and extract the maximum possible number of high-quality MCQs.
+
+Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
+${FORMULA_PROTECTION_SHORT}
+
+🔴 MANDATORY RULES:
+1. Go through the chapter SECTION BY SECTION — generate MCQs from every topic
+2. Generate minimum 60–80 MCQs. More is better. Use every available token.
+3. MCQ TYPE DISTRIBUTION (follow this mix):
+   - Conceptual/Theoretical (40%): definitions, laws, principles — "Which of the following correctly defines...?"
+   - Reasoning-based (25%): "Why does X happen?", "Which reason correctly explains...?" — make students think
+   - Application-based (20%): apply the concept to a given situation or scenario
+   - Formula/Numerical (10%): use a formula to find a value or compare quantities
+   - Derivation-related (5%): a step or result from a key derivation
+4. Each MCQ must have exactly 4 options (A, B, C, D) with exactly one correct answer
+5. Distractors must be realistic — based on common student misconceptions, not obviously wrong
+6. Vary difficulty: 30% easy, 50% medium, 20% hard
+7. No two questions should test the exact same fact
+
+Chapter Content:
+${chapterText.slice(0, 120000)}
+
+Return ONLY this exact JSON (no extra text, no markdown):
+{
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "Precise, clear MCQ question testing a specific concept",
+      "options": ["A) option1", "B) option2", "C) option3", "D) option4"],
+      "correctAnswer": "A",
+      "explanation": "Clear explanation of why this answer is correct and why the others are wrong"
+    }
+  ]
+}
+
+🔴 REMEMBER: More high-quality MCQs = better student preparation. Cover the entire chapter thoroughly. Minimum 60 MCQs required. Use all available tokens.`;
+}
+
+// Batch A: oneMarks + twoMarks + trueFalse + fillBlanks (MCQ handled separately)
 export function questionsBatchAPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
   const langInstruction = lang === "hindi"
     ? `सभी प्रश्न और उत्तर शुद्ध हिंदी (Unicode Devanagari) में लिखें। ${UNICODE_ENFORCEMENT_SHORT}`
     : "Write all questions and answers in clear, precise English.";
 
-  return `Create a rigorous question bank (Batch A) for this NCERT chapter following the exact Bihar Board exam pattern. Questions must be high-quality, exam-focused, and model answers must be complete enough to earn full marks.
+  return `Create a rigorous short-answer question bank (Batch A) for this NCERT chapter following the exact Bihar Board exam pattern. Model answers must be complete enough to earn full marks.
 
 Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
 ${langInstruction}
@@ -305,9 +385,6 @@ ${chapterText.slice(0, 100000)}
 
 Return ONLY this exact JSON (no extra text):
 {
-  "mcq": [
-    {"id":"mcq_1","question":"Precise, clear MCQ question","options":["A) option1","B) option2","C) option3","D) option4"],"correctAnswer":"A","explanation":"Clear explanation of why this answer is correct and why the others are wrong"}
-  ],
   "oneMarks": [
     {"id":"1m_1","question":"Direct, precise 1-mark question","answer":"Concise but complete answer that earns full marks","explanation":"Brief reasoning behind the answer"}
   ],
@@ -322,8 +399,8 @@ Return ONLY this exact JSON (no extra text):
   ]
 }
 
-Generate exactly: 10 MCQ, 8 one-mark, 8 two-mark, 6 true-false, 6 fill-blanks.
-Make questions cover all important topics of the chapter. MCQs should include application-based and conceptual questions, not just factual recall.`;
+Generate exactly: 10 one-mark, 10 two-mark, 8 true-false, 8 fill-blanks.
+Cover all important topics. Questions must reflect real Bihar Board patterns.`;
 }
 
 // Batch B: fiveMarks + assertionReason + caseBased + examImportant
