@@ -4,6 +4,7 @@ import {
   getUserData, saveUserData, updateStreakIfNeeded,
   trackQuestionAnswerInDB, markChapterActivityInDB,
   addBadgeToUser, getUserChapters,
+  updateLeaderboardEntry, updateClassMemberStats,
   type UserData, type Chapter,
 } from "../lib/firestore";
 
@@ -73,7 +74,6 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         const newStreak = await updateStreakIfNeeded(user.uid);
         if (newStreak) {
           setUserData(prev => prev ? { ...prev, streak: newStreak } : prev);
-          // Check streak badges after update
           await checkAndAwardBadges(user.uid, { ...ud, streak: newStreak }, ch);
         } else {
           await checkAndAwardBadges(user.uid, ud, ch);
@@ -188,6 +188,28 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         totalQuestionsWrong: result.totalQuestionsWrong,
       };
       await checkAndAwardBadges(user.uid, updatedUd, chapters);
+
+      // ── Phase 5: Update leaderboard + class member stats (fire and forget) ──
+      const { name, school, district, class: classNum } = userData.profile || {};
+      const streak = userData.streak?.current || 0;
+      const displayName = name || user.displayName || "Student";
+
+      updateLeaderboardEntry(
+        user.uid, displayName, school || "", district || "", classNum || "11",
+        result.totalQuestionsAnswered, result.totalQuestionsWrong, streak
+      ).catch(e => console.warn("Leaderboard update failed:", e));
+
+      if (userData.classId) {
+        const accuracy = result.totalQuestionsAnswered > 0
+          ? Math.round(((result.totalQuestionsAnswered - result.totalQuestionsWrong) / result.totalQuestionsAnswered) * 100)
+          : 0;
+        updateClassMemberStats(userData.classId, user.uid, {
+          displayName,
+          questionsAnswered: result.totalQuestionsAnswered,
+          streak,
+          accuracy,
+        }).catch(e => console.warn("Class member update failed:", e));
+      }
     }
   }, [user, userData, chapters]);
 

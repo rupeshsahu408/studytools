@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Sun, Moon, LogOut, BarChart2, UserCircle } from "lucide-react";
+import { Sun, Moon, LogOut, BarChart2, UserCircle, Users } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 
@@ -34,6 +34,16 @@ export default function Navbar() {
 
           {user ? (
             <>
+              <Link to="/community"
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                  isActive("/community")
+                    ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
+                    : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
+                title="Community">
+                <Users className="w-4 h-4" />
+              </Link>
+
               <Link to="/progress"
                 className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
                   isActive("/progress")

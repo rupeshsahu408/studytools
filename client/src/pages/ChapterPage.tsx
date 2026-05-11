@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen, HelpCircle, ArrowLeft, Atom, FlaskConical,
   Calculator, Leaf, Calendar, Sigma, Network, AlertTriangle,
-  Layers, MessageCircle, HelpingHand, Loader2, Beaker,
+  Layers, MessageCircle, HelpingHand, Loader2, Beaker, Users,
 } from "lucide-react";
 import { getChapter, updateChapterSection } from "../lib/firestore";
 import type { Chapter } from "../lib/firestore";
@@ -22,6 +22,7 @@ import MistakesView from "../components/MistakesView";
 import FlashCards from "../components/FlashCards";
 import DoubtChat from "../components/DoubtChat";
 import SimulationsView from "../components/SimulationsView";
+import DiscussionView from "../components/DiscussionView";
 
 const SUBJECT_ICONS: Record<string, any> = {
   Physics: Atom, Chemistry: FlaskConical, Mathematics: Calculator, Biology: Leaf,
@@ -36,6 +37,7 @@ const SIDEBAR_ITEMS = [
   { key: "flashcards",  label: "Flash Cards",         icon: Layers,        phase: 2 },
   { key: "chat",        label: "Doubt Chat",          icon: MessageCircle, phase: 2 },
   { key: "simulations", label: "Simulations",         icon: Beaker,        phase: 3 },
+  { key: "discussion",  label: "Discussion",          icon: Users,         phase: 5 },
 ];
 
 function formatDate(ts: any): string {
@@ -327,6 +329,17 @@ export default function ChapterPage() {
           />
         );
 
+      case "discussion":
+        return (
+          <DiscussionView
+            chapterId={chapter.id}
+            chapterName={chapter.chapterName}
+            subject={chapter.subject}
+            language={chapter.language}
+            chapterText={chapter.text || ""}
+          />
+        );
+
       default:
         return null;
     }
@@ -465,6 +478,28 @@ export default function ChapterPage() {
                   </button>
                 );
               })}
+            </div>
+
+            <div className="h-px bg-gray-100 dark:bg-gray-800 my-3" />
+
+            {/* Phase 5 — Community */}
+            <div>
+              <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-3 mb-1.5">
+                Community
+                <span className="ml-1.5 text-xs text-purple-500 font-semibold normal-case">Phase 5</span>
+              </p>
+              {SIDEBAR_ITEMS.filter(s => s.phase === 5).map(item => (
+                <button key={item.key} onClick={() => switchSection(item.key)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-0.5 ${
+                    activeSection === item.key
+                      ? "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  }`}>
+                  <item.icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="flex-1 text-left">{item.label}</span>
+                  <span className="text-xs text-purple-400 dark:text-purple-500 font-medium">New</span>
+                </button>
+              ))}
             </div>
           </div>
         </aside>
