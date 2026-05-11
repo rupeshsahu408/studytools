@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 
-export const MODEL = "meta/llama-4-scout-17b-16e-instruct";
+export const MODEL = "meta/llama-4-maverick-17b-128e-instruct";
 
 function getClient(): OpenAI {
   const apiKey = process.env.NVIDIA_API_KEY;
