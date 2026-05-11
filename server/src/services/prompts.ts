@@ -660,13 +660,181 @@ Generate exactly: 10 one-mark, 8 true-false, 8 fill-blanks.
 Cover all important topics. Questions must reflect real Bihar Board patterns.`;
 }
 
-// Batch B: fiveMarks + assertionReason + caseBased + examImportant
+// ─── Dedicated 5-Mark Question Batch ─────────────────────────────────────────
+// Single parallel call targeting 10-15 five-mark questions across all 5 types:
+// Theoretical | Conceptual Explanation | Application-Based | Derivation | Long Reasoning/Analytical
+
+export function questionsFiveMarkPrompt(
+  chapterText: string, subject: string, classNum: string,
+  chapterName: string, lang: string
+): string {
+  if (lang === "hindi") {
+    return `तुम Bihar Board Class ${classNum} के सबसे अनुभवी और कुशल शिक्षक हो। तुम्हें इस NCERT chapter से केवल 5-अंक के प्रश्न तैयार करने हैं — पूरी गहराई और quality के साथ।
+
+विषय: ${subject}, कक्षा: ${classNum}, अध्याय: ${chapterName}
+${UNICODE_ENFORCEMENT_SHORT}
+${FORMULA_PROTECTION_SHORT}
+
+🎯 5-अंक प्रश्नों के 5 प्रकार — सभी types को include करो:
+
+⭐ प्रकार 1 — Theoretical Questions (High Priority):
+   • किसी concept, law, या phenomenon की विस्तृत व्याख्या
+   • "______ को विस्तार से समझाइए।", "______ का सिद्धांत समझाइए।"
+   • Bihar Board में सबसे अधिक पूछे जाने वाले questions
+
+⭐ प्रकार 2 — Conceptual Explanation Questions (High Priority):
+   • "______ क्यों होता है? पूरी तरह समझाइए।"
+   • "______ और ______ में विस्तृत अंतर बताइए।" (कम से कम 5 points)
+   • Concept की underlying physics/chemistry explain करना
+
+⭐ प्रकार 3 — Application-Based Questions (High Priority):
+   • Real-world scenario में concept apply करना
+   • "______ का उपयोग ______ में कैसे होता है? विस्तार से बताइए।"
+   • Numerical problems जिनमें concept की समझ ज़रूरी हो
+   • Device या phenomenon की working explain करना
+
+⭐ प्रकार 4 — Derivation-Based Questions (Medium Priority — ज़रूरी जहाँ applicable हो):
+   • Chapter के important derivations को step-by-step derive करना
+   • "______ formula derive कीजिए।", "______ सिद्ध कीजिए।"
+   • केवल Bihar Board में बार-बार आने वाले derivations
+
+⭐ प्रकार 5 — Long Reasoning / Analytical Questions (High Priority):
+   • "यदि ______ हो जाए तो क्या होगा? विस्तार से विश्लेषण करो।"
+   • Multiple concepts को connect करने वाले analytical questions
+   • "______ process को step-by-step explain करो।"
+
+🔴 ANSWER QUALITY — यह सबसे महत्वपूर्ण है:
+• हर उत्तर Bihar Board में पूरे 5/5 marks दिलाए — shallow या incomplete answer नहीं चलेगा
+• answer field: detailed model answer जो एक expert student लिखे — कम से कम 8-10 key points या 4-5 rich paragraphs
+• keyPoints: 5 specific, examiner-checked points — generic नहीं, chapter-specific facts/formulas/laws
+• भाषा सरल, स्पष्ट, student-friendly — जैसे एक अच्छा teacher समझाता है
+• Derivation questions में: हर step clearly लिखो, assumptions state करो, final result highlight करो
+• Application questions में: concept → formula → calculation → real-world connection
+• Diagrams ज़रूरी हों तो diagramDescription में clearly describe करो
+
+🔴 COVERAGE RULE — Chapter का कोई important topic miss नहीं होना चाहिए:
+• Chapter के हर major section से कम से कम एक 5-mark question बनाओ
+• जो topics Bihar Board exams में बार-बार आते हैं उन्हें ज़रूर cover करो
+• सभी 5 types में balance रखो
+
+🔴 मात्रा नियम:
+• कम से कम 10-15 प्रश्न generate करो — यह minimum है
+• Chapter बड़ा हो और topics ज़्यादा हों तो और ज़्यादा questions बनाओ
+• कोई भी दो प्रश्न एक ही concept को repeat न करें
+
+Chapter Content:
+${chapterText.slice(0, 130000)}
+
+केवल यह exact JSON return करो (कोई extra text नहीं, कोई markdown नहीं):
+{
+  "fiveMarks": [
+    {
+      "id": "5m_1",
+      "type": "Theoretical / Conceptual / Application / Derivation / Analytical में से एक",
+      "question": "हिंदी में स्पष्ट 5-अंक का प्रश्न",
+      "answer": "विस्तृत model answer — कम से कम 8-10 key points को paragraphs में explain करो। हर point Bihar Board examiner के लिए check करने योग्य हो। Derivation हो तो step-by-step। Application हो तो formula → calculation → conclusion। यह answer इतना complete हो कि student को कोई और source न देखना पड़े।",
+      "keyPoints": [
+        "Point 1: एक specific, chapter-related fact/law/formula जो examiner check करेगा",
+        "Point 2: दूसरा specific point — formula, definition, या key concept",
+        "Point 3: तीसरा important point — step, condition, या result",
+        "Point 4: चौथा point — application, example, या significance",
+        "Point 5: पाँचवाँ point — conclusion, unit, या एक और critical fact"
+      ],
+      "diagramDescription": "अगर diagram ज़रूरी हो तो clearly describe करो — components, labels, arrows, और student को drawing में क्या focus करना है। अगर diagram ज़रूरी नहीं तो empty string।",
+      "explanation": "Bihar Board में यह प्रश्न क्यों important है, कितने marks कहाँ मिलते हैं, और answer को maximize कैसे करें"
+    }
+  ]
+}
+
+🔴 याद रखो: कम से कम 10-15 प्रश्न। सभी 5 types include करो। हर answer पूरे 5/5 marks के लायक हो। पूरे chapter को cover करो।`;
+  }
+
+  return `You are the most experienced Bihar Board Class ${classNum} teacher and question paper expert. Generate ONLY 5-mark questions from this NCERT chapter — detailed, exam-ready, covering the entire chapter.
+
+Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
+${FORMULA_PROTECTION_SHORT}
+
+🎯 5 Types of 5-mark questions — ALL types must be included:
+
+⭐ Type 1 — Theoretical Questions (High Priority):
+   • Detailed explanation of a concept, law, or phenomenon
+   • "Explain ______ in detail.", "Describe the principle of ______."
+   • Most frequently asked type in Bihar Board exams
+
+⭐ Type 2 — Conceptual Explanation Questions (High Priority):
+   • "Why does ______ happen? Explain completely."
+   • "Differentiate between ______ and ______." (minimum 5 key differences)
+   • Explaining the underlying physics/chemistry behind a concept
+
+⭐ Type 3 — Application-Based Questions (High Priority):
+   • Applying concepts to real-world scenarios
+   • "How is ______ used in ______? Explain in detail."
+   • Numerical problems requiring conceptual understanding + calculation
+   • Explaining how a device or phenomenon works
+
+⭐ Type 4 — Derivation-Based Questions (Medium Priority — include where applicable):
+   • Step-by-step derivation of important chapter formulas
+   • "Derive the expression for ______.", "Prove that ______."
+   • Only derivations that repeatedly appear in Bihar Board exams
+
+⭐ Type 5 — Long Reasoning / Analytical Questions (High Priority):
+   • "What would happen if ______? Analyze in detail."
+   • Analytical questions connecting multiple concepts
+   • "Explain the complete process of ______ step by step."
+
+🔴 ANSWER QUALITY — Most critical requirement:
+• Every answer must earn full 5/5 marks in Bihar Board — no shallow or incomplete answers
+• answer field: detailed model answer with minimum 8-10 key points in rich paragraphs (or complete step-by-step for derivations)
+• keyPoints: 5 specific, examiner-verified points — chapter-specific facts, formulas, laws — NOT generic statements
+• Language: simple, clear, student-friendly — as an expert teacher would explain
+• Derivations: state assumptions → show every step clearly → highlight final result
+• Applications: concept → formula → calculation → real-world connection
+• Describe diagrams clearly in diagramDescription where required
+
+🔴 COVERAGE RULE — No important topic should be missed:
+• At least one 5-mark question per major section of the chapter
+• Topics that frequently appear in Bihar Board exams must be covered
+• Balance all 5 types across the question set
+
+🔴 QUANTITY RULE:
+• Generate MINIMUM 10-15 questions — generate more if the chapter has many important topics
+• No two questions should test the same concept
+• Cover the full chapter — beginning to end
+
+Chapter Content:
+${chapterText.slice(0, 130000)}
+
+Return ONLY this exact JSON (no extra text, no markdown):
+{
+  "fiveMarks": [
+    {
+      "id": "5m_1",
+      "type": "One of: Theoretical / Conceptual / Application / Derivation / Analytical",
+      "question": "Clear, precise 5-mark question",
+      "answer": "Detailed model answer — minimum 8-10 key points in rich paragraphs. Every point is examiner-checkable. For derivations: every step shown clearly. For applications: concept → formula → calculation → conclusion. This answer must be so complete that a student needs no other source.",
+      "keyPoints": [
+        "Point 1: Specific chapter fact/law/formula the examiner will check",
+        "Point 2: Second specific point — formula, definition, or key concept",
+        "Point 3: Third important point — step, condition, or result",
+        "Point 4: Fourth point — application, example, or significance",
+        "Point 5: Fifth point — conclusion, unit, or another critical fact"
+      ],
+      "diagramDescription": "If a diagram is needed, describe it clearly: components, labels, arrows, and what the student should focus on when drawing it. Empty string if no diagram needed.",
+      "explanation": "Why this question is important for Bihar Board, how marks are distributed, and how to structure the answer for maximum marks"
+    }
+  ]
+}
+
+🔴 REMEMBER: Minimum 10-15 questions. All 5 types included. Every answer worth full 5/5 marks. Full chapter coverage.`;
+}
+
+// Batch B: assertionReason + caseBased + examImportant (fiveMarks now handled by dedicated 5M batch)
 export function questionsBatchBPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
   const langInstruction = lang === "hindi"
     ? `सभी प्रश्न और उत्तर शुद्ध हिंदी (Unicode Devanagari) में लिखें। ${UNICODE_ENFORCEMENT_SHORT}`
     : "Write all questions and answers in clear, precise English.";
 
-  return `Create a rigorous question bank (Batch B) for this NCERT chapter following the exact Bihar Board exam pattern. Long answers must be detailed enough to earn full marks. Case-based questions must reflect real Bihar Board 2022-2024 style.
+  return `Create a rigorous question bank (Batch B) for this NCERT chapter following the exact Bihar Board exam pattern. Case-based questions must reflect real Bihar Board 2022-2024 style. All answers must be detailed enough to earn full marks.
 
 Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
 ${langInstruction}
@@ -676,21 +844,19 @@ ${chapterText.slice(0, 100000)}
 
 Return ONLY this exact JSON (no extra text):
 {
-  "fiveMarks": [
-    {"id":"5m_1","question":"A substantial question requiring deep understanding — explain, derive, or describe with a diagram","answer":"Comprehensive model answer with all key points, steps, and sub-explanations that would earn 5/5 marks","keyPoints":["Every point the examiner will check — be specific","Include formula/law if applicable","Include diagram description if needed","Application or example","Units or conclusion"],"explanation":"How to structure the answer to maximize marks in the Bihar Board pattern"}
-  ],
   "assertionReason": [
-    {"id":"ar_1","assertion":"A clear, factually correct or incorrect assertion about a concept in this chapter","reason":"A related reason that may or may not correctly explain the assertion","options":["A) Both Assertion and Reason are true and Reason is the correct explanation of Assertion","B) Both Assertion and Reason are true but Reason is not the correct explanation of Assertion","C) Assertion is true but Reason is false","D) Assertion is false but Reason is true"],"correctAnswer":"A","explanation":"Detailed explanation of the relationship between assertion and reason"}
+    {"id":"ar_1","assertion":"A clear, factually correct or incorrect assertion about a concept in this chapter","reason":"A related reason that may or may not correctly explain the assertion","options":["A) Both Assertion and Reason are true and Reason is the correct explanation of Assertion","B) Both Assertion and Reason are true but Reason is not the correct explanation of Assertion","C) Assertion is true but Reason is false","D) Assertion is false but Reason is true"],"correctAnswer":"A","explanation":"Detailed explanation of the relationship between assertion and reason — why this option is correct"}
   ],
   "caseBased": [
-    {"id":"cb_1","paragraph":"A detailed, realistic 5-7 sentence real-world scenario directly related to a key concept from this chapter. Make it engaging and practical — something a student could relate to.","questions":[{"id":"cb_1_q1","question":"1-mark factual question from the scenario","answer":"Precise 1-mark answer","marks":1},{"id":"cb_1_q2","question":"Another 1-mark question testing a different concept","answer":"Precise 1-mark answer","marks":1},{"id":"cb_1_q3","question":"2-mark analytical question requiring explanation","answer":"Complete 2-mark model answer","marks":2},{"id":"cb_1_q4","question":"2-mark application question — calculate or apply a concept","answer":"Step-by-step 2-mark answer","marks":2}]}
+    {"id":"cb_1","paragraph":"A detailed, realistic 5-7 sentence real-world scenario directly related to a key concept from this chapter. Make it engaging and practical — something a Bihar Board student can relate to.","questions":[{"id":"cb_1_q1","question":"1-mark factual question from the scenario","answer":"Precise 1-mark answer","marks":1},{"id":"cb_1_q2","question":"Another 1-mark question testing a different concept from the scenario","answer":"Precise 1-mark answer","marks":1},{"id":"cb_1_q3","question":"2-mark analytical question requiring explanation","answer":"Complete 2-mark model answer — 2-3 sentences","marks":2},{"id":"cb_1_q4","question":"2-mark application question — calculate or apply a concept from the scenario","answer":"Step-by-step 2-mark answer with formula and calculation if needed","marks":2}]}
   ],
   "examImportant": [
-    {"id":"ei_1","question":"A question that has appeared in or is highly likely to appear in Bihar Board exams","answer":"Perfect model answer with all points the examiner expects","marks":5,"explanation":"Why this question is important and how to tackle it in the exam"}
+    {"id":"ei_1","question":"A question that has appeared in or is highly likely to appear in Bihar Board exams based on chapter importance","answer":"Perfect model answer with every point the examiner expects — complete, structured, and exam-ready","marks":5,"explanation":"Why this question is important and how to structure the answer for maximum marks"}
   ]
 }
 
-Generate exactly: 5 five-mark, 4 assertion-reason, 2 case-based sets (each with exactly 4 sub-questions), 4 exam-important questions.`;
+Generate exactly: 6 assertion-reason, 3 case-based sets (each with exactly 4 sub-questions), 5 exam-important questions.
+Cover a variety of topics across the chapter. Assertion-Reason options must always use exactly the 4 standard Bihar Board options listed above.`;
 }
 
 // Keep old name as alias used elsewhere — delegates to batch A+B merge (handled in route)

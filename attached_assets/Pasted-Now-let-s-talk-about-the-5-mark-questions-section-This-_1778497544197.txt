@@ -1,0 +1,47 @@
+Now let’s talk about the 5-mark questions section. This is also a very important part of the system.
+
+Our full focus is on the Questions dashboard, especially the Questions button page. We are now improving each question type deeply, and in this case, we are focusing on 5-mark questions generation.
+
+🟢 5-MARK QUESTIONS REQUIREMENTS
+
+The system must generate high-quality 5-mark questions for every chapter with proper depth and coverage.
+
+A single chapter should generate a well-structured set of 5-mark questions that fully cover the important concepts.
+
+📌 QUESTION TYPE STRUCTURE
+
+5-mark questions should include a balanced mix of:
+
+⭐ Theoretical Questions → High Priority
+⭐ Conceptual Explanation Questions → High Priority
+⭐ Application-Based Questions → High Priority
+⭐ Derivation-Based Questions → Medium Priority (must be included properly where needed)
+⭐ Long Reasoning / Analytical Questions → High Priority
+🎯 QUALITY REQUIREMENTS
+Answers must be detailed, structured, and accurate
+Language should be simple, clear, and student-friendly
+Content should feel like a well-prepared exam answer written by a teacher
+Each answer should be properly expanded to match 5-mark level depth
+No shallow or short answers allowed
+📚 COVERAGE RULE
+The system must ensure full chapter coverage
+All important topics should be included
+Questions should be exam-oriented and revision-friendly
+Nothing important from the chapter should be skipped
+🧠 GENERATION STRATEGY
+AI must deeply analyze the full chapter
+Extract all possible 5-mark level concepts
+Convert them into structured exam questions
+Ensure answers are complete and meaningful
+🚀 GOAL
+
+The goal is to create a perfect 5-mark question bank where:
+
+Students can revise the entire chapter only through these questions
+Answers feel like a complete exam solution sheet
+Everything is structured, detailed, and easy to understand
+⚙️ SYSTEM BEHAVIOR
+Generate a sufficient number of 5-mark questions for full coverage
+Ensure no important concept is missed
+Maintain consistency and accuracy in every chapter
+Focus on depth, not just quantity

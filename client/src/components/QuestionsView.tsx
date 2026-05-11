@@ -459,6 +459,17 @@ export default function QuestionsView({ questions, onQuestionAnswered, onRetryBa
                           {q.marks} Marks
                         </span>
                       )}
+
+                      {/* Type badge for 2-mark and 5-mark questions */}
+                      {(activeType === "twoMarks" || activeType === "fiveMarks") && q.type && (
+                        <span className={`inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full font-medium ${
+                          activeType === "fiveMarks"
+                            ? "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"
+                            : "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                        }`}>
+                          {q.type}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -468,18 +479,25 @@ export default function QuestionsView({ questions, onQuestionAnswered, onRetryBa
                         className="border-t border-gray-50 dark:border-gray-800 pt-3 mt-2">
                         <div className="bg-green-50 dark:bg-green-900/10 rounded-xl p-3">
                           <p className="text-xs font-semibold text-green-600 dark:text-green-400 mb-1">Answer</p>
-                          <p className="text-sm text-gray-700 dark:text-gray-300">{q.answer || q.correctAnswer}</p>
-                          {q.keyPoints && (
-                            <ul className="mt-2 space-y-1">
+                          <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{q.answer || q.correctAnswer}</p>
+                          {q.keyPoints && q.keyPoints.length > 0 && (
+                            <ul className="mt-2.5 space-y-1.5">
                               {q.keyPoints.map((kp: string, ki: number) => (
                                 <li key={ki} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1.5">
-                                  <span className="text-green-500">•</span> {kp}
+                                  <span className="text-green-500 font-bold mt-0.5">✓</span> {kp}
                                 </li>
                               ))}
                             </ul>
                           )}
+                          {/* Diagram description for 5-mark questions */}
+                          {activeType === "fiveMarks" && q.diagramDescription && q.diagramDescription.trim() && (
+                            <div className="mt-2.5 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 rounded-lg p-2.5">
+                              <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">📐 Diagram</p>
+                              <p className="text-xs text-blue-700 dark:text-blue-300">{q.diagramDescription}</p>
+                            </div>
+                          )}
                           {q.explanation && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 italic">{q.explanation}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 italic border-t border-gray-100 dark:border-gray-700 pt-1.5">{q.explanation}</p>
                           )}
                         </div>
 

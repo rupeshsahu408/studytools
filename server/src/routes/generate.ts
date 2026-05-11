@@ -6,7 +6,7 @@ import {
   notesContentBatchSystemPrompt, notesContentBatchUserPrompt,
   questionsSystemPrompt,
   questionsMCQPrompt, questionsTwoMarkP1Prompt, questionsTwoMarkP2Prompt,
-  questionsBatchAPrompt, questionsBatchBPrompt,
+  questionsFiveMarkPrompt, questionsBatchAPrompt, questionsBatchBPrompt,
   formulasSystemPrompt, formulasUserPrompt,
   mindmapSystemPrompt, mindmapUserPrompt,
   mistakesSystemPrompt, mistakesUserPrompt,
@@ -424,26 +424,29 @@ router.post("/questions", async (req, res) => {
   const lang = language || "english";
   const sysPrompt = questionsSystemPrompt(lang);
 
-  // Six parallel batches — 2-mark questions are the PRIMARY focus:
+  // Seven parallel batches — 2-mark is PRIMARY, 5-mark gets its own dedicated batch:
   //   MCQ-P1   — conceptual + theoretical + reasoning MCQs        (50-60)
   //   MCQ-P2   — application + formula/numerical + scenario MCQs  (50-60)
-  //   2M-P1    — 2-mark: Theoretical + Reasoning questions         (25-30) ★ PRIMARY
-  //   2M-P2    — 2-mark: Application + Derivation questions        (25-30) ★ PRIMARY
+  //   2M-P1    — 2-mark: Theoretical + Reasoning                  (25-30) ★ PRIMARY
+  //   2M-P2    — 2-mark: Application + Derivation                 (25-30) ★ PRIMARY
+  //   5M       — 5-mark: all 5 types, full chapter coverage       (10-15) ★
   //   Batch A  — 1-mark + True/False + Fill Blanks
-  //   Batch B  — 5-mark + Assertion-Reason + Case-Based + Exam Important
+  //   Batch B  — Assertion-Reason + Case-Based + Exam Important
   //
-  // Client retry "A" reruns all 5 non-B batches; "B" reruns BatchB only.
+  // Client retry "A" reruns MCQ + 2M + 5M + BatchA; "B" reruns BatchB only.
   const runMCQ = !batch || batch === "A";
   const run2M  = !batch || batch === "A";
+  const run5M  = !batch || batch === "A";
   const runA   = !batch || batch === "A";
   const runB   = !batch || batch === "B";
 
-  const MCQ_MAX_TOKENS    = 20000;
+  const MCQ_MAX_TOKENS     = 20000;
   const TWOMARK_MAX_TOKENS = 16384;
-  const SHORT_MAX_TOKENS  = 10000;
-  const LONG_MAX_TOKENS   = 16384;
+  const FIVEMARK_MAX_TOKENS = 20000;
+  const SHORT_MAX_TOKENS   = 10000;
+  const LONG_MAX_TOKENS    = 16384;
 
-  const [mcqP1Result, mcqP2Result, twoMP1Result, twoMP2Result, batchAResult, batchBResult] =
+  const [mcqP1Result, mcqP2Result, twoMP1Result, twoMP2Result, fiveMResult, batchAResult, batchBResult] =
     await Promise.allSettled([
       runMCQ
         ? callNvidiaWithRetry(
@@ -477,6 +480,14 @@ router.post("/questions", async (req, res) => {
             3
           )
         : Promise.resolve(null),
+      run5M
+        ? callNvidiaWithRetry(
+            sysPrompt,
+            questionsFiveMarkPrompt(text, subject, classNum, chapterName, lang),
+            { maxTokens: FIVEMARK_MAX_TOKENS },
+            3
+          )
+        : Promise.resolve(null),
       runA
         ? callNvidiaWithRetry(
             sysPrompt,
@@ -499,6 +510,7 @@ router.post("/questions", async (req, res) => {
   const mcqP2  = mcqP2Result.status   === "fulfilled" ? (mcqP2Result.value   ?? {}) : {};
   const twoMP1 = twoMP1Result.status  === "fulfilled" ? (twoMP1Result.value  ?? {}) : {};
   const twoMP2 = twoMP2Result.status  === "fulfilled" ? (twoMP2Result.value  ?? {}) : {};
+  const fiveM  = fiveMResult.status   === "fulfilled" ? (fiveMResult.value   ?? {}) : {};
   const batchA = batchAResult.status  === "fulfilled" ? (batchAResult.value  ?? {}) : {};
   const batchB = batchBResult.status  === "fulfilled" ? (batchBResult.value  ?? {}) : {};
 
@@ -510,6 +522,8 @@ router.post("/questions", async (req, res) => {
     console.error("[generate/questions] 2M-P1 failed:", (twoMP1Result as PromiseRejectedResult).reason?.message);
   if (run2M && twoMP2Result.status === "rejected")
     console.error("[generate/questions] 2M-P2 failed:", (twoMP2Result as PromiseRejectedResult).reason?.message);
+  if (run5M && fiveMResult.status === "rejected")
+    console.error("[generate/questions] 5M failed:", (fiveMResult as PromiseRejectedResult).reason?.message);
   if (runA && batchAResult.status === "rejected")
     console.error("[generate/questions] Batch A failed:", (batchAResult as PromiseRejectedResult).reason?.message);
   if (runB && batchBResult.status === "rejected")
@@ -547,15 +561,22 @@ router.post("/questions", async (req, res) => {
     })
     .map((q, i) => ({ ...q, id: `2m_${i + 1}` }));
 
+  // ── 5-mark: re-index IDs from dedicated batch ─────────────────────────────
+  const raw5M: any[] = Array.isArray(fiveM.fiveMarks) ? fiveM.fiveMarks : [];
+  const merged5M = raw5M
+    .filter(q => q?.question)
+    .map((q, i) => ({ ...q, id: `5m_${i + 1}` }));
+
   const count2MP1 = Array.isArray(twoMP1.twoMarks) ? twoMP1.twoMarks.length : 0;
   const count2MP2 = Array.isArray(twoMP2.twoMarks) ? twoMP2.twoMarks.length : 0;
 
-  // Determine if the A-side as a whole failed (all A-side batches rejected)
+  // Determine overall failure: A-side fails only if ALL A-side batches rejected
   const requestedAFailed = runA
     && mcqP1Result.status === "rejected"
     && mcqP2Result.status === "rejected"
     && twoMP1Result.status === "rejected"
     && twoMP2Result.status === "rejected"
+    && fiveMResult.status === "rejected"
     && batchAResult.status === "rejected";
   const requestedBFailed = runB && batchBResult.status === "rejected";
 
@@ -566,15 +587,15 @@ router.post("/questions", async (req, res) => {
   }
 
   const questions: Record<string, any[]> = {};
-  if (runMCQ || runA || run2M) {
-    questions.mcq       = mergedMCQs;
-    questions.twoMarks  = merged2M;
-    questions.oneMarks  = batchA.oneMarks  || [];
-    questions.trueFalse = batchA.trueFalse || [];
+  if (runMCQ || runA || run2M || run5M) {
+    questions.mcq        = mergedMCQs;
+    questions.twoMarks   = merged2M;
+    questions.fiveMarks  = merged5M;
+    questions.oneMarks   = batchA.oneMarks   || [];
+    questions.trueFalse  = batchA.trueFalse  || [];
     questions.fillBlanks = batchA.fillBlanks || [];
   }
   if (runB) {
-    questions.fiveMarks       = batchB.fiveMarks       || [];
     questions.assertionReason = batchB.assertionReason || [];
     questions.caseBased       = batchB.caseBased       || [];
     questions.examImportant   = batchB.examImportant   || [];
@@ -584,32 +605,32 @@ router.post("/questions", async (req, res) => {
   if (requestedAFailed) failedBatches.push("A");
   if (requestedBFailed) failedBatches.push("B");
 
-  const countMCQ   = questions.mcq?.length     || 0;
-  const count2M    = questions.twoMarks?.length || 0;
-  const countMCQP1 = Array.isArray(mcqP1.mcq)  ? mcqP1.mcq.length : 0;
-  const countMCQP2 = Array.isArray(mcqP2.mcq)  ? mcqP2.mcq.length : 0;
-  const countA = (questions.oneMarks?.length  || 0) +
-                 (questions.trueFalse?.length  || 0) +
-                 (questions.fillBlanks?.length || 0);
-  const countB = (questions.fiveMarks?.length       || 0) +
-                 (questions.assertionReason?.length  || 0) +
-                 (questions.examImportant?.length    || 0) +
+  const countMCQ   = questions.mcq?.length        || 0;
+  const count2M    = questions.twoMarks?.length    || 0;
+  const count5M    = questions.fiveMarks?.length   || 0;
+  const countMCQP1 = Array.isArray(mcqP1.mcq)     ? mcqP1.mcq.length : 0;
+  const countMCQP2 = Array.isArray(mcqP2.mcq)     ? mcqP2.mcq.length : 0;
+  const countA = (questions.oneMarks?.length   || 0) +
+                 (questions.trueFalse?.length   || 0) +
+                 (questions.fillBlanks?.length  || 0);
+  const countB = (questions.assertionReason?.length || 0) +
+                 (questions.examImportant?.length   || 0) +
                  (questions.caseBased?.reduce((s: number, cb: any) => s + (cb.questions?.length || 0), 0) || 0);
-  const total = countMCQ + count2M + countA + countB;
+  const total = countMCQ + count2M + count5M + countA + countB;
 
   console.log(
     `[generate/questions] lang=${lang} | ` +
     `MCQ-P1=${countMCQP1} MCQ-P2=${countMCQP2} merged=${countMCQ} | ` +
     `2M-P1=${count2MP1} 2M-P2=${count2MP2} merged=${count2M} | ` +
-    `ShortQ=${countA} | LongQ=${countB} | Total=${total} | Failed=[${failedBatches.join(",")}]`
+    `5M=${count5M} | ShortQ=${countA} | LongQ=${countB} | Total=${total} | Failed=[${failedBatches.join(",")}]`
   );
 
-  if (countMCQ < 60 && runMCQ && !(mcqP1Result.status === "rejected" && mcqP2Result.status === "rejected")) {
+  if (countMCQ < 60 && runMCQ && !(mcqP1Result.status === "rejected" && mcqP2Result.status === "rejected"))
     console.warn(`[generate/questions] ⚠️ LOW MCQ COUNT (${countMCQ}) — expected 100+`);
-  }
-  if (count2M < 40 && run2M && !(twoMP1Result.status === "rejected" && twoMP2Result.status === "rejected")) {
+  if (count2M < 40 && run2M && !(twoMP1Result.status === "rejected" && twoMP2Result.status === "rejected"))
     console.warn(`[generate/questions] ⚠️ LOW 2-MARK COUNT (${count2M}) — expected 50-60+`);
-  }
+  if (count5M < 8 && run5M && fiveMResult.status !== "rejected")
+    console.warn(`[generate/questions] ⚠️ LOW 5-MARK COUNT (${count5M}) — expected 10-15`);
 
   res.json({ questions: cleanQuestionsObject(questions), language: lang, failedBatches });
 });
