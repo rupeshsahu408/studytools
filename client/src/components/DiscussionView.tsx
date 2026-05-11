@@ -104,7 +104,7 @@ function ReplyList({
       setReplyText("");
       // Notify the post author if it's a different user
       if (postAuthorUid && postAuthorUid !== currentUid) {
-        createReplyNotification(postAuthorUid, chapterId, postId, userName, text)
+        createReplyNotification(postAuthorUid, chapterId, postId, userName, text, chapterName)
           .catch(console.warn);
       }
       await loadReplies();

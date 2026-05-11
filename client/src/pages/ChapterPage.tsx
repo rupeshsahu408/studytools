@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen, HelpCircle, ArrowLeft, Atom, FlaskConical,
@@ -93,9 +93,12 @@ function SectionEmpty({ label, description, onGenerate, generating }: {
 export default function ChapterPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [chapter, setChapter] = useState<Chapter | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState("notes");
+  const [activeSection, setActiveSection] = useState(
+    () => searchParams.get("section") || "notes"
+  );
   const [generatingSection, setGeneratingSection] = useState<string | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
 

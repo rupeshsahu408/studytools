@@ -582,6 +582,7 @@ export interface NotificationItem {
   type: "reply";
   chapterId: string;
   postId: string;
+  chapterName: string;
   fromUserName: string;
   preview: string;
   read: boolean;
@@ -593,18 +594,32 @@ export async function createReplyNotification(
   chapterId: string,
   postId: string,
   fromUserName: string,
-  replyText: string
+  replyText: string,
+  chapterName: string
 ): Promise<void> {
   const ref = doc(collection(db, "users", postAuthorUid, "notifications"));
   await setDoc(ref, {
     type: "reply",
     chapterId,
     postId,
+    chapterName: chapterName || "a chapter",
     fromUserName: fromUserName || "Someone",
-    preview: replyText.slice(0, 80),
+    preview: replyText.slice(0, 100),
     read: false,
     createdAt: serverTimestamp(),
   });
+}
+
+export async function getNotifications(uid: string, maxCount = 30): Promise<NotificationItem[]> {
+  const snap = await getDocs(collection(db, "users", uid, "notifications"));
+  const notifs = snap.docs.map(d => ({ id: d.id, ...d.data() } as NotificationItem));
+  return notifs
+    .sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() ?? 0;
+      const bTime = b.createdAt?.toMillis?.() ?? 0;
+      return bTime - aTime;
+    })
+    .slice(0, maxCount);
 }
 
 export async function markNotificationsRead(uid: string): Promise<void> {

@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, Users, BookOpen, Copy, Check, LogIn, LogOut,
   Plus, Loader2, ChevronRight, Crown, Medal, Award,
-  GraduationCap, Flame, Target, TrendingUp, Share2,
-  Trash2, UserPlus, Star,
+  GraduationCap, Flame, Share2,
+  Trash2, UserPlus, Bell, X, MessageSquare, ArrowRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -13,8 +13,8 @@ import {
   getLeaderboard, getWeekKey,
   getClassById, getClassByInviteCode, getClassMembers, getSharedChapters,
   createClass, joinClass, leaveClass,
-  shareChapterToClass, removeSharedChapter, markNotificationsRead,
-  type LeaderboardEntry, type ClassRoom, type ClassMember, type SharedChapter,
+  shareChapterToClass, removeSharedChapter, markNotificationsRead, getNotifications,
+  type LeaderboardEntry, type ClassRoom, type ClassMember, type SharedChapter, type NotificationItem,
 } from "../lib/firestore";
 import Navbar from "../components/Navbar";
 
@@ -679,12 +679,157 @@ function MyClassTab({
   );
 }
 
+// ─── Notifications Panel ──────────────────────────────────────────────────────
+
+function timeAgo(ts: any): string {
+  if (!ts?.toMillis) return "";
+  const diff = Date.now() - ts.toMillis();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "abhi";
+  if (m < 60) return `${m}m pehle`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h pehle`;
+  const d = Math.floor(h / 24);
+  return `${d}d pehle`;
+}
+
+function NotificationsPanel({
+  uid,
+  onClose,
+}: {
+  uid: string;
+  onClose: () => void;
+}) {
+  const navigate = useNavigate();
+  const [notifs, setNotifs] = useState<NotificationItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getNotifications(uid)
+      .then(setNotifs)
+      .catch(console.warn)
+      .finally(() => setLoading(false));
+  }, [uid]);
+
+  function handleClick(n: NotificationItem) {
+    onClose();
+    navigate(`/chapter/${n.chapterId}?section=discussion`);
+  }
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-30 bg-black/20 dark:bg-black/40"
+        onClick={onClose}
+      />
+
+      {/* Drawer */}
+      <motion.div
+        initial={{ x: "100%", opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: "100%", opacity: 0 }}
+        transition={{ type: "spring", damping: 28, stiffness: 220 }}
+        className="fixed right-0 top-14 bottom-0 w-80 bg-white dark:bg-gray-900 border-l border-gray-100 dark:border-gray-800 z-40 flex flex-col shadow-2xl"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+          <div className="flex items-center gap-2">
+            <Bell className="w-4 h-4 text-purple-500" />
+            <span className="font-semibold text-gray-900 dark:text-white text-sm">
+              Notifications
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* List */}
+        <div className="flex-1 overflow-y-auto">
+          {loading ? (
+            <div className="flex items-center justify-center h-32">
+              <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+            </div>
+          ) : notifs.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-48 gap-3 px-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                <Bell className="w-6 h-6 text-gray-400" />
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Koi notification nahi hai abhi.
+              </p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                Jab koi aapke post pe reply karega, yahan dikhega.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-50 dark:divide-gray-800">
+              {notifs.map(n => (
+                <button
+                  key={n.id}
+                  onClick={() => handleClick(n)}
+                  className="w-full text-left px-4 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors flex gap-3 items-start"
+                >
+                  {/* Unread dot + Avatar */}
+                  <div className="relative flex-shrink-0 mt-0.5">
+                    {!n.read && (
+                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-purple-500 border-2 border-white dark:border-gray-900 z-10" />
+                    )}
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold">
+                      {getInitials(n.fromUserName)}
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs leading-snug mb-0.5 ${!n.read ? "font-semibold text-gray-900 dark:text-white" : "text-gray-700 dark:text-gray-300"}`}>
+                      <span className="text-purple-600 dark:text-purple-400">{n.fromUserName}</span>
+                      {" "}ne aapke post pe reply kiya{" "}
+                      <span className="italic text-gray-500 dark:text-gray-400">
+                        "{n.chapterName}"
+                      </span>
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-snug mb-1">
+                      {n.preview}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                        {timeAgo(n.createdAt)}
+                      </span>
+                      <span className="text-[10px] text-purple-500 flex items-center gap-0.5">
+                        Discussion dekho <ArrowRight className="w-3 h-3" />
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        {notifs.length > 0 && (
+          <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800 flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+            <MessageSquare className="w-3.5 h-3.5" />
+            {notifs.length} notification{notifs.length !== 1 ? "s" : ""}
+          </div>
+        )}
+      </motion.div>
+    </>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function CommunityPage() {
   const { user } = useAuth();
   const { userData, chapters, refreshUserData } = useProgress();
   const [activeTab, setActiveTab] = useState<"leaderboard" | "class">("leaderboard");
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
 
   // Clear unread notification badge when user opens community page
   useEffect(() => {
@@ -707,14 +852,35 @@ export default function CommunityPage() {
       <div className="pt-14 max-w-3xl mx-auto px-4 py-8">
 
         {/* Page header */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
-            <Users className="w-6 h-6 text-green-600" /> Community
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            Compete on the leaderboard, join a class, and study together.
-          </p>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+              <Users className="w-6 h-6 text-green-600" /> Community
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
+              Compete on the leaderboard, join a class, and study together.
+            </p>
+          </div>
+          {user && (
+            <button
+              onClick={() => setShowNotifPanel(v => !v)}
+              className="flex-shrink-0 mt-1 p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-300 dark:hover:border-purple-700 transition-all shadow-sm"
+              title="Notifications"
+            >
+              <Bell className="w-5 h-5" />
+            </button>
+          )}
         </motion.div>
+
+        {/* Notifications Panel */}
+        <AnimatePresence>
+          {showNotifPanel && user?.uid && (
+            <NotificationsPanel
+              uid={user.uid}
+              onClose={() => setShowNotifPanel(false)}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Tabs */}
         <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-2xl mb-6">
