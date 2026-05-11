@@ -335,9 +335,9 @@ export default function NotesView({ notes, onRead, onRegenerate, regenerating }:
                   <span className="font-semibold text-gray-900 dark:text-white text-sm leading-snug">{topic.title}</span>
                 </div>
                 <div className="flex items-center gap-2 ml-3 flex-shrink-0">
-                  {hasFormulas && <FlaskConical className="w-3.5 h-3.5 text-blue-400" title="Has formulas" />}
-                  {hasDerivation && <GitBranch className="w-3.5 h-3.5 text-purple-400" title="Has derivation" />}
-                  {hasDiagram && <Image className="w-3.5 h-3.5 text-orange-400" title="Has diagram" />}
+                  {hasFormulas && <span title="Has formulas"><FlaskConical className="w-3.5 h-3.5 text-blue-400" /></span>}
+                  {hasDerivation && <span title="Has derivation"><GitBranch className="w-3.5 h-3.5 text-purple-400" /></span>}
+                  {hasDiagram && <span title="Has diagram"><Image className="w-3.5 h-3.5 text-orange-400" /></span>}
                   {isOpen
                     ? <ChevronUp className="w-4 h-4 text-gray-400" />
                     : <ChevronDown className="w-4 h-4 text-gray-400" />
