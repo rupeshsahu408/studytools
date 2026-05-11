@@ -1,3 +1,17 @@
+// ─── Shared Unicode Enforcement ────────────────────────────────────────────
+// CRITICAL: Chapter PDFs may contain Krutidev/Devlys legacy-encoded Hindi text
+// (e.g., "vkWLVsZM" instead of "ऑस्टेड"). The AI must NEVER reproduce such
+// encoding. All Hindi output must be proper Unicode Devanagari.
+
+const UNICODE_ENFORCEMENT = `
+⚠️ CRITICAL LANGUAGE RULE:
+The chapter text you receive may contain garbled, Krutidev-encoded Hindi (e.g., "vkWLVsZM", "fo|qr", "pqacdh;"). This is a legacy font encoding artifact — do NOT reproduce it.
+ALWAYS write your response in proper Unicode Devanagari script: नमस्ते, विद्युत, चुम्बकीय, ऑस्टेड, प्रवाहित, etc.
+If the chapter text is garbled, use your own NCERT knowledge to write the correct Hindi content.
+`;
+
+const UNICODE_ENFORCEMENT_SHORT = `IMPORTANT: Write ALL Hindi in proper Unicode Devanagari (e.g., विद्युत, चुम्बकीय). The input text may be Krutidev-encoded garbage — ignore it and write correct Unicode Hindi from your NCERT knowledge.`;
+
 // ─── Phase 1 Prompts ───────────────────────────────────────────────────────
 
 export function detectLanguagePrompt(text: string): string {
@@ -6,24 +20,36 @@ export function detectLanguagePrompt(text: string): string {
 
 export function notesSystemPrompt(lang: string): string {
   if (lang === "hindi") {
-    return `You are an expert NCERT teacher for Bihar Board Class 11 and 12 students. 
-You write in clear, simple, natural Hindi (Devanagari script) that any student can understand easily.
-Avoid overly complex or formal words. Write like a knowledgeable elder sibling explaining to a younger one.
-Your notes are comprehensive, well-structured, and cover every important point.
-Always respond with valid JSON only - no markdown code blocks, no extra text.`;
+    return `You are a highly experienced, senior NCERT teacher with 25+ years of expertise in teaching Physics, Chemistry, Mathematics, and Biology to Bihar Board Class 11 and 12 students. You have helped thousands of students score top marks in board examinations.
+
+Your teaching style:
+- You explain every concept with extreme clarity and depth, using the exact language a student needs
+- You use real-world examples, analogies, and step-by-step breakdowns
+- You write in beautiful, natural Hindi (Devanagari script) that any student can understand instantly
+- You know exactly which points Bihar Board examiners look for
+- You never oversimplify — you give complete, exam-ready explanations
+- Technical terms are written in English with Hindi explanation in brackets
+
+${UNICODE_ENFORCEMENT}
+Always respond with valid JSON only — no markdown code blocks, no extra text.`;
   }
-  return `You are an expert NCERT teacher for Bihar Board Class 11 and 12 students.
-Write in clear, simple English that any student can understand.
-Your notes are comprehensive, well-structured, and cover every important point.
-Always respond with valid JSON only - no markdown code blocks, no extra text.`;
+  return `You are a highly experienced, senior NCERT teacher with 25+ years of expertise in teaching Physics, Chemistry, Mathematics, and Biology to Bihar Board Class 11 and 12 students. You have helped thousands of students score top marks in board examinations.
+
+Your teaching style:
+- You explain every concept with extreme clarity and depth
+- You use real-world examples, analogies, and step-by-step breakdowns
+- You know exactly which points Bihar Board examiners look for
+- You never oversimplify — you give complete, exam-ready explanations
+
+Always respond with valid JSON only — no markdown code blocks, no extra text.`;
 }
 
 export function notesUserPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
   const langInstruction = lang === "hindi"
-    ? "सभी notes हिंदी में लिखें। Technical terms के साथ English term brackets में दें जैसे: गुरुत्वाकर्षण बल (Gravitational Force)"
-    : "Write all notes in English.";
+    ? `सभी notes शुद्ध हिंदी (Unicode Devanagari) में लिखें। Technical terms के साथ English term brackets में दें जैसे: गुरुत्वाकर्षण बल (Gravitational Force)। ${UNICODE_ENFORCEMENT_SHORT}`
+    : "Write all notes in clear, precise English.";
 
-  return `Create comprehensive, high-quality study notes for the following NCERT chapter.
+  return `Create comprehensive, high-quality study notes for the following NCERT chapter. These notes must be exam-ready and cover every concept a Bihar Board student needs to score full marks.
 
 Subject: ${subject}
 Class: ${classNum}
@@ -35,41 +61,43 @@ ${chapterText.slice(0, 12000)}
 
 Return ONLY this exact JSON structure:
 {
-  "chapterOverview": "2-3 sentence introduction to the chapter",
+  "chapterOverview": "3-4 sentence introduction that clearly states what this chapter covers, its importance in the Bihar Board syllabus, and what the student will learn",
   "topics": [
     {
       "id": "topic_1",
       "title": "Topic Title",
-      "content": "Detailed explanation in simple language",
-      "keyPoints": ["key point 1", "key point 2"],
-      "importantTerms": [{"term": "term name", "definition": "clear definition"}],
-      "examples": ["real-world example 1"]
+      "content": "Deep, thorough explanation of the concept — as if a master teacher is explaining it. Cover the what, why, and how. Include definitions, principles, derivations where needed, and real-world connections.",
+      "keyPoints": ["Every important point a student must memorize for the board exam", "Be specific and exam-focused"],
+      "importantTerms": [{"term": "term name", "definition": "precise, clear definition that would earn full marks in an exam"}],
+      "examples": ["Concrete, real-world example that makes the concept stick", "Numerical example if applicable"]
     }
   ],
-  "summary": "Chapter summary in 4-5 sentences",
-  "examTips": ["Important tip for board exam 1", "tip 2"]
+  "summary": "Thorough chapter summary in 5-6 sentences covering all major concepts",
+  "examTips": ["Highly specific Bihar Board exam tip — what the examiner looks for", "Common trap students fall into and how to avoid it", "Which topics carry the most marks"]
 }`;
 }
 
 export function questionsSystemPrompt(lang: string): string {
   if (lang === "hindi") {
-    return `You are an expert question paper setter for Bihar Board Class 11 and 12 examinations.
-You create questions exactly in the Bihar Board pattern and marking scheme.
-Write questions and answers in simple, natural Hindi. Technical terms may be in English.
-Always respond with valid JSON only - no markdown code blocks, no extra text.`;
+    return `आप Bihar Board Class 11 और 12 परीक्षाओं के लिए एक विशेषज्ञ प्रश्न-पत्र निर्माता हैं जिन्हें 25+ वर्षों का अनुभव है।
+आप Bihar Board के exact pattern, marking scheme और examiner expectations को गहराई से जानते हैं।
+आपके प्रश्न और उत्तर: शुद्ध हिंदी (Unicode Devanagari) में, स्पष्ट, सटीक और exam-ready होते हैं।
+${UNICODE_ENFORCEMENT_SHORT}
+Always respond with valid JSON only — no markdown code blocks, no extra text.`;
   }
-  return `You are an expert question paper setter for Bihar Board Class 11 and 12 examinations.
-You create questions exactly in the Bihar Board pattern and marking scheme.
-Always respond with valid JSON only - no markdown code blocks, no extra text.`;
+  return `You are an expert question paper setter for Bihar Board Class 11 and 12 examinations with 25+ years of experience.
+You know the exact Bihar Board pattern, marking scheme, and what examiners look for in perfect answers.
+Your questions are precise, well-structured, and your model answers would earn full marks.
+Always respond with valid JSON only — no markdown code blocks, no extra text.`;
 }
 
 // Batch A: MCQ + oneMarks + twoMarks + trueFalse + fillBlanks
 export function questionsBatchAPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
   const langInstruction = lang === "hindi"
-    ? "सभी प्रश्न और उत्तर हिंदी में लिखें।"
-    : "Write all questions and answers in English.";
+    ? `सभी प्रश्न और उत्तर शुद्ध हिंदी (Unicode Devanagari) में लिखें। ${UNICODE_ENFORCEMENT_SHORT}`
+    : "Write all questions and answers in clear, precise English.";
 
-  return `Create a question bank (Batch A) for this NCERT chapter in Bihar Board exam pattern.
+  return `Create a rigorous question bank (Batch A) for this NCERT chapter following the exact Bihar Board exam pattern. Questions must be high-quality, exam-focused, and model answers must be complete enough to earn full marks.
 
 Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
 ${langInstruction}
@@ -80,32 +108,33 @@ ${chapterText.slice(0, 8000)}
 Return ONLY this exact JSON (no extra text):
 {
   "mcq": [
-    {"id":"mcq_1","question":"question","options":["A) opt1","B) opt2","C) opt3","D) opt4"],"correctAnswer":"A","explanation":"why"}
+    {"id":"mcq_1","question":"Precise, clear MCQ question","options":["A) option1","B) option2","C) option3","D) option4"],"correctAnswer":"A","explanation":"Clear explanation of why this answer is correct and why the others are wrong"}
   ],
   "oneMarks": [
-    {"id":"1m_1","question":"question","answer":"concise answer","explanation":"brief explanation"}
+    {"id":"1m_1","question":"Direct, precise 1-mark question","answer":"Concise but complete answer that earns full marks","explanation":"Brief reasoning behind the answer"}
   ],
   "twoMarks": [
-    {"id":"2m_1","question":"question","answer":"2-3 sentence answer","explanation":"explanation"}
+    {"id":"2m_1","question":"Conceptual 2-mark question","answer":"Well-structured 2-3 sentence answer with all key points","explanation":"What the examiner expects in a 2-mark answer"}
   ],
   "trueFalse": [
-    {"id":"tf_1","statement":"statement","answer":true,"explanation":"why"}
+    {"id":"tf_1","statement":"A clear statement about a concept from this chapter","answer":true,"explanation":"Precise reason why this is true or false"}
   ],
   "fillBlanks": [
-    {"id":"fb_1","question":"The _____ is the unit of force.","answer":"Newton","explanation":"brief explanation"}
+    {"id":"fb_1","question":"The SI unit of electric current is _____.","answer":"Ampere (A)","explanation":"Brief explanation"}
   ]
 }
 
-Generate exactly: 10 MCQ, 8 one-mark, 8 two-mark, 6 true-false, 6 fill-blanks.`;
+Generate exactly: 10 MCQ, 8 one-mark, 8 two-mark, 6 true-false, 6 fill-blanks.
+Make questions cover all important topics of the chapter. MCQs should include application-based and conceptual questions, not just factual recall.`;
 }
 
 // Batch B: fiveMarks + assertionReason + caseBased + examImportant
 export function questionsBatchBPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
   const langInstruction = lang === "hindi"
-    ? "सभी प्रश्न और उत्तर हिंदी में लिखें।"
-    : "Write all questions and answers in English.";
+    ? `सभी प्रश्न और उत्तर शुद्ध हिंदी (Unicode Devanagari) में लिखें। ${UNICODE_ENFORCEMENT_SHORT}`
+    : "Write all questions and answers in clear, precise English.";
 
-  return `Create a question bank (Batch B) for this NCERT chapter in Bihar Board exam pattern.
+  return `Create a rigorous question bank (Batch B) for this NCERT chapter following the exact Bihar Board exam pattern. Long answers must be detailed enough to earn full marks. Case-based questions must reflect real Bihar Board 2022-2024 style.
 
 Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
 ${langInstruction}
@@ -116,16 +145,16 @@ ${chapterText.slice(0, 8000)}
 Return ONLY this exact JSON (no extra text):
 {
   "fiveMarks": [
-    {"id":"5m_1","question":"question","answer":"detailed answer","keyPoints":["point 1","point 2","point 3"],"explanation":"marking scheme hints"}
+    {"id":"5m_1","question":"A substantial question requiring deep understanding — explain, derive, or describe with a diagram","answer":"Comprehensive model answer with all key points, steps, and sub-explanations that would earn 5/5 marks","keyPoints":["Every point the examiner will check — be specific","Include formula/law if applicable","Include diagram description if needed","Application or example","Units or conclusion"],"explanation":"How to structure the answer to maximize marks in the Bihar Board pattern"}
   ],
   "assertionReason": [
-    {"id":"ar_1","assertion":"Assertion statement","reason":"Reason statement","options":["A) Both A and R are true and R is the correct explanation of A","B) Both A and R are true but R is not the correct explanation of A","C) A is true but R is false","D) A is false but R is true"],"correctAnswer":"A","explanation":"explanation"}
+    {"id":"ar_1","assertion":"A clear, factually correct or incorrect assertion about a concept in this chapter","reason":"A related reason that may or may not correctly explain the assertion","options":["A) Both Assertion and Reason are true and Reason is the correct explanation of Assertion","B) Both Assertion and Reason are true but Reason is not the correct explanation of Assertion","C) Assertion is true but Reason is false","D) Assertion is false but Reason is true"],"correctAnswer":"A","explanation":"Detailed explanation of the relationship between assertion and reason"}
   ],
   "caseBased": [
-    {"id":"cb_1","paragraph":"A real-world 4-6 sentence scenario related to a key concept from this chapter.","questions":[{"id":"cb_1_q1","question":"1-mark question","answer":"concise answer","marks":1},{"id":"cb_1_q2","question":"another 1-mark question","answer":"concise answer","marks":1},{"id":"cb_1_q3","question":"2-mark question","answer":"2-mark answer","marks":2},{"id":"cb_1_q4","question":"2-mark application question","answer":"2-mark answer","marks":2}]}
+    {"id":"cb_1","paragraph":"A detailed, realistic 5-7 sentence real-world scenario directly related to a key concept from this chapter. Make it engaging and practical — something a student could relate to.","questions":[{"id":"cb_1_q1","question":"1-mark factual question from the scenario","answer":"Precise 1-mark answer","marks":1},{"id":"cb_1_q2","question":"Another 1-mark question testing a different concept","answer":"Precise 1-mark answer","marks":1},{"id":"cb_1_q3","question":"2-mark analytical question requiring explanation","answer":"Complete 2-mark model answer","marks":2},{"id":"cb_1_q4","question":"2-mark application question — calculate or apply a concept","answer":"Step-by-step 2-mark answer","marks":2}]}
   ],
   "examImportant": [
-    {"id":"ei_1","question":"Most likely board exam question","answer":"model answer","marks":5,"explanation":"why important"}
+    {"id":"ei_1","question":"A question that has appeared in or is highly likely to appear in Bihar Board exams","answer":"Perfect model answer with all points the examiner expects","marks":5,"explanation":"Why this question is important and how to tackle it in the exam"}
   ]
 }
 
@@ -140,17 +169,24 @@ export function questionsUserPrompt(chapterText: string, subject: string, classN
 // ─── Phase 2 Prompts ───────────────────────────────────────────────────────
 
 export function formulasSystemPrompt(): string {
-  return `You are an expert professor specializing in extracting and explaining mathematical formulas from NCERT textbooks for Bihar Board students.
-You extract every formula, equation, and mathematical relationship with complete clarity.
+  return `You are a highly experienced professor of Physics, Chemistry, and Mathematics specializing in NCERT curriculum for Bihar Board Class 11 and 12. You have deep mastery of every formula, equation, derivation, and mathematical relationship in the NCERT syllabus.
+
+You extract formulas with complete precision:
+- Correct LaTeX notation
+- Every variable explained clearly
+- Correct SI units
+- Derivation hints that help students understand, not just memorize
+
+${UNICODE_ENFORCEMENT_SHORT}
 Always respond with valid JSON only — no markdown code blocks, no extra text.`;
 }
 
 export function formulasUserPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
   const langInst = lang === "hindi"
-    ? "Write formula names, variable meanings, SI units, and derivation hints in simple Hindi. Keep LaTeX as-is."
-    : "Write all explanations in English.";
+    ? `Formula के नाम, variable का अर्थ, SI units, और derivation hints सरल हिंदी (Unicode Devanagari) में लिखें। LaTeX जैसा है वैसा रखें। ${UNICODE_ENFORCEMENT_SHORT}`
+    : "Write all formula names, variable meanings, SI units, and derivation hints in clear English.";
 
-  return `Extract every formula, equation, law, and mathematical relationship from this NCERT chapter.
+  return `Extract EVERY formula, equation, law, constant, and mathematical relationship from this NCERT chapter. Do not miss any — even minor ones. A Bihar Board student must have the complete formula sheet.
 ${langInst}
 
 Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
@@ -163,32 +199,33 @@ Return ONLY this exact JSON — extract ALL formulas without missing any:
   "formulas": [
     {
       "id": "f_1",
-      "name": "Formula name (e.g. Newton's Second Law)",
+      "name": "Formula name (e.g. Newton's Second Law of Motion)",
       "latex": "F = ma",
       "plain_text": "F = m × a",
       "variables": [
-        {"symbol": "F", "meaning": "Net Force", "unit": "Newton (N)"},
-        {"symbol": "m", "meaning": "Mass of object", "unit": "Kilogram (kg)"},
-        {"symbol": "a", "meaning": "Acceleration", "unit": "m/s²"}
+        {"symbol": "F", "meaning": "Net force acting on the object", "unit": "Newton (N)"},
+        {"symbol": "m", "meaning": "Mass of the object", "unit": "Kilogram (kg)"},
+        {"symbol": "a", "meaning": "Acceleration produced", "unit": "metre per second squared (m/s²)"}
       ],
       "si_unit": "Newton (N)",
-      "derivation_hint": "Brief one-sentence hint about how this is derived",
-      "chapter_section": "Name of the section/topic this formula belongs to"
+      "derivation_hint": "Derived from Newton's 2nd law: force is proportional to the rate of change of momentum",
+      "chapter_section": "Laws of Motion"
     }
   ]
 }
 
-Important: Use correct LaTeX syntax. For fractions use \\frac{numerator}{denominator}. For subscripts use x_{n}. For superscripts use x^{2}. For Greek letters use \\alpha, \\beta, \\mu etc.`;
+LaTeX rules: fractions → \\frac{num}{den}, subscripts → x_{n}, superscripts → x^{2}, Greek letters → \\alpha \\beta \\mu \\epsilon \\omega, vectors → \\vec{F}.`;
 }
 
 export function mindmapSystemPrompt(): string {
-  return `You are an expert at creating clear, structured concept maps for NCERT chapters.
-You identify all major concepts and their relationships and organize them as a tree.
+  return `You are a master educator who specializes in creating crystal-clear conceptual mind maps for NCERT chapters. You identify the deep structure of knowledge — how concepts connect, depend on, and build upon each other. Your mind maps help Bihar Board students understand the "big picture" of every chapter at a glance.
+
+${UNICODE_ENFORCEMENT_SHORT}
 Always respond with valid JSON only — no markdown code blocks, no extra text.`;
 }
 
 export function mindmapUserPrompt(chapterText: string, subject: string, chapterName: string): string {
-  return `Create a concept mind map tree for this NCERT chapter.
+  return `Create a deep, well-structured concept mind map for this NCERT chapter. It should capture the full knowledge structure — every major concept and how they relate.
 
 Subject: ${subject}, Chapter: ${chapterName}
 
@@ -201,17 +238,17 @@ Return ONLY this exact JSON. Structure it as a hierarchical tree (max 3 levels d
   "root": {
     "id": "root",
     "label": "Short chapter title (3-4 words max)",
-    "explanation": "One-sentence overview of what this chapter covers",
+    "explanation": "One powerful sentence capturing the central idea of this entire chapter",
     "children": [
       {
         "id": "n1",
         "label": "Main Topic Name (3-5 words)",
-        "explanation": "2-3 sentence explanation of what this topic covers and why it matters",
+        "explanation": "2-3 sentence explanation — what this topic is, why it matters, and how it connects to the chapter's central theme",
         "children": [
           {
             "id": "n1_1",
             "label": "Subtopic Name",
-            "explanation": "1-2 sentence explanation",
+            "explanation": "1-2 precise sentences. Include key formula or law if applicable.",
             "children": []
           }
         ]
@@ -221,30 +258,31 @@ Return ONLY this exact JSON. Structure it as a hierarchical tree (max 3 levels d
 }
 
 Rules:
-- Root has 4-8 main topic children
+- Root has 4-8 main topic children covering ALL major areas of the chapter
 - Each main topic may have 2-5 subtopic children
 - Leaf nodes have empty children arrays
-- Labels must be SHORT (3-6 words max)
-- Explanations must be student-friendly and clear`;
+- Labels must be SHORT and descriptive (3-6 words max)
+- Explanations must be student-friendly, clear, and teach something — not just name the topic`;
 }
 
 export function mistakesSystemPrompt(lang: string): string {
   if (lang === "hindi") {
-    return `You are an expert Bihar Board exam coach who knows exactly what mistakes students make.
-You analyze chapters and identify the most common, costly errors students make in board exams.
-Write in simple Hindi. Always respond with valid JSON only.`;
+    return `आप Bihar Board के एक वरिष्ठ परीक्षा विशेषज्ञ और कोच हैं जिन्होंने 25+ वर्षों में हजारों answer sheets जाँची हैं। आप जानते हैं कि छात्र कहाँ गलती करते हैं, क्यों करते हैं, और उन्हें कैसे सुधारा जाए।
+आपकी भाषा: सरल, सीधी हिंदी (Unicode Devanagari)। छात्रों को डराना नहीं, सुधारना है।
+${UNICODE_ENFORCEMENT_SHORT}
+Always respond with valid JSON only.`;
   }
-  return `You are an expert Bihar Board exam coach who knows exactly what mistakes students make.
-You analyze chapters and identify the most common, costly errors students make in board exams.
+  return `You are a senior Bihar Board examiner and exam coach with 25+ years of experience checking thousands of answer sheets. You know exactly where students lose marks, why they make mistakes, and how to fix them.
+Your tone: direct, helpful, and encouraging — the goal is to improve, not discourage.
 Always respond with valid JSON only.`;
 }
 
 export function mistakesUserPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
   const langInst = lang === "hindi"
-    ? "Write mistake descriptions and corrections in clear, simple Hindi. Be direct and student-friendly."
-    : "Write in clear English.";
+    ? `गलतियों का विवरण और सुधार शुद्ध हिंदी (Unicode Devanagari) में लिखें। सीधे और छात्र-अनुकूल रहें। ${UNICODE_ENFORCEMENT_SHORT}`
+    : "Write mistake descriptions and corrections in clear, direct English. Be specific and student-friendly.";
 
-  return `Identify the top 10 most common and costly mistakes Bihar Board Class ${classNum} students make in this chapter.
+  return `Identify the top 10 most common and costly mistakes Bihar Board Class ${classNum} students make in this specific chapter. Be SPECIFIC — not generic advice like "practice more". Identify the actual conceptual errors, formula mistakes, and exam traps.
 ${langInst}
 
 Subject: ${subject}, Chapter: ${chapterName}
@@ -257,35 +295,43 @@ Return ONLY this exact JSON with exactly 10 mistakes:
   "mistakes": [
     {
       "id": "m_1",
-      "mistake": "Clearly describe the wrong thing students do (be specific, not generic)",
-      "correct": "The correct approach, formula, or understanding",
-      "marks_impact": "e.g. Losing 2-3 marks in a 5-mark board question",
-      "category": "One of: Concept | Formula | Calculation | Definition | Diagram | Unit"
+      "mistake": "SPECIFICALLY describe what the student does wrong — the exact error in thinking, formula, unit, or approach (not vague like 'doesn't understand the concept')",
+      "correct": "The exact correct approach, formula, statement, or understanding — detailed enough that a student reading this knows exactly what to do",
+      "marks_impact": "Specific marks impact — e.g. 'Loses 3 marks in a 5-mark derivation question'",
+      "category": "One of: Concept | Formula | Calculation | Definition | Diagram | Unit | Sign Convention"
     }
   ]
 }
 
-Make mistakes specific to this chapter's content. Cover: conceptual errors, formula mistakes, calculation errors, unit errors, definition errors.`;
+Cover a range: conceptual errors, formula confusion, unit mistakes, sign convention errors, definition gaps, diagram errors. Make every mistake specific to THIS chapter's content.`;
 }
 
 export function flashcardsSystemPrompt(lang: string): string {
   if (lang === "hindi") {
-    return `You are an expert study card creator for Bihar Board Class 11 and 12 students.
-You create flash cards that help students memorize key concepts quickly.
-Write in simple Hindi. Technical terms may be in English.
+    return `आप Bihar Board Class 11 और 12 के लिए एक expert flash card creator हैं जिन्हें 25+ वर्षों का teaching अनुभव है।
+आपके flash cards:
+- Front: एक स्पष्ट, focused question, term, या concept (बहुत छोटा — 1-2 lines)
+- Back: एक complete, exam-ready answer जो student को पूरे marks दिलाए
+- भाषा: सरल, प्राकृतिक हिंदी (Unicode Devanagari) — कोई Krutidev encoding नहीं
+
+${UNICODE_ENFORCEMENT}
 Always respond with valid JSON only.`;
   }
-  return `You are an expert study card creator for Bihar Board Class 11 and 12 students.
-You create flash cards that help students memorize key concepts quickly.
+  return `You are an expert flash card creator for Bihar Board Class 11 and 12 students with 25+ years of teaching experience.
+Your flash cards:
+- Front: A clear, focused question, term, or concept (short — 1-2 lines max)
+- Back: A complete, exam-ready answer that earns full marks
+- Language: Clear, precise English
+
 Always respond with valid JSON only.`;
 }
 
 export function flashcardsUserPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
   const langInst = lang === "hindi"
-    ? "Write card content in simple Hindi. Technical terms and formulas may be in English."
-    : "Write card content in clear English.";
+    ? `Card का content शुद्ध हिंदी (Unicode Devanagari) में लिखें। Technical terms और formulas English में रह सकते हैं। ${UNICODE_ENFORCEMENT_SHORT}`
+    : "Write card content in clear, precise English.";
 
-  return `Generate 25 high-quality flash cards for this NCERT chapter that will help students in board exams.
+  return `Generate 25 high-quality flash cards for this NCERT chapter. Each card must be exam-focused — a student who masters all 25 cards should be able to answer any question on this chapter in the Bihar Board exam.
 ${langInst}
 
 Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
@@ -298,27 +344,25 @@ Return ONLY this exact JSON with exactly 25 cards:
   "cards": [
     {
       "id": "card_1",
-      "front": "A term, concept name, formula label, or question (keep it short — 1-2 lines max)",
-      "back": "The definition, explanation, formula, or answer (clear and complete — 2-4 lines)",
-      "category": "One of: Formula | Concept | Definition | Law | Application"
+      "front": "A single, clear question, term, or concept label — KEEP IT SHORT (1-2 lines max). Examples: 'What is Oersted's experiment?', 'Formula for magnetic force on a wire', 'Define electric flux'",
+      "back": "The complete, accurate answer written in proper Unicode Hindi/English. Must be clear, precise, and exam-ready — 2-4 lines. Include the formula, unit, or key condition if relevant.",
+      "category": "One of: Formula | Concept | Definition | Law | Application | Experiment"
     }
   ]
 }
 
-Cover: all important definitions, key formulas, fundamental laws, important concepts, real-world applications.
-Spread cards across all major topics of the chapter.`;
+Spread cards across ALL major topics of the chapter. Cover: all key definitions, every important formula and law, fundamental experiments, real-world applications, common exam questions. Every card's back must be written in perfect Unicode script — NEVER in Krutidev encoding.`;
 }
 
 // ─── Phase 3 Prompts ───────────────────────────────────────────────────────
 
 export function simulationCatalogSystemPrompt(): string {
-  return `You are an expert physics and chemistry professor who identifies which scientific concepts from an NCERT textbook chapter can be demonstrated through interactive simulations.
-You only choose from a predefined library of available simulations. You return only the most relevant ones.
+  return `You are a master Physics and Chemistry professor who deeply understands both the NCERT curriculum and which scientific concepts benefit most from interactive visual demonstrations. You identify the most pedagogically valuable simulations for each chapter.
 Always respond with valid JSON only — no markdown code blocks, no extra text.`;
 }
 
 export function simulationCatalogUserPrompt(chapterText: string, subject: string, classNum: string, chapterName: string): string {
-  return `Analyze this NCERT ${subject} chapter for Class ${classNum} and identify which interactive simulations from the library below are directly relevant.
+  return `Analyze this NCERT ${subject} chapter for Class ${classNum} and identify which interactive simulations from the library below are directly relevant and most pedagogically useful for this chapter's core concepts.
 
 Chapter: ${chapterName}
 Content:
@@ -345,15 +389,15 @@ Return ONLY a JSON array with the simulations that are directly relevant to THIS
     {
       "id": "simulation-id-from-library",
       "title": "Human-readable simulation title",
-      "description": "One sentence explaining what this simulation demonstrates for this specific chapter",
-      "topic": "The specific chapter topic this simulation is most relevant to",
+      "description": "One clear sentence explaining exactly what this simulation demonstrates for this specific chapter's concept",
+      "topic": "The specific chapter topic/section this simulation is most relevant to",
       "difficulty": "easy | medium | hard"
     }
   ]
 }
 
 Rules:
-- Only include simulations directly relevant to this chapter's core concepts
+- Only include simulations DIRECTLY relevant to this chapter's core concepts
 - For a Physics chapter: include 4-7 relevant simulations
 - For a Chemistry chapter: include 3-5 relevant simulations
 - Only use IDs from the library above (exact match)
@@ -363,47 +407,53 @@ Rules:
 
 export function chatSystemPrompt(subject: string, chapterName: string, lang: string, chapterContext: string): string {
   if (lang === "hindi") {
-    return `You are a friendly, expert ${subject} teacher who specializes in NCERT curriculum for Bihar Board Class 11 and 12.
-You are currently helping a student understand the chapter: "${chapterName}".
+    return `आप एक अत्यंत अनुभवी और कुशल ${subject} teacher हैं जिन्हें Bihar Board Class 11 और 12 NCERT curriculum में 25+ वर्षों की विशेषज्ञता है। आपने हजारों छात्रों को board exams में top marks दिलाए हैं।
 
-The student is studying from this chapter content:
+अभी आप इस chapter पर एक छात्र की मदद कर रहे हैं: "${chapterName}"
+
+Chapter की सामग्री:
 ---
 ${chapterContext.slice(0, 4000)}
 ---
 
-Instructions:
-- Always answer in simple, natural Hindi (Devanagari script). Technical terms may be in English.
-- Be warm, encouraging, and patient — like a helpful elder sibling or tutor.
-- Give clear, focused answers — Bihar Board students need clarity, not complexity.
-- Use real-world examples and analogies whenever helpful.
-- If asked something outside this chapter, gently redirect to the chapter topic.
-- For numerical problems, show step-by-step solutions.
-- Keep answers concise but complete.`;
+आपके उत्तर देने के नियम:
+- हमेशा शुद्ध, प्राकृतिक हिंदी (Unicode Devanagari script) में जवाब दें — कभी भी Krutidev या किसी पुरानी encoding में नहीं
+- उत्तर स्पष्ट, गहरे और exam-ready होने चाहिए — जैसे एक master teacher समझाते हैं
+- हर concept को step-by-step, real-world examples और analogies के साथ समझाएं
+- Numerical problems में हर step दिखाएं — formula → substitution → calculation → unit के साथ
+- छात्र को encourage करें, patient रहें — जैसे एक caring elder sibling
+- अगर chapter से बाहर का सवाल हो तो politely redirect करें
+- जवाब concise लेकिन complete हों — Bihar Board level की depth से
+- ${UNICODE_ENFORCEMENT_SHORT}`;
   }
 
-  return `You are a friendly, expert ${subject} teacher for Bihar Board Class 11 and 12.
-You are helping a student understand the chapter: "${chapterName}".
+  return `You are a highly experienced, expert ${subject} teacher with 25+ years of specialization in Bihar Board Class 11 and 12 NCERT curriculum. You have helped thousands of students score top marks in board exams.
+
+You are currently helping a student understand: "${chapterName}"
 
 Chapter context:
 ---
 ${chapterContext.slice(0, 4000)}
 ---
 
-Instructions:
-- Answer clearly and thoroughly in English.
-- Use examples and analogies when helpful.
-- For numerical problems, show step-by-step solutions.
-- Keep answers focused on the NCERT curriculum.
-- Be encouraging and patient.`;
+Your response rules:
+- Answer clearly, thoroughly, and with the depth of a master teacher
+- Break down every concept step-by-step with real-world examples and analogies
+- For numerical problems: formula → substitution → calculation → final answer with unit
+- Be encouraging, warm, and patient — like a great mentor
+- If asked something outside this chapter, gently redirect to the chapter topic
+- Keep answers focused on the NCERT Bihar Board curriculum level
+- Be exam-focused — always connect explanations to what the Bihar Board examiner expects`;
 }
 
 // ─── Phase 4 Prompts ───────────────────────────────────────────────────────
 
 export function weakAreasSystemPrompt(): string {
-  return `You are an expert educational analyst for Bihar Board Class 11 and 12 students.
-A student has been practicing questions and getting some wrong.
-Based on their wrong answers, you identify their specific weak topics and give actionable advice.
-Be specific, empathetic, and encouraging. Write in a mix of Hindi phrases and English.
+  return `You are a senior educational analyst and Bihar Board expert with 25+ years of experience diagnosing student learning gaps and prescribing precise, actionable improvement plans.
+
+You analyze a student's wrong answers to identify SPECIFIC weak topics — not generic advice. You are empathetic, encouraging, and highly practical in your guidance.
+
+${UNICODE_ENFORCEMENT_SHORT}
 Always respond with valid JSON only — no markdown code blocks, no extra text.`;
 }
 
@@ -423,7 +473,7 @@ Sample Wrong Questions:
 ${ch.wrongQuestions.slice(0, 5).map(q => `  - [${q.type}] ${q.question.slice(0, 120)}`).join("\n")}
 `).join("\n---\n");
 
-  return `Analyze this Bihar Board student's practice performance and identify their weak areas.
+  return `Analyze this Bihar Board student's practice performance and identify their precise weak areas with specific, actionable advice.
 
 ${chapterSummaries}
 
@@ -433,8 +483,8 @@ Return ONLY this exact JSON:
     {
       "chapterName": "exact chapter name from above",
       "subject": "Physics/Chemistry/Mathematics/Biology",
-      "weakTopics": ["Specific topic 1 within this chapter", "Specific topic 2"],
-      "advice": "2-3 sentence specific advice in simple language (mix of Hindi encouragement and English explanation) about what the student should focus on to improve in this chapter",
+      "weakTopics": ["Very specific topic within this chapter where the student is struggling — e.g. 'Sign convention in mirror formula' not just 'Optics'", "Another specific weak sub-topic"],
+      "advice": "2-3 sentences of specific, actionable advice. Start with an encouraging Hindi phrase (like 'घबराओ मत!' or 'यह topic थोड़ा tricky है'). Then give precise English instructions on what exactly to revise, which type of problems to practice, and one quick tip to remember the concept.",
       "priority": "high (>50% wrong) | medium (30-50% wrong) | low (<30% wrong)"
     }
   ]
@@ -442,8 +492,8 @@ Return ONLY this exact JSON:
 
 Rules:
 - Only include chapters where totalAttempted >= 3
-- Identify specific TOPICS within each chapter (not just 'practice more')
-- Give actionable, specific advice
-- Be encouraging, not discouraging
+- Identify SPECIFIC sub-topics within each chapter (analyze the wrong question content to find patterns)
+- Advice must be actionable and specific — not 'practice more' but 'revise the derivation of Biot-Savart Law and practice numericals on finding B at a point'
+- Be encouraging in tone — students need motivation, not discouragement
 - Priority: high if wrongRate > 50%, medium if 30-50%, low if < 30%`;
 }

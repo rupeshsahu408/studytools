@@ -36,8 +36,9 @@ export async function callNvidia(
   const response = await client.chat.completions.create({
     model: MODEL,
     messages,
-    temperature: 0.7,
-    max_tokens: options?.maxTokens ?? 4096,
+    temperature: 0.3,
+    top_p: 0.9,
+    max_tokens: options?.maxTokens ?? 6144,
   });
   return response.choices[0]?.message?.content || "";
 }
