@@ -370,19 +370,21 @@ export function formulasSystemPrompt(): string {
   return `You are a highly experienced professor of Physics, Chemistry, and Mathematics specializing in NCERT curriculum for Bihar Board Class 11 and 12. You have deep mastery of every formula, equation, derivation, and mathematical relationship in the NCERT syllabus.
 
 You extract formulas with complete precision:
-- Correct LaTeX notation
-- Every variable explained clearly
-- Correct SI units
+- The "latex" field: write the raw LaTeX expression without wrapping $ signs (e.g., F = ma, not $F = ma$) — KaTeX renders it directly
+- The "plain_text" field: plain readable notation (e.g., F = m × a)
+- Every variable explained clearly with SI units
 - Derivation hints that help students understand, not just memorize
+- All explanatory text (name, derivation_hint, variable meanings) in natural language — no $...$ syntax
 
 ${UNICODE_ENFORCEMENT_SHORT}
+${FORMULA_PROTECTION_SHORT}
 Always respond with valid JSON only — no markdown code blocks, no extra text.`;
 }
 
 export function formulasUserPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
   const langInst = lang === "hindi"
-    ? `Formula के नाम, variable का अर्थ, SI units, और derivation hints सरल हिंदी (Unicode Devanagari) में लिखें। LaTeX जैसा है वैसा रखें। ${UNICODE_ENFORCEMENT_SHORT}`
-    : "Write all formula names, variable meanings, SI units, and derivation hints in clear English.";
+    ? `Formula के नाम, variable का अर्थ, SI units, और derivation hints सरल हिंदी (Unicode Devanagari) में लिखें। "latex" field में raw LaTeX expression लिखें — $ signs के बिना (e.g., F = ma, not $F = ma$)। ${UNICODE_ENFORCEMENT_SHORT} ${FORMULA_PROTECTION_SHORT}`
+    : "Write all formula names, variable meanings, SI units, and derivation hints in clear English. In the \"latex\" field write the raw expression without wrapping $ signs (e.g., F = ma not $F = ma$).";
 
   return `Extract EVERY formula, equation, law, constant, and mathematical relationship from this NCERT chapter. Do not miss any — even minor ones. A Bihar Board student must have the complete formula sheet.
 ${langInst}
@@ -468,10 +470,12 @@ export function mistakesSystemPrompt(lang: string): string {
     return `आप Bihar Board के एक वरिष्ठ परीक्षा विशेषज्ञ और कोच हैं जिन्होंने 25+ वर्षों में हजारों answer sheets जाँची हैं। आप जानते हैं कि छात्र कहाँ गलती करते हैं, क्यों करते हैं, और उन्हें कैसे सुधारा जाए।
 आपकी भाषा: सरल, सीधी हिंदी (Unicode Devanagari)। छात्रों को डराना नहीं, सुधारना है।
 ${UNICODE_ENFORCEMENT_SHORT}
+${FORMULA_PROTECTION_SHORT}
 Always respond with valid JSON only.`;
   }
   return `You are a senior Bihar Board examiner and exam coach with 25+ years of experience checking thousands of answer sheets. You know exactly where students lose marks, why they make mistakes, and how to fix them.
 Your tone: direct, helpful, and encouraging — the goal is to improve, not discourage.
+Write formulas in plain text notation (e.g., F = qvB sin θ) — do NOT use LaTeX $...$ syntax.
 Always respond with valid JSON only.`;
 }
 
