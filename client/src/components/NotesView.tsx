@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, ChevronUp, Star, Lightbulb, BookOpen,
   FlaskConical, GitBranch, Image, Hash, ChevronRight,
-  RefreshCw, Loader2,
+  RefreshCw, Loader2, BarChart2,
 } from "lucide-react";
 
 interface SubTopic {
@@ -50,12 +50,65 @@ interface NotesViewProps {
   regenerating?: boolean;
 }
 
+function countWords(str: string | undefined): number {
+  if (!str) return 0;
+  return str.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function getDepthInfo(wordCount: number): { label: string; sublabel: string; pillClass: string; barWidth: string } {
+  if (wordCount < 1500) return {
+    label: "Basic",
+    sublabel: "Try regenerating for deeper coverage",
+    pillClass: "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400",
+    barWidth: "20%",
+  };
+  if (wordCount < 3000) return {
+    label: "Good",
+    sublabel: "Solid coverage",
+    pillClass: "bg-blue-50 dark:bg-blue-900/25 text-blue-600 dark:text-blue-400",
+    barWidth: "45%",
+  };
+  if (wordCount < 5000) return {
+    label: "Detailed",
+    sublabel: "Strong depth",
+    pillClass: "bg-green-50 dark:bg-green-900/25 text-green-700 dark:text-green-400",
+    barWidth: "70%",
+  };
+  return {
+    label: "In-depth",
+    sublabel: "Comprehensive coverage",
+    pillClass: "bg-violet-50 dark:bg-violet-900/25 text-violet-700 dark:text-violet-400",
+    barWidth: "100%",
+  };
+}
+
 export default function NotesView({ notes, onRead, onRegenerate, regenerating }: NotesViewProps) {
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(
     new Set(notes.topics?.[0]?.id ? [notes.topics[0].id] : [])
   );
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showDepthTooltip, setShowDepthTooltip] = useState(false);
   const calledOnRead = useRef(false);
+
+  const totalWords = useMemo(() => {
+    let count = 0;
+    count += countWords(notes.chapterOverview);
+    count += countWords(notes.summary);
+    notes.examTips?.forEach(t => { count += countWords(t); });
+    notes.topics?.forEach(topic => {
+      count += countWords(topic.content);
+      topic.subTopics?.forEach(st => { count += countWords(st.content); });
+      topic.keyPoints?.forEach(kp => { count += countWords(kp); });
+      topic.importantTerms?.forEach(it => { count += countWords(it.definition); });
+      topic.formulasUsed?.forEach(f => { count += countWords(f.explanation); });
+      topic.derivationSteps?.forEach(ds => { count += countWords(ds); });
+      count += countWords(topic.diagramDescription);
+      topic.examples?.forEach(ex => { count += countWords(ex); });
+    });
+    return count;
+  }, [notes]);
+
+  const depthInfo = useMemo(() => getDepthInfo(totalWords), [totalWords]);
 
   useEffect(() => {
     if (onRead && !calledOnRead.current) {
@@ -160,12 +213,66 @@ export default function NotesView({ notes, onRead, onRegenerate, regenerating }:
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-green-600" /> Chapter Notes
-          {notes.topics?.length > 0 && (
-            <span className="text-sm font-normal text-gray-400 ml-1">{notes.topics.length} sections</span>
-          )}
-        </h2>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-green-600" /> Chapter Notes
+            {notes.topics?.length > 0 && (
+              <span className="text-sm font-normal text-gray-400">{notes.topics.length} sections</span>
+            )}
+          </h2>
+
+          {/* Depth indicator pill */}
+          <div className="relative">
+            <button
+              onMouseEnter={() => setShowDepthTooltip(true)}
+              onMouseLeave={() => setShowDepthTooltip(false)}
+              onFocus={() => setShowDepthTooltip(true)}
+              onBlur={() => setShowDepthTooltip(false)}
+              className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full cursor-default select-none transition-colors ${depthInfo.pillClass}`}
+            >
+              <BarChart2 className="w-3 h-3" />
+              {depthInfo.label}
+              <span className="font-normal opacity-70">· {totalWords.toLocaleString()} words</span>
+            </button>
+
+            <AnimatePresence>
+              {showDepthTooltip && (
+                <motion.div
+                  initial={{ opacity: 0, y: 4, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 4, scale: 0.97 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute left-0 top-full mt-2 z-20 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl p-3"
+                >
+                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                    Notes Depth
+                  </p>
+                  {/* Mini progress bar */}
+                  <div className="h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-800 mb-2 overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: depthInfo.barWidth }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                      className={`h-full rounded-full ${
+                        depthInfo.label === "Basic" ? "bg-gray-400" :
+                        depthInfo.label === "Good" ? "bg-blue-500" :
+                        depthInfo.label === "Detailed" ? "bg-green-500" :
+                        "bg-violet-500"
+                      }`}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[10px] text-gray-400 mb-2.5">
+                    <span>Basic</span><span>Good</span><span>Detailed</span><span>In-depth</span>
+                  </div>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-snug">
+                    {depthInfo.sublabel}. Total content: <span className="font-semibold text-gray-700 dark:text-gray-300">{totalWords.toLocaleString()} words</span> across {notes.topics?.length ?? 0} sections.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
         <div className="flex items-center gap-3">
           <button onClick={expandAll} className="text-xs text-green-600 hover:underline">Expand All</button>
           <span className="text-gray-300 dark:text-gray-600">|</span>
