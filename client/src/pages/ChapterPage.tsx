@@ -11,7 +11,7 @@ import type { Chapter } from "../lib/firestore";
 import {
   generateFormulas, generateMindmap, generateMistakes,
   generateFlashcards, generateSimulationCatalog, regenerateQuestionBatch,
-  regenerateNotes, generateSummary,
+  regenerateNotes, generateSummary, generateExamPaper,
 } from "../lib/api";
 import { useProgress } from "../contexts/ProgressContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -110,6 +110,8 @@ export default function ChapterPage() {
   const [retryingBatch, setRetryingBatch] = useState<"A" | "B" | null>(null);
   const [regeneratingNotes, setRegeneratingNotes] = useState(false);
   const [regeneratingSummary, setRegeneratingSummary] = useState(false);
+  const [generatingExamPaper, setGeneratingExamPaper] = useState(false);
+  const [examPaperError, setExamPaperError] = useState<string | null>(null);
 
   const { user } = useAuth();
 
@@ -253,6 +255,33 @@ export default function ChapterPage() {
       setRegeneratingSummary(false);
     }
   }, [chapter, regeneratingSummary]);
+
+  const handleGenerateExamPaper = useCallback(async () => {
+    if (!chapter || generatingExamPaper) return;
+    setGeneratingExamPaper(true);
+    setExamPaperError(null);
+    try {
+      const { text, subject, classNum, chapterName, language } = chapter;
+      const data = await generateExamPaper(text, subject, classNum, chapterName, language || "english");
+      if (data && chapter.id) {
+        const paperData = { mcq: data.mcq || [], twoMarks: data.twoMarks || [], fiveMarks: data.fiveMarks || [] };
+        await updateChapterSection(chapter.id, "examPaper", paperData);
+        setChapter(prev => prev ? { ...prev, examPaper: paperData } : prev);
+      }
+    } catch (err: any) {
+      console.error("Error generating exam paper:", err);
+      setExamPaperError(err?.response?.data?.error || "Could not generate exam paper. Please try again.");
+    } finally {
+      setGeneratingExamPaper(false);
+    }
+  }, [chapter, generatingExamPaper]);
+
+  const handleResetExamPaper = useCallback(async () => {
+    if (!chapter?.id) return;
+    await updateChapterSection(chapter.id, "examPaper", null);
+    setChapter(prev => prev ? { ...prev, examPaper: null } : prev);
+    setExamPaperError(null);
+  }, [chapter]);
 
   // Progress tracking callbacks
   const handleNotesRead = useCallback(() => {
@@ -466,13 +495,17 @@ export default function ChapterPage() {
         );
 
       case "exampaper":
+        if (generatingExamPaper) return <SectionGenerating label="Exam Paper" />;
         return (
           <ExamPaperView
-            chapterText={chapter.text || ""}
             subject={chapter.subject}
             classNum={chapter.classNum}
             chapterName={chapter.chapterName}
-            language={chapter.language || "english"}
+            paper={(chapter.examPaper as any) || null}
+            generating={generatingExamPaper}
+            error={examPaperError}
+            onGenerate={handleGenerateExamPaper}
+            onReset={handleResetExamPaper}
           />
         );
 
@@ -645,18 +678,29 @@ export default function ChapterPage() {
               <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-3 mb-1.5">
                 Exam Tools
               </p>
-              {SIDEBAR_ITEMS.filter(s => s.phase === 6).map(item => (
-                <button key={item.key} onClick={() => switchSection(item.key)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-0.5 ${
-                    activeSection === item.key
-                      ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
-                  }`}>
-                  <item.icon className="w-4 h-4 flex-shrink-0" />
-                  <span className="flex-1 text-left">{item.label}</span>
-                  <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">PDF</span>
-                </button>
-              ))}
+              {SIDEBAR_ITEMS.filter(s => s.phase === 6).map(item => {
+                const isReady = !!(chapter as any).examPaper;
+                return (
+                  <button key={item.key} onClick={() => switchSection(item.key)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-0.5 ${
+                      activeSection === item.key
+                        ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    }`}>
+                    {generatingExamPaper
+                      ? <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin text-amber-500" />
+                      : <item.icon className="w-4 h-4 flex-shrink-0" />
+                    }
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {isReady && !generatingExamPaper && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                    )}
+                    {!isReady && !generatingExamPaper && (
+                      <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">PDF</span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </aside>

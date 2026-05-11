@@ -3,7 +3,6 @@ import {
   FileText, Download, Eye, EyeOff, RefreshCw, Loader2,
   Printer, CheckCircle2, BookOpen, Clock, Award,
 } from "lucide-react";
-import { generateExamPaper } from "../lib/api";
 
 interface MCQQuestion {
   id: string;
@@ -34,11 +33,14 @@ interface ExamPaperData {
 }
 
 interface Props {
-  chapterText: string;
   subject: string;
   classNum: string;
   chapterName: string;
-  language: string;
+  paper: ExamPaperData | null;
+  generating: boolean;
+  error: string | null;
+  onGenerate: () => void;
+  onReset: () => void;
 }
 
 const OPTION_LABELS = ["(A)", "(B)", "(C)", "(D)"];
@@ -276,34 +278,21 @@ function buildAnswerKeyHTML(
 </html>`;
 }
 
-export default function ExamPaperView({ chapterText, subject, classNum, chapterName, language }: Props) {
-  const [paper, setPaper] = useState<ExamPaperData | null>(null);
-  const [generating, setGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export default function ExamPaperView({ subject, classNum, chapterName, paper, generating, error, onGenerate, onReset }: Props) {
   const [showMCQAnswers, setShowMCQAnswers] = useState(false);
   const [schoolName, setSchoolName] = useState("Bihar Board — Practice Examination");
   const [examDate, setExamDate] = useState(() => new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" }));
   const [duration, setDuration] = useState("3 Hours / 3 घंटे");
   const paperRef = useRef<HTMLDivElement>(null);
 
-  const handleGenerate = async () => {
-    setGenerating(true);
-    setError(null);
+  const handleGenerate = () => {
     setShowMCQAnswers(false);
-    try {
-      const data = await generateExamPaper(chapterText, subject, classNum, chapterName, language);
-      setPaper(data);
-    } catch (err: any) {
-      setError(err?.response?.data?.error || "Could not generate exam paper. Please try again.");
-    } finally {
-      setGenerating(false);
-    }
+    onGenerate();
   };
 
   const handleReset = () => {
-    setPaper(null);
     setShowMCQAnswers(false);
-    setError(null);
+    onReset();
   };
 
   const meta = { schoolName, examDate, duration, subject, classNum, chapterName };
