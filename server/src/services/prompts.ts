@@ -868,10 +868,23 @@ export function questionsUserPrompt(chapterText: string, subject: string, classN
 
 export function examPaperMCQP1Prompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
   const isHindi = lang === "hindi";
+  const languageBlock = isHindi ? `LANGUAGE RULES (STRICTLY FOLLOW):
+- Question text and answer explanations → Write in clear, natural Hindi (Devanagari script)
+- Scientific/technical terms (e.g., Lorentz Force, Newton's Law, Coulomb's Law, Ohm's Law, Faraday's Law, etc.) → ALWAYS write in English, never translate to Hindi
+- All mathematical formulas and equations → ALWAYS write in standard English notation (e.g., F = qvB, E = mc², V = IR). NEVER write formulas using Hindi/Devanagari characters
+- Variable symbols → ALWAYS English letters (F, v, B, E, q, m, a, etc.)
+- Units of measurement → ALWAYS English (m/s, N, J, kg, Hz, mol, Pa, etc.)
+- Scientist/law names → ALWAYS English (Newton, Einstein, Coulomb, Lorentz, Faraday, Avogadro, etc.)
+- Chemical formulas and element symbols → ALWAYS English (H₂O, CO₂, NaCl, Fe, etc.)
+- Numbers → Standard Arabic numerals (1, 2, 3 — not Hindi numerals)
+- MCQ options containing formulas → ALWAYS in standard English mathematical notation
+EXAMPLE OF CORRECT STYLE: "लोरेंट्ज़ बल (Lorentz Force) का सूत्र क्या है?" with options like "(A) F = q(v × B)  (B) F = qvB + qE  (C) F = q(E + v × B)  (D) F = ma"` : `LANGUAGE: English`;
+
   return `You are generating questions for a formal Bihar Board exam paper.
 
 CHAPTER: ${chapterName} | ${subject} Class ${classNum}
-LANGUAGE: ${isHindi ? "Hindi (Devanagari script for explanations, technical terms in English)" : "English"}
+
+${languageBlock}
 
 Generate EXACTLY 50 high-quality MCQ questions (Batch 1: Theoretical + Conceptual + Reasoning focus).
 
@@ -880,13 +893,14 @@ DISTRIBUTION (Batch 1):
 - 15 Conceptual reasoning questions (why/how/what happens if)
 - 15 Reasoning-based questions (compare, contrast, identify)
 
-RULES:
+QUALITY RULES:
 - Every question must be clearly answerable from the chapter
 - Each question has exactly 4 options (A, B, C, D)
 - Exactly one correct answer per question
 - No repetition across questions
 - Questions must cover different topics of the chapter (full coverage)
 - Difficulty: 40% easy, 40% medium, 20% hard
+- Questions and options must be clean, professional, and properly formatted
 
 Return ONLY valid JSON:
 {
@@ -907,10 +921,23 @@ ${chapterText.slice(0, 12000)}`;
 
 export function examPaperMCQP2Prompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
   const isHindi = lang === "hindi";
+  const languageBlock = isHindi ? `LANGUAGE RULES (STRICTLY FOLLOW):
+- Question text and answer explanations → Write in clear, natural Hindi (Devanagari script)
+- Scientific/technical terms (e.g., Lorentz Force, Newton's Law, Coulomb's Law, Ohm's Law, Faraday's Law, etc.) → ALWAYS write in English, never translate to Hindi
+- All mathematical formulas and equations → ALWAYS write in standard English notation (e.g., F = qvB, E = mc², V = IR). NEVER write formulas using Hindi/Devanagari characters
+- Variable symbols → ALWAYS English letters (F, v, B, E, q, m, a, etc.)
+- Units of measurement → ALWAYS English (m/s, N, J, kg, Hz, mol, Pa, etc.)
+- Scientist/law names → ALWAYS English (Newton, Einstein, Coulomb, Lorentz, Faraday, Avogadro, etc.)
+- Chemical formulas and element symbols → ALWAYS English (H₂O, CO₂, NaCl, Fe, etc.)
+- Numbers → Standard Arabic numerals (1, 2, 3 — not Hindi numerals)
+- MCQ options containing formulas → ALWAYS in standard English mathematical notation
+EXAMPLE OF CORRECT STYLE: "यदि एक आवेश q, वेग v से चुंबकीय क्षेत्र B में गति करे, तो Lorentz Force F = q(v × B) होगा।"` : `LANGUAGE: English`;
+
   return `You are generating questions for a formal Bihar Board exam paper.
 
 CHAPTER: ${chapterName} | ${subject} Class ${classNum}
-LANGUAGE: ${isHindi ? "Hindi (Devanagari script for explanations, technical terms in English)" : "English"}
+
+${languageBlock}
 
 Generate EXACTLY 50 high-quality MCQ questions (Batch 2: Application + Numerical + Scenario focus).
 
@@ -919,13 +946,14 @@ DISTRIBUTION (Batch 2):
 - 15 Numerical/calculation questions (where applicable)
 - 15 Scenario/case-based questions (given a situation, what happens?)
 
-RULES:
+QUALITY RULES:
 - Every question must be clearly answerable from the chapter
 - Each question has exactly 4 options (A, B, C, D)
 - Exactly one correct answer per question
 - No repetition — these must be DIFFERENT from Batch 1 questions
 - Questions must cover different topics of the chapter (full coverage)
 - Difficulty: 30% easy, 40% medium, 30% hard
+- Questions and options must be clean, professional, and properly formatted
 
 Return ONLY valid JSON:
 {
@@ -946,10 +974,22 @@ ${chapterText.slice(0, 12000)}`;
 
 export function examPaperTwoMarkPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
   const isHindi = lang === "hindi";
+  const languageBlock = isHindi ? `LANGUAGE RULES (STRICTLY FOLLOW):
+- Questions and model answers → Write in clear, natural Hindi (Devanagari script)
+- Scientific/technical terms (e.g., Lorentz Force, Newton's Law, Coulomb's Law, Ohm's Law, Faraday's Law, etc.) → ALWAYS write in English, never translate to Hindi
+- All mathematical formulas and equations → ALWAYS write in standard English notation (e.g., F = qvB, E = mc², V = IR). NEVER write formulas using Hindi/Devanagari characters
+- Variable symbols → ALWAYS English letters (F, v, B, E, q, m, a, etc.)
+- Units of measurement → ALWAYS English (m/s, N, J, kg, Hz, mol, Pa, etc.)
+- Scientist/law names → ALWAYS English (Newton, Einstein, Coulomb, Lorentz, Faraday, Avogadro, etc.)
+- Chemical formulas and element symbols → ALWAYS English (H₂O, CO₂, NaCl, Fe, etc.)
+- Numbers → Standard Arabic numerals (1, 2, 3 — not Hindi numerals)
+EXAMPLE OF CORRECT STYLE: "Lorentz Force को परिभाषित करें।" with answer "Lorentz Force वह बल है जो किसी आवेशित कण पर विद्युत क्षेत्र E और चुंबकीय क्षेत्र B के कारण लगता है। इसका सूत्र F = q(E + v × B) है।"` : `LANGUAGE: English`;
+
   return `You are generating short-answer questions for a formal Bihar Board exam paper.
 
 CHAPTER: ${chapterName} | ${subject} Class ${classNum}
-LANGUAGE: ${isHindi ? "Hindi (mix: Devanagari for explanations, English for technical terms)" : "English"}
+
+${languageBlock}
 
 Generate EXACTLY 20 two-mark short-answer questions. These questions must cover the entire chapter with full depth.
 
@@ -964,6 +1004,7 @@ ANSWER QUALITY:
 - Answer must be worth exactly 2 marks
 - Clear, student-friendly language
 - No shallow or incomplete answers
+- Questions and answers must be clean, professional, and properly formatted
 
 Return ONLY valid JSON:
 {
@@ -983,10 +1024,22 @@ ${chapterText.slice(0, 10000)}`;
 
 export function examPaperFiveMarkPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
   const isHindi = lang === "hindi";
+  const languageBlock = isHindi ? `LANGUAGE RULES (STRICTLY FOLLOW):
+- Questions and model answers → Write in clear, natural Hindi (Devanagari script)
+- Scientific/technical terms (e.g., Lorentz Force, Newton's Law, Coulomb's Law, Ohm's Law, Faraday's Law, etc.) → ALWAYS write in English, never translate to Hindi
+- All mathematical formulas and equations → ALWAYS write in standard English notation (e.g., F = qvB, E = mc², V = IR). NEVER write formulas using Hindi/Devanagari characters
+- Variable symbols → ALWAYS English letters (F, v, B, E, q, m, a, etc.)
+- Units of measurement → ALWAYS English (m/s, N, J, kg, Hz, mol, Pa, etc.)
+- Scientist/law names → ALWAYS English (Newton, Einstein, Coulomb, Lorentz, Faraday, Avogadro, etc.)
+- Chemical formulas and element symbols → ALWAYS English (H₂O, CO₂, NaCl, Fe, etc.)
+- Numbers → Standard Arabic numerals (1, 2, 3 — not Hindi numerals)
+EXAMPLE OF CORRECT STYLE: "Lorentz Force का विस्तार से वर्णन करें।" with answer in Hindi but formulas written as "F = q(E + v × B)" in English notation.` : `LANGUAGE: English`;
+
   return `You are generating long-answer questions for a formal Bihar Board exam paper.
 
 CHAPTER: ${chapterName} | ${subject} Class ${classNum}
-LANGUAGE: ${isHindi ? "Hindi (Devanagari for explanations, English for technical terms/formulas)" : "English"}
+
+${languageBlock}
 
 Generate EXACTLY 6 five-mark long-answer questions. These are the most important questions in the paper.
 
@@ -1004,6 +1057,7 @@ ANSWER QUALITY (critical):
 - Answers must feel like a model answer written by a Bihar Board topper
 - Include: explanation, examples, formulas (where applicable), conclusion
 - No shallow, short, or incomplete answers
+- Questions and answers must be clean, professional, and properly formatted
 
 Return ONLY valid JSON:
 {
