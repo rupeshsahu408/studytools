@@ -5,7 +5,11 @@ const krutidevToUnicode = require("@anthro-ai/krutidev-unicode");
 
 export async function extractTextFromPDF(filePath: string): Promise<string> {
   const dataBuffer = fs.readFileSync(filePath);
-  const data = await pdfParse(dataBuffer);
+  // max: 0 explicitly means "no page limit — parse ALL pages"
+  const data = await pdfParse(dataBuffer, { max: 0 });
+  const pageCount = data.numpages ?? "unknown";
+  const charCount = (data.text || "").length;
+  console.log(`[pdf] Extracted ${pageCount} pages | ${charCount} characters from PDF`);
   return data.text || "";
 }
 
