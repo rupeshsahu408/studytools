@@ -36,3 +36,55 @@ export async function callNvidia(
   });
   return response.choices[0]?.message?.content || "";
 }
+
+// ─── Model Health Check ──────────────────────────────────────────────────────
+// Sends a minimal 1-token request to verify the model is live.
+// Returns a status object — never throws.
+export interface ModelHealthResult {
+  ok: boolean;
+  model: string;
+  latencyMs: number | null;
+  error: string | null;
+  checkedAt: string;
+}
+
+export async function checkModelHealth(): Promise<ModelHealthResult> {
+  const checkedAt = new Date().toISOString();
+
+  if (!process.env.NVIDIA_API_KEY) {
+    return { ok: false, model: MODEL, latencyMs: null, error: "NVIDIA_API_KEY not set", checkedAt };
+  }
+
+  const start = Date.now();
+  try {
+    const client = getClient();
+    await client.chat.completions.create({
+      model: MODEL,
+      messages: [{ role: "user", content: "hi" }],
+      max_tokens: 1,
+    });
+    return { ok: true, model: MODEL, latencyMs: Date.now() - start, error: null, checkedAt };
+  } catch (err: any) {
+    const status = err?.status ?? err?.statusCode ?? null;
+    const msg =
+      status === 410
+        ? `Model "${MODEL}" has been removed from NVIDIA NIM (410 Gone). Update MODEL in nvidia.ts.`
+        : status === 401
+        ? "NVIDIA_API_KEY is invalid or expired."
+        : status === 429
+        ? "NVIDIA API rate limit hit during health check."
+        : err?.message ?? "Unknown error";
+    return { ok: false, model: MODEL, latencyMs: Date.now() - start, error: msg, checkedAt };
+  }
+}
+
+// Run on startup — logs clearly so Render logs show the issue immediately
+export async function runStartupHealthCheck(): Promise<void> {
+  console.log(`[health] Checking NVIDIA NIM model: ${MODEL} ...`);
+  const result = await checkModelHealth();
+  if (result.ok) {
+    console.log(`[health] ✓ Model OK — ${result.latencyMs}ms`);
+  } else {
+    console.error(`[health] ✗ Model UNAVAILABLE — ${result.error}`);
+  }
+}

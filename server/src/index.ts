@@ -8,6 +8,7 @@ import uploadRouter from "./routes/upload";
 import generateRouter from "./routes/generate";
 import ncertRouter from "./routes/ncert";
 import chatRouter from "./routes/chat";
+import { MODEL, checkModelHealth, runStartupHealthCheck } from "./services/nvidia";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -55,7 +56,13 @@ app.get("/api/health", (_req, res) => {
     status: "ok",
     message: "Topper 2.0 API running",
     env: process.env.NODE_ENV || "development",
+    model: MODEL,
   });
+});
+
+app.get("/api/health/ai", async (_req, res) => {
+  const result = await checkModelHealth();
+  res.status(result.ok ? 200 : 503).json(result);
 });
 
 app.use("/api/upload", uploadRouter);
@@ -74,4 +81,5 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 
 app.listen(PORT, () => {
   console.log(`Topper 2.0 API running on port ${PORT}`);
+  runStartupHealthCheck();
 });
