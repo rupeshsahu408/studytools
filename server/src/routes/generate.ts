@@ -132,7 +132,8 @@ router.post("/notes", async (req, res) => {
   const notes = await callNvidiaWithRetry(
     notesSystemPrompt(lang),
     notesUserPrompt(text, subject, classNum, chapterName, lang),
-    { maxTokens: 8192 }
+    { maxTokens: 16384 },
+    3
   );
   res.json({ notes, language: lang });
 });
