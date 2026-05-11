@@ -60,7 +60,7 @@ router.post("/", (req, res, next) => {
     }
 
     try {
-      const rawText = await extractTextFromPDF(req.file.path);
+      const { text: rawText, pageCount } = await extractTextFromPDF(req.file.path);
       const cleanedText = cleanText(rawText);
 
       if (cleanedText.length < 100) {
@@ -82,6 +82,7 @@ router.post("/", (req, res, next) => {
         classNum,
         chapterName,
         language,
+        pageCount,
         textLength: cleanedText.length,
         text: cleanedText,
       });
@@ -127,7 +128,7 @@ router.post("/url", async (req, res, next) => {
     const buffer = await response.arrayBuffer();
     fs.writeFileSync(tempPath, Buffer.from(buffer));
 
-    const rawText = await extractTextFromPDF(tempPath);
+    const { text: rawText, pageCount } = await extractTextFromPDF(tempPath);
     const cleanedText = cleanText(rawText);
 
     if (cleanedText.length < 100) {
@@ -151,6 +152,7 @@ router.post("/url", async (req, res, next) => {
       classNum,
       chapterName,
       language,
+      pageCount,
       textLength: cleanedText.length,
       text: cleanedText,
     });

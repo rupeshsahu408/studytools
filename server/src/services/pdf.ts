@@ -3,14 +3,14 @@ import fs from "fs";
 const pdfParse = require("pdf-parse");
 const krutidevToUnicode = require("@anthro-ai/krutidev-unicode");
 
-export async function extractTextFromPDF(filePath: string): Promise<string> {
+export async function extractTextFromPDF(filePath: string): Promise<{ text: string; pageCount: number }> {
   const dataBuffer = fs.readFileSync(filePath);
   // max: 0 explicitly means "no page limit — parse ALL pages"
   const data = await pdfParse(dataBuffer, { max: 0 });
-  const pageCount = data.numpages ?? "unknown";
-  const charCount = (data.text || "").length;
-  console.log(`[pdf] Extracted ${pageCount} pages | ${charCount} characters from PDF`);
-  return data.text || "";
+  const pageCount: number = data.numpages ?? 0;
+  const text: string = data.text || "";
+  console.log(`[pdf] Extracted ${pageCount} pages | ${text.length} characters from PDF`);
+  return { text, pageCount };
 }
 
 // ─── Krutidev Detection ──────────────────────────────────────────────────────
