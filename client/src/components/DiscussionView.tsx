@@ -9,7 +9,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useProgress } from "../contexts/ProgressContext";
 import {
   getDiscussionPosts, createDiscussionPost, toggleUpvotePost, deleteDiscussionPost,
-  getDiscussionReplies, addDiscussionReply, toggleUpvoteReply,
+  getDiscussionReplies, addDiscussionReply, toggleUpvoteReply, createReplyNotification,
   type DiscussionPost, type DiscussionReply,
 } from "../lib/firestore";
 import { sendChatMessage } from "../lib/api";
@@ -57,6 +57,7 @@ function Avatar({ name, isAI = false, size = "sm" }: { name: string; isAI?: bool
 interface ReplyListProps {
   chapterId: string;
   postId: string;
+  postAuthorUid: string;
   currentUid: string;
   chapterName: string;
   subject: string;
@@ -67,7 +68,7 @@ interface ReplyListProps {
 }
 
 function ReplyList({
-  chapterId, postId, currentUid, chapterName, subject, language, chapterText, userName, replyCount
+  chapterId, postId, postAuthorUid, currentUid, chapterName, subject, language, chapterText, userName, replyCount
 }: ReplyListProps) {
   const [replies, setReplies] = useState<DiscussionReply[]>([]);
   const [expanded, setExpanded] = useState(false);
@@ -101,6 +102,11 @@ function ReplyList({
     try {
       await addDiscussionReply(chapterId, postId, currentUid, userName, text, false);
       setReplyText("");
+      // Notify the post author if it's a different user
+      if (postAuthorUid && postAuthorUid !== currentUid) {
+        createReplyNotification(postAuthorUid, chapterId, postId, userName, text)
+          .catch(console.warn);
+      }
       await loadReplies();
     } catch (e) {
       console.error(e);
@@ -442,6 +448,7 @@ export default function DiscussionView({
                 <ReplyList
                   chapterId={chapterId}
                   postId={post.id}
+                  postAuthorUid={post.uid}
                   currentUid={uid}
                   chapterName={chapterName}
                   subject={subject}

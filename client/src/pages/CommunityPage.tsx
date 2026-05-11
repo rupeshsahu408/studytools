@@ -13,7 +13,7 @@ import {
   getLeaderboard, getWeekKey,
   getClassById, getClassByInviteCode, getClassMembers, getSharedChapters,
   createClass, joinClass, leaveClass,
-  shareChapterToClass, removeSharedChapter,
+  shareChapterToClass, removeSharedChapter, markNotificationsRead,
   type LeaderboardEntry, type ClassRoom, type ClassMember, type SharedChapter,
 } from "../lib/firestore";
 import Navbar from "../components/Navbar";
@@ -685,6 +685,13 @@ export default function CommunityPage() {
   const { user } = useAuth();
   const { userData, chapters, refreshUserData } = useProgress();
   const [activeTab, setActiveTab] = useState<"leaderboard" | "class">("leaderboard");
+
+  // Clear unread notification badge when user opens community page
+  useEffect(() => {
+    if (user?.uid) {
+      markNotificationsRead(user.uid).catch(console.warn);
+    }
+  }, [user?.uid]);
 
   const school = userData?.profile?.school || "";
   const district = userData?.profile?.district || "";

@@ -2,6 +2,7 @@ import { db } from "./firebase";
 import {
   collection, doc, setDoc, getDoc, getDocs,
   deleteDoc, query, where, serverTimestamp, updateDoc, arrayUnion, arrayRemove,
+  onSnapshot, writeBatch,
 } from "firebase/firestore";
 
 // ─── Existing Types ──────────────────────────────────────────────────────────
@@ -572,4 +573,59 @@ export async function getDiscussionReplies(chapterId: string, postId: string): P
     const bTime = b.createdAt?.toMillis?.() ?? 0;
     return aTime - bTime;
   });
+}
+
+// ─── Phase 5 — Notifications ─────────────────────────────────────────────────
+
+export interface NotificationItem {
+  id: string;
+  type: "reply";
+  chapterId: string;
+  postId: string;
+  fromUserName: string;
+  preview: string;
+  read: boolean;
+  createdAt: any;
+}
+
+export async function createReplyNotification(
+  postAuthorUid: string,
+  chapterId: string,
+  postId: string,
+  fromUserName: string,
+  replyText: string
+): Promise<void> {
+  const ref = doc(collection(db, "users", postAuthorUid, "notifications"));
+  await setDoc(ref, {
+    type: "reply",
+    chapterId,
+    postId,
+    fromUserName: fromUserName || "Someone",
+    preview: replyText.slice(0, 80),
+    read: false,
+    createdAt: serverTimestamp(),
+  });
+}
+
+export async function markNotificationsRead(uid: string): Promise<void> {
+  const q = query(
+    collection(db, "users", uid, "notifications"),
+    where("read", "==", false)
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return;
+  const batch = writeBatch(db);
+  snap.docs.forEach(d => batch.update(d.ref, { read: true }));
+  await batch.commit();
+}
+
+export function onNotificationsSnapshot(
+  uid: string,
+  callback: (unreadCount: number) => void
+): () => void {
+  const q = query(
+    collection(db, "users", uid, "notifications"),
+    where("read", "==", false)
+  );
+  return onSnapshot(q, snap => callback(snap.docs.length), () => callback(0));
 }

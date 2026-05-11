@@ -1,13 +1,23 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Sun, Moon, LogOut, BarChart2, UserCircle, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
+import { onNotificationsSnapshot } from "../lib/firestore";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
+
+  // Real-time notification listener
+  useEffect(() => {
+    if (!user) { setUnreadNotifs(0); return; }
+    const unsub = onNotificationsSnapshot(user.uid, setUnreadNotifs);
+    return unsub;
+  }, [user]);
 
   const handleLogout = async () => {
     await logout();
@@ -34,14 +44,20 @@ export default function Navbar() {
 
           {user ? (
             <>
+              {/* Community link with notification badge */}
               <Link to="/community"
-                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                className={`relative w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
                   isActive("/community")
                     ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
                     : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                 }`}
                 title="Community">
                 <Users className="w-4 h-4" />
+                {unreadNotifs > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">
+                    {unreadNotifs > 9 ? "9+" : unreadNotifs}
+                  </span>
+                )}
               </Link>
 
               <Link to="/progress"
