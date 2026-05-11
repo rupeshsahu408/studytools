@@ -71,7 +71,6 @@ function LeaderboardTab({ currentUid, school, district }: { currentUid: string; 
   const weekLabel = weekOffset === 0 ? "This Week" : weekOffset === 1 ? "Last Week" : `${weekOffset} weeks ago`;
 
   const top3 = filtered.slice(0, 3);
-  const rest = filtered.slice(3);
 
   return (
     <div>
