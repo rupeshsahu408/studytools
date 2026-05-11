@@ -1,5 +1,12 @@
-import { motion } from "framer-motion";
-import { Clock, Zap, BookMarked, FlaskConical, Star, Target, Brain } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Zap, Clock, ChevronDown, ChevronUp, Star,
+  BookOpen, Target, Brain, CheckCircle2, AlertCircle,
+  TrendingUp, Flame, Eye, Award, List, Sparkles,
+} from "lucide-react";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Concept {
   id: string;
@@ -35,201 +42,429 @@ interface SummaryViewProps {
   subject: string;
 }
 
-const WEIGHT_STYLES = {
-  high:   { border: "border-l-violet-500", badge: "bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300", label: "High Priority" },
-  medium: { border: "border-l-blue-400",   badge: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",     label: "Medium"       },
-  low:    { border: "border-l-gray-300 dark:border-l-gray-600", badge: "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400", label: "Low" },
+// ── Weight config ─────────────────────────────────────────────────────────────
+
+const WEIGHT = {
+  high: {
+    label: "High Priority",
+    card: "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/60",
+    dot: "bg-red-500",
+    badge: "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400",
+    formula: "bg-white dark:bg-gray-900 border-red-200 dark:border-red-800/40",
+  },
+  medium: {
+    label: "Medium Priority",
+    card: "bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/50",
+    dot: "bg-amber-400",
+    badge: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400",
+    formula: "bg-white dark:bg-gray-900 border-amber-200 dark:border-amber-800/40",
+  },
+  low: {
+    label: "Good to Know",
+    card: "bg-gray-50 dark:bg-gray-800/30 border-gray-200 dark:border-gray-700/60",
+    dot: "bg-gray-400",
+    badge: "bg-gray-100 dark:bg-gray-700/60 text-gray-600 dark:text-gray-400",
+    formula: "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700",
+  },
 };
 
-function SectionHeading({ icon: Icon, label, color = "violet" }: { icon: any; label: string; color?: string }) {
-  const colorMap: Record<string, string> = {
-    violet: "text-violet-600 dark:text-violet-400",
-    amber:  "text-amber-600 dark:text-amber-400",
-    green:  "text-green-600 dark:text-green-400",
-    blue:   "text-blue-600 dark:text-blue-400",
-  };
+// ── Concept Card ──────────────────────────────────────────────────────────────
+
+function ConceptCard({ concept, index }: { concept: Concept; index: number }) {
+  const [open, setOpen] = useState(index < 4);
+  const w = WEIGHT[concept.examWeight] || WEIGHT.medium;
+
   return (
-    <div className="flex items-center gap-2 mb-4">
-      <Icon className={`w-4.5 h-4.5 flex-shrink-0 ${colorMap[color]}`} />
-      <h3 className={`text-sm font-bold uppercase tracking-wide ${colorMap[color]}`}>{label}</h3>
-    </div>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.08 + index * 0.035, duration: 0.35 }}
+      className={`rounded-2xl border overflow-hidden ${w.card}`}
+    >
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-start gap-3 px-4 py-3.5 text-left group"
+      >
+        <span className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${w.dot}`} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-bold text-gray-900 dark:text-white leading-snug">
+              {concept.title}
+            </span>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide ${w.badge}`}>
+              {w.label}
+            </span>
+          </div>
+          {!open && concept.keyFormula && (
+            <p className="text-xs text-gray-400 dark:text-gray-500 font-mono mt-0.5 truncate">
+              {concept.keyFormula}
+            </p>
+          )}
+        </div>
+        <span className="flex-shrink-0 text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors mt-0.5">
+          {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </span>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="body"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 space-y-3 pt-0.5">
+              <p className="text-[0.85rem] text-gray-700 dark:text-gray-300 leading-relaxed">
+                {concept.explanation}
+              </p>
+              {concept.keyFormula && (
+                <div className={`inline-flex items-center gap-2 border rounded-xl px-3 py-1.5 ${w.formula}`}>
+                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Formula</span>
+                  <span className="text-sm font-bold text-green-700 dark:text-green-400 font-mono">
+                    {concept.keyFormula}
+                  </span>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
+// ── Main Component ────────────────────────────────────────────────────────────
+
 export default function SummaryView({ summary, chapterName, subject }: SummaryViewProps) {
-  const fade = (delay: number) => ({
-    initial: { opacity: 0, y: 12 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.4, delay },
+  const [checkedPoints, setCheckedPoints] = useState<Set<number>>(new Set());
+  const [revisionComplete, setRevisionComplete] = useState(false);
+
+  const togglePoint = (i: number) => {
+    setCheckedPoints(prev => {
+      const next = new Set(prev);
+      next.has(i) ? next.delete(i) : next.add(i);
+      return next;
+    });
+  };
+
+  const totalPoints = summary.lastNightRevision?.length || 0;
+  const allChecked = checkedPoints.size === totalPoints && totalPoints > 0;
+
+  // Sort: high → medium → low
+  const sortedConcepts = [...(summary.concepts || [])].sort((a, b) => {
+    const order = { high: 0, medium: 1, low: 2 };
+    return (order[a.examWeight] ?? 1) - (order[b.examWeight] ?? 1);
   });
 
-  return (
-    <div className="max-w-3xl space-y-6">
+  const highCount = sortedConcepts.filter(c => c.examWeight === "high").length;
 
-      {/* ── Header ── */}
-      <motion.div {...fade(0)}>
-        <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 px-3 py-1 rounded-full">
-            <Zap className="w-3 h-3" /> One-Shot Revision
-          </span>
-          {summary.readTime && (
-            <span className="inline-flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
-              <Clock className="w-3 h-3" /> {summary.readTime} min read
-            </span>
-          )}
+  return (
+    <div className="max-w-3xl mx-auto px-1 sm:px-4 py-5 space-y-5 pb-20">
+
+      {/* ── Hero Header ──────────────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="relative bg-gradient-to-br from-green-600 via-green-600 to-emerald-700 rounded-3xl p-6 text-white overflow-hidden shadow-lg shadow-green-900/20"
+      >
+        {/* Decorative blobs */}
+        <div className="absolute top-0 right-0 w-44 h-44 bg-white/5 rounded-full -translate-y-14 translate-x-12 pointer-events-none" />
+        <div className="absolute bottom-0 left-8 w-20 h-20 bg-white/5 rounded-full translate-y-8 pointer-events-none" />
+
+        <div className="relative">
+          {/* Top badge */}
+          <div className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1 mb-4">
+            <Zap className="w-3 h-3 text-green-200" />
+            <span className="text-xs font-bold text-white uppercase tracking-widest">One-Shot Revision</span>
+          </div>
+
+          <h1 className="text-[1.25rem] font-black text-white leading-tight mb-1">{chapterName}</h1>
+          <p className="text-sm text-green-200 mb-5">{subject} · Bihar Board</p>
+
+          {/* Stats row */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1 border border-white/10">
+              <Clock className="w-3 h-3 text-green-200" />
+              <span className="text-xs font-semibold text-white">{summary.readTime || 6} min read</span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1 border border-white/10">
+              <BookOpen className="w-3 h-3 text-green-200" />
+              <span className="text-xs font-semibold text-white">{sortedConcepts.length} concepts</span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1 border border-white/10">
+              <Star className="w-3 h-3 text-green-200" />
+              <span className="text-xs font-semibold text-white">{summary.formulaSnapshot?.length || 0} formulas</span>
+            </div>
+            {highCount > 0 && (
+              <div className="flex items-center gap-1.5 bg-red-500/30 rounded-full px-3 py-1 border border-red-400/30">
+                <Flame className="w-3 h-3 text-red-200" />
+                <span className="text-xs font-semibold text-white">{highCount} high-priority</span>
+              </div>
+            )}
+          </div>
         </div>
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white leading-snug">
-          {chapterName}
-        </h2>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{subject} · Bihar Board</p>
       </motion.div>
 
-      {/* ── Chapter Essence ── */}
+      {/* ── Chapter Essence ──────────────────────────────────────────────── */}
       {summary.chapterEssence && (
-        <motion.div {...fade(0.05)}
-          className="border-l-4 border-violet-500 bg-violet-50 dark:bg-violet-950/20 rounded-r-2xl px-5 py-4">
-          <p className="text-[0.93rem] leading-relaxed text-gray-800 dark:text-gray-200 italic">
-            {summary.chapterEssence}
-          </p>
-        </motion.div>
-      )}
-
-      {/* ── Key Concepts ── */}
-      {summary.concepts && summary.concepts.length > 0 && (
-        <motion.div {...fade(0.1)}>
-          <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-5">
-            <SectionHeading icon={Brain} label="Key Concepts" color="violet" />
-            <div className="space-y-3">
-              {summary.concepts.map((concept, i) => {
-                const ws = WEIGHT_STYLES[concept.examWeight] || WEIGHT_STYLES.medium;
-                return (
-                  <motion.div key={concept.id || i}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 + i * 0.04 }}
-                    className={`border-l-4 ${ws.border} bg-gray-50 dark:bg-gray-800/50 rounded-r-xl px-4 py-3`}>
-                    <div className="flex items-start justify-between gap-2 mb-1.5">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white leading-snug">{concept.title}</p>
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${ws.badge}`}>
-                        {ws.label}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{concept.explanation}</p>
-                    {concept.keyFormula && (
-                      <div className="mt-2 inline-flex items-center gap-1.5 bg-white dark:bg-gray-900 border border-violet-200 dark:border-violet-800/40 rounded-lg px-3 py-1">
-                        <span className="text-violet-500 text-xs font-bold">f</span>
-                        <span className="text-xs font-mono font-semibold text-gray-800 dark:text-gray-200">{concept.keyFormula}</span>
-                      </div>
-                    )}
-                  </motion.div>
-                );
-              })}
-            </div>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05, duration: 0.35 }}
+          className="flex gap-3 bg-blue-50 dark:bg-blue-950/25 border border-blue-200 dark:border-blue-800/60 rounded-2xl p-4"
+        >
+          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+            <Brain className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1.5">Chapter Essence</p>
+            <p className="text-[0.875rem] text-gray-800 dark:text-gray-200 leading-relaxed">
+              {summary.chapterEssence}
+            </p>
           </div>
         </motion.div>
       )}
 
-      {/* ── Formula Snapshot ── */}
-      {summary.formulaSnapshot && summary.formulaSnapshot.length > 0 && (
-        <motion.div {...fade(0.15)}>
-          <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-5">
-            <SectionHeading icon={BookMarked} label="Formula Snapshot" color="green" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {summary.formulaSnapshot.map((item, i) => (
-                <motion.div key={i}
-                  initial={{ opacity: 0, scale: 0.97 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.15 + i * 0.03 }}
-                  className="bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-2.5">
-                  <p className="font-mono text-sm font-bold text-green-700 dark:text-green-400 leading-snug">{item.formula}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">{item.context}</p>
-                </motion.div>
-              ))}
-            </div>
+      {/* ── Key Concepts ─────────────────────────────────────────────────── */}
+      {sortedConcepts.length > 0 && (
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <Target className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+            <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Key Concepts</h2>
+            <span className="text-xs text-gray-400 dark:text-gray-600 ml-auto">
+              tap to expand
+            </span>
           </div>
-        </motion.div>
+          <div className="space-y-2">
+            {sortedConcepts.map((c, i) => (
+              <ConceptCard key={c.id || i} concept={c} index={i} />
+            ))}
+          </div>
+        </section>
       )}
 
-      {/* ── Exam Spotlight ── */}
+      {/* ── Formula Snapshot ─────────────────────────────────────────────── */}
+      {summary.formulaSnapshot?.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12, duration: 0.35 }}
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <Star className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+            <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Formula Snapshot</h2>
+          </div>
+
+          <div className="bg-gray-950 dark:bg-black rounded-2xl p-4 space-y-3 border border-gray-800">
+            {summary.formulaSnapshot.map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.14 + i * 0.028, duration: 0.3 }}
+                className="flex items-start gap-3 group"
+              >
+                <span className="flex-shrink-0 w-6 h-6 rounded-lg bg-green-500/15 border border-green-500/25 flex items-center justify-center mt-0.5">
+                  <span className="text-[10px] font-bold text-green-400">{i + 1}</span>
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[0.875rem] font-bold text-green-400 font-mono leading-snug break-words">
+                    {item.formula}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{item.context}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.section>
+      )}
+
+      {/* ── Exam Spotlight ───────────────────────────────────────────────── */}
       {summary.examSpotlight && (
-        <motion.div {...fade(0.2)}>
-          <div className="bg-amber-50 dark:bg-amber-950/15 border border-amber-200 dark:border-amber-800/30 rounded-2xl p-5">
-            <SectionHeading icon={Target} label="Exam Spotlight" color="amber" />
-            <div className="space-y-4">
-
-              {/* High-value topics */}
-              {summary.examSpotlight.highValueTopics?.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-2">High-Value Topics</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {summary.examSpotlight.highValueTopics.map((topic, i) => (
-                      <span key={i} className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-700/40 px-2.5 py-1 rounded-full font-medium">
-                        {topic}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Question patterns */}
-              {summary.examSpotlight.questionPatterns?.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-2">Expected Question Patterns</p>
-                  <ul className="space-y-1.5">
-                    {summary.examSpotlight.questionPatterns.map((pat, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
-                        <span className="w-5 h-5 bg-amber-200 dark:bg-amber-800/40 text-amber-700 dark:text-amber-400 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">{i + 1}</span>
-                        {pat}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Must memorize */}
-              {summary.examSpotlight.mustMemorize?.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-2">Must Memorize</p>
-                  <div className="space-y-1.5">
-                    {summary.examSpotlight.mustMemorize.map((item, i) => (
-                      <div key={i} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900/50 rounded-lg px-3 py-2">
-                        <Star className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
-                        <span className="font-medium">{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18, duration: 0.35 }}
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+            <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Exam Spotlight</h2>
           </div>
-        </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+            {/* High Value Topics */}
+            <div className="bg-red-50 dark:bg-red-950/25 border border-red-200 dark:border-red-800/60 rounded-2xl p-4">
+              <div className="flex items-center gap-1.5 mb-3">
+                <Flame className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
+                <span className="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-widest">High Value</span>
+              </div>
+              <ul className="space-y-2.5">
+                {summary.examSpotlight.highValueTopics?.map((t, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="w-4 h-4 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-[9px] font-bold text-red-600 dark:text-red-400">{i + 1}</span>
+                    </span>
+                    <span className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">{t}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Question Patterns */}
+            <div className="bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/50 rounded-2xl p-4">
+              <div className="flex items-center gap-1.5 mb-3">
+                <Eye className="w-3.5 h-3.5 text-purple-500 dark:text-purple-400" />
+                <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest">Question Patterns</span>
+              </div>
+              <ul className="space-y-2.5">
+                {summary.examSpotlight.questionPatterns?.map((p, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-400 dark:bg-purple-500 flex-shrink-0 mt-1.5" />
+                    <span className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">{p}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Must Memorize */}
+            <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-4">
+              <div className="flex items-center gap-1.5 mb-3">
+                <Award className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">Must Memorize</span>
+              </div>
+              <ul className="space-y-2">
+                {summary.examSpotlight.mustMemorize?.map((m, i) => (
+                  <li key={i} className="flex items-start gap-1.5">
+                    <AlertCircle className="w-3 h-3 text-amber-500 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                    <span className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed font-medium">{m}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+          </div>
+        </motion.section>
       )}
 
-      {/* ── Last Night Revision ── */}
-      {summary.lastNightRevision && summary.lastNightRevision.length > 0 && (
-        <motion.div {...fade(0.25)}>
-          <div className="bg-gray-900 dark:bg-gray-950 border border-gray-800 rounded-2xl p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <FlaskConical className="w-4 h-4 text-violet-400" />
-              <h3 className="text-sm font-bold uppercase tracking-wide text-violet-400">Last Night Revision</h3>
-              <span className="text-xs text-gray-500 ml-auto">10 must-know points</span>
+      {/* ── Last Night Revision ──────────────────────────────────────────── */}
+      {summary.lastNightRevision?.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.22, duration: 0.35 }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <List className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+              <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                Last Night Revision
+              </h2>
             </div>
-            <ol className="space-y-2.5">
-              {summary.lastNightRevision.slice(0, 10).map((point, i) => (
-                <motion.li key={i}
-                  initial={{ opacity: 0, x: -6 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.25 + i * 0.04 }}
-                  className="flex items-start gap-3 text-sm text-gray-200 leading-relaxed">
-                  <span className="w-6 h-6 bg-violet-900/50 border border-violet-700/40 text-violet-300 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                    {i + 1}
-                  </span>
-                  <span>{point}</span>
-                </motion.li>
-              ))}
-            </ol>
+            <span className="text-xs font-semibold text-gray-400 dark:text-gray-600">
+              {checkedPoints.size}/{totalPoints} checked
+            </span>
           </div>
-        </motion.div>
+
+          {/* Progress bar */}
+          <div className="h-1 bg-gray-100 dark:bg-gray-800 rounded-full mb-3 overflow-hidden">
+            <motion.div
+              className="h-full bg-green-500 rounded-full"
+              animate={{ width: `${totalPoints ? (checkedPoints.size / totalPoints) * 100 : 0}%` }}
+              transition={{ duration: 0.3 }}
+            />
+          </div>
+
+          <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden divide-y divide-gray-50 dark:divide-gray-800">
+            {summary.lastNightRevision.map((point, i) => {
+              const checked = checkedPoints.has(i);
+              return (
+                <motion.button
+                  key={i}
+                  onClick={() => togglePoint(i)}
+                  whileTap={{ scale: 0.995 }}
+                  className={`w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors duration-150 ${
+                    checked
+                      ? "bg-green-50/70 dark:bg-green-900/10"
+                      : "hover:bg-gray-50/80 dark:hover:bg-gray-800/40"
+                  }`}
+                >
+                  {/* Checkbox */}
+                  <span className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 transition-all duration-200 ${
+                    checked
+                      ? "bg-green-500 border-green-500"
+                      : "border-gray-300 dark:border-gray-600"
+                  }`}>
+                    {checked && (
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                      >
+                        <CheckCircle2 className="w-3 h-3 text-white" />
+                      </motion.span>
+                    )}
+                  </span>
+
+                  <div className="flex-1 min-w-0 flex items-start gap-2">
+                    <span className="text-[10px] font-bold text-gray-300 dark:text-gray-600 mt-0.5 w-4 flex-shrink-0">
+                      {i + 1}
+                    </span>
+                    <p className={`text-sm leading-relaxed transition-all duration-200 ${
+                      checked
+                        ? "text-gray-400 dark:text-gray-600 line-through decoration-gray-300 dark:decoration-gray-600"
+                        : "text-gray-800 dark:text-gray-200"
+                    }`}>
+                      {point}
+                    </p>
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+
+          {/* Completion state */}
+          <AnimatePresence>
+            {allChecked && !revisionComplete && (
+              <motion.div
+                initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                className="mt-3 flex items-center gap-4 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl px-5 py-4 shadow-lg shadow-green-900/20"
+              >
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-white">Revision Complete!</p>
+                  <p className="text-xs text-green-100 mt-0.5">
+                    All {totalPoints} points covered. You are exam ready!
+                  </p>
+                </div>
+                <button
+                  onClick={() => setRevisionComplete(true)}
+                  className="flex-shrink-0 bg-white/20 hover:bg-white/30 border border-white/20 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors"
+                >
+                  Done
+                </button>
+              </motion.div>
+            )}
+            {revisionComplete && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mt-3 text-center text-sm font-bold text-green-600 dark:text-green-400 py-2"
+              >
+                All the best for your exam!
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </motion.section>
       )}
 
     </div>
