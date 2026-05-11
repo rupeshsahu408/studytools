@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, Clock, ChevronDown, ChevronUp, Star,
   BookOpen, Target, Brain, CheckCircle2, AlertCircle,
   TrendingUp, Flame, Eye, Award, List, Sparkles,
+  Download,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -83,7 +84,7 @@ function ConceptCard({ concept, index }: { concept: Concept; index: number }) {
     >
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-start gap-3 px-4 py-3.5 text-left group"
+        className="w-full flex items-start gap-3 px-4 py-3.5 text-left group summary-print-hide-chevron"
       >
         <span className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${w.dot}`} />
         <div className="flex-1 min-w-0">
@@ -96,42 +97,49 @@ function ConceptCard({ concept, index }: { concept: Concept; index: number }) {
             </span>
           </div>
           {!open && concept.keyFormula && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 font-mono mt-0.5 truncate">
+            <p className="text-xs text-gray-400 dark:text-gray-500 font-mono mt-0.5 truncate summary-print-hide">
               {concept.keyFormula}
             </p>
           )}
         </div>
-        <span className="flex-shrink-0 text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors mt-0.5">
+        <span className="flex-shrink-0 text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors mt-0.5 summary-print-hide">
           {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </span>
       </button>
 
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            key="body"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: "easeInOut" }}
-            className="overflow-hidden"
-          >
-            <div className="px-4 pb-4 space-y-3 pt-0.5">
-              <p className="text-[0.85rem] text-gray-700 dark:text-gray-300 leading-relaxed">
-                {concept.explanation}
-              </p>
-              {concept.keyFormula && (
-                <div className={`inline-flex items-center gap-2 border rounded-xl px-3 py-1.5 ${w.formula}`}>
-                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Formula</span>
-                  <span className="text-sm font-bold text-green-700 dark:text-green-400 font-mono">
-                    {concept.keyFormula}
-                  </span>
-                </div>
-              )}
+      {/* Always rendered — shown via CSS on print even if open=false */}
+      <div className="concept-card-body" style={open ? {} : { display: "none" }}>
+        <div className="px-4 pb-4 space-y-3 pt-0.5">
+          <p className="text-[0.85rem] text-gray-700 dark:text-gray-300 leading-relaxed">
+            {concept.explanation}
+          </p>
+          {concept.keyFormula && (
+            <div className={`inline-flex items-center gap-2 border rounded-xl px-3 py-1.5 ${w.formula}`}>
+              <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Formula</span>
+              <span className="text-sm font-bold text-green-700 dark:text-green-400 font-mono">
+                {concept.keyFormula}
+              </span>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </div>
+      </div>
+
+      {/* Hidden collapsed body — only shown during print */}
+      {!open && (
+        <div className="concept-card-body" style={{ display: "none" }}>
+          <div className="px-4 pb-4 space-y-3 pt-0.5">
+            <p className="text-[0.85rem] text-gray-700 leading-relaxed">
+              {concept.explanation}
+            </p>
+            {concept.keyFormula && (
+              <div className="inline-flex items-center gap-2 border border-gray-200 rounded-xl px-3 py-1.5 bg-white">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Formula</span>
+                <span className="text-sm font-bold text-green-700 font-mono">{concept.keyFormula}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
@@ -141,6 +149,8 @@ function ConceptCard({ concept, index }: { concept: Concept; index: number }) {
 export default function SummaryView({ summary, chapterName, subject }: SummaryViewProps) {
   const [checkedPoints, setCheckedPoints] = useState<Set<number>>(new Set());
   const [revisionComplete, setRevisionComplete] = useState(false);
+  const [printing, setPrinting] = useState(false);
+  const printAreaRef = useRef<HTMLDivElement>(null);
 
   const togglePoint = (i: number) => {
     setCheckedPoints(prev => {
@@ -148,6 +158,15 @@ export default function SummaryView({ summary, chapterName, subject }: SummaryVi
       next.has(i) ? next.delete(i) : next.add(i);
       return next;
     });
+  };
+
+  const handlePrint = () => {
+    setPrinting(true);
+    // Small delay to let state render before print dialog opens
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => setPrinting(false), 800);
+    }, 120);
   };
 
   const totalPoints = summary.lastNightRevision?.length || 0;
@@ -162,7 +181,8 @@ export default function SummaryView({ summary, chapterName, subject }: SummaryVi
   const highCount = sortedConcepts.filter(c => c.examWeight === "high").length;
 
   return (
-    <div className="max-w-3xl mx-auto px-1 sm:px-4 py-5 space-y-5 pb-20">
+    <div id="summary-print-area" ref={printAreaRef}
+      className="max-w-3xl mx-auto px-1 sm:px-4 py-5 space-y-5 pb-20">
 
       {/* ── Hero Header ──────────────────────────────────────────────────── */}
       <motion.div
@@ -176,10 +196,29 @@ export default function SummaryView({ summary, chapterName, subject }: SummaryVi
         <div className="absolute bottom-0 left-8 w-20 h-20 bg-white/5 rounded-full translate-y-8 pointer-events-none" />
 
         <div className="relative">
-          {/* Top badge */}
-          <div className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1 mb-4">
-            <Zap className="w-3 h-3 text-green-200" />
-            <span className="text-xs font-bold text-white uppercase tracking-widest">One-Shot Revision</span>
+          {/* Top row: badge + download button */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1">
+              <Zap className="w-3 h-3 text-green-200" />
+              <span className="text-xs font-bold text-white uppercase tracking-widest">One-Shot Revision</span>
+            </div>
+
+            {/* ── Download / Print Button ── */}
+            <button
+              onClick={handlePrint}
+              disabled={printing}
+              className="summary-print-hide inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 active:bg-white/30 border border-white/20 rounded-full px-3 py-1.5 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              title="Save as PDF"
+            >
+              {printing ? (
+                <span className="w-3 h-3 border border-white/50 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Download className="w-3 h-3 text-white" />
+              )}
+              <span className="text-xs font-semibold text-white">
+                {printing ? "Opening..." : "Save PDF"}
+              </span>
+            </button>
           </div>
 
           <h1 className="text-[1.25rem] font-black text-white leading-tight mb-1">{chapterName}</h1>
@@ -235,7 +274,7 @@ export default function SummaryView({ summary, chapterName, subject }: SummaryVi
           <div className="flex items-center gap-2 mb-3">
             <Target className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
             <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Key Concepts</h2>
-            <span className="text-xs text-gray-400 dark:text-gray-600 ml-auto">
+            <span className="text-xs text-gray-400 dark:text-gray-600 ml-auto summary-print-hide">
               tap to expand
             </span>
           </div>
@@ -259,7 +298,7 @@ export default function SummaryView({ summary, chapterName, subject }: SummaryVi
             <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Formula Snapshot</h2>
           </div>
 
-          <div className="bg-gray-950 dark:bg-black rounded-2xl p-4 space-y-3 border border-gray-800">
+          <div className="formula-print-panel bg-gray-950 dark:bg-black rounded-2xl p-4 space-y-3 border border-gray-800">
             {summary.formulaSnapshot.map((item, i) => (
               <motion.div
                 key={i}
@@ -272,10 +311,10 @@ export default function SummaryView({ summary, chapterName, subject }: SummaryVi
                   <span className="text-[10px] font-bold text-green-400">{i + 1}</span>
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[0.875rem] font-bold text-green-400 font-mono leading-snug break-words">
+                  <p className="formula-text text-[0.875rem] font-bold text-green-400 font-mono leading-snug break-words">
                     {item.formula}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{item.context}</p>
+                  <p className="formula-context text-xs text-gray-500 mt-0.5 leading-relaxed">{item.context}</p>
                 </div>
               </motion.div>
             ))}
@@ -295,7 +334,7 @@ export default function SummaryView({ summary, chapterName, subject }: SummaryVi
             <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Exam Spotlight</h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="exam-spotlight-grid grid grid-cols-1 sm:grid-cols-3 gap-3">
 
             {/* High Value Topics */}
             <div className="bg-red-50 dark:bg-red-950/25 border border-red-200 dark:border-red-800/60 rounded-2xl p-4">
@@ -365,13 +404,13 @@ export default function SummaryView({ summary, chapterName, subject }: SummaryVi
                 Last Night Revision
               </h2>
             </div>
-            <span className="text-xs font-semibold text-gray-400 dark:text-gray-600">
+            <span className="text-xs font-semibold text-gray-400 dark:text-gray-600 summary-print-hide">
               {checkedPoints.size}/{totalPoints} checked
             </span>
           </div>
 
-          {/* Progress bar */}
-          <div className="h-1 bg-gray-100 dark:bg-gray-800 rounded-full mb-3 overflow-hidden">
+          {/* Progress bar — hidden in print */}
+          <div className="summary-print-hide h-1 bg-gray-100 dark:bg-gray-800 rounded-full mb-3 overflow-hidden">
             <motion.div
               className="h-full bg-green-500 rounded-full"
               animate={{ width: `${totalPoints ? (checkedPoints.size / totalPoints) * 100 : 0}%` }}
@@ -393,8 +432,8 @@ export default function SummaryView({ summary, chapterName, subject }: SummaryVi
                       : "hover:bg-gray-50/80 dark:hover:bg-gray-800/40"
                   }`}
                 >
-                  {/* Checkbox */}
-                  <span className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 transition-all duration-200 ${
+                  {/* Checkbox — hidden in print */}
+                  <span className={`summary-print-hide flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 transition-all duration-200 ${
                     checked
                       ? "bg-green-500 border-green-500"
                       : "border-gray-300 dark:border-gray-600"
@@ -427,7 +466,7 @@ export default function SummaryView({ summary, chapterName, subject }: SummaryVi
             })}
           </div>
 
-          {/* Completion state */}
+          {/* Completion state — hidden in print */}
           <AnimatePresence>
             {allChecked && !revisionComplete && (
               <motion.div
@@ -435,7 +474,7 @@ export default function SummaryView({ summary, chapterName, subject }: SummaryVi
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.97 }}
                 transition={{ type: "spring", stiffness: 300, damping: 24 }}
-                className="mt-3 flex items-center gap-4 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl px-5 py-4 shadow-lg shadow-green-900/20"
+                className="summary-print-hide mt-3 flex items-center gap-4 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl px-5 py-4 shadow-lg shadow-green-900/20"
               >
                 <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Sparkles className="w-5 h-5 text-white" />
@@ -458,7 +497,7 @@ export default function SummaryView({ summary, chapterName, subject }: SummaryVi
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="mt-3 text-center text-sm font-bold text-green-600 dark:text-green-400 py-2"
+                className="summary-print-hide mt-3 text-center text-sm font-bold text-green-600 dark:text-green-400 py-2"
               >
                 All the best for your exam!
               </motion.p>
@@ -466,6 +505,15 @@ export default function SummaryView({ summary, chapterName, subject }: SummaryVi
           </AnimatePresence>
         </motion.section>
       )}
+
+      {/* ── Print Footer (only visible in PDF) ───────────────────────────── */}
+      <div className="hidden print-only" style={{ display: "none" }}>
+        <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "12px", marginTop: "24px", textAlign: "center" }}>
+          <p style={{ fontSize: "10px", color: "#6b7280" }}>
+            Topper 2.0 · One-Shot Revision · {chapterName} · {subject} · Bihar Board
+          </p>
+        </div>
+      </div>
 
     </div>
   );

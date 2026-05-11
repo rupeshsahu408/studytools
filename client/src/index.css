@@ -23,3 +23,92 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ── Summary PDF Print Styles ──────────────────────────────────────────────── */
+@media print {
+  /* Force color rendering */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide all page chrome */
+  nav,
+  aside,
+  .summary-print-hide {
+    display: none !important;
+  }
+
+  /* Remove body/root offset from navbar */
+  body,
+  #root {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+  }
+
+  /* Remove the pt-14 flex wrapper offsets */
+  .pt-14 {
+    padding-top: 0 !important;
+  }
+
+  /* Make main content panel full-width, no sidebar offset */
+  .md\:pl-64,
+  .pl-64 {
+    padding-left: 0 !important;
+  }
+
+  /* Summary print area — full page, clean margins */
+  #summary-print-area {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 24px 32px !important;
+    padding-bottom: 32px !important;
+  }
+
+  /* Force all concept card bodies open — override framer-motion height:0 */
+  .concept-card-body {
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* Formula dark panel → clean light panel for print */
+  .formula-print-panel {
+    background: #f4fdf6 !important;
+    border: 1px solid #d1fae5 !important;
+    color: #065f46 !important;
+  }
+
+  .formula-print-panel .formula-text {
+    color: #065f46 !important;
+  }
+
+  .formula-print-panel .formula-context {
+    color: #374151 !important;
+  }
+
+  /* Exam spotlight grid — full 3 cols on print */
+  .exam-spotlight-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  /* Avoid page breaks inside sections */
+  section,
+  .concept-card-body,
+  .formula-print-panel,
+  .exam-spotlight-grid > div {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Print footer on each page */
+  @page {
+    margin: 1.5cm 1.8cm;
+    size: A4;
+  }
+}
