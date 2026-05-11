@@ -4,7 +4,7 @@ import {
   Zap, Clock, ChevronDown, ChevronUp, Star,
   BookOpen, Target, Brain, CheckCircle2, AlertCircle,
   TrendingUp, Flame, Eye, Award, List, Sparkles,
-  Download,
+  Download, RefreshCw, AlertTriangle, X,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -41,6 +41,8 @@ interface SummaryViewProps {
   summary: Summary;
   chapterName: string;
   subject: string;
+  onRegenerate?: () => void;
+  regenerating?: boolean;
 }
 
 // ── Weight config ─────────────────────────────────────────────────────────────
@@ -146,10 +148,11 @@ function ConceptCard({ concept, index }: { concept: Concept; index: number }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
-export default function SummaryView({ summary, chapterName, subject }: SummaryViewProps) {
+export default function SummaryView({ summary, chapterName, subject, onRegenerate, regenerating }: SummaryViewProps) {
   const [checkedPoints, setCheckedPoints] = useState<Set<number>>(new Set());
   const [revisionComplete, setRevisionComplete] = useState(false);
   const [printing, setPrinting] = useState(false);
+  const [confirmRegen, setConfirmRegen] = useState(false);
   const printAreaRef = useRef<HTMLDivElement>(null);
 
   const togglePoint = (i: number) => {
@@ -162,11 +165,15 @@ export default function SummaryView({ summary, chapterName, subject }: SummaryVi
 
   const handlePrint = () => {
     setPrinting(true);
-    // Small delay to let state render before print dialog opens
     setTimeout(() => {
       window.print();
       setTimeout(() => setPrinting(false), 800);
     }, 120);
+  };
+
+  const handleRegenerate = () => {
+    setConfirmRegen(false);
+    onRegenerate?.();
   };
 
   const totalPoints = summary.lastNightRevision?.length || 0;
@@ -196,30 +203,93 @@ export default function SummaryView({ summary, chapterName, subject }: SummaryVi
         <div className="absolute bottom-0 left-8 w-20 h-20 bg-white/5 rounded-full translate-y-8 pointer-events-none" />
 
         <div className="relative">
-          {/* Top row: badge + download button */}
-          <div className="flex items-center justify-between mb-4">
+          {/* Top row: badge + action buttons */}
+          <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
             <div className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1">
               <Zap className="w-3 h-3 text-green-200" />
               <span className="text-xs font-bold text-white uppercase tracking-widest">One-Shot Revision</span>
             </div>
 
-            {/* ── Download / Print Button ── */}
-            <button
-              onClick={handlePrint}
-              disabled={printing}
-              className="summary-print-hide inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 active:bg-white/30 border border-white/20 rounded-full px-3 py-1.5 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-              title="Save as PDF"
-            >
-              {printing ? (
-                <span className="w-3 h-3 border border-white/50 border-t-white rounded-full animate-spin" />
-              ) : (
-                <Download className="w-3 h-3 text-white" />
+            <div className="summary-print-hide flex items-center gap-2">
+              {/* ── Regenerate Button ── */}
+              {onRegenerate && (
+                <button
+                  onClick={() => setConfirmRegen(true)}
+                  disabled={regenerating || printing}
+                  className="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/20 active:bg-white/25 border border-white/15 rounded-full px-3 py-1.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Regenerate summary"
+                >
+                  <RefreshCw className={`w-3 h-3 text-green-200 ${regenerating ? "animate-spin" : ""}`} />
+                  <span className="text-xs font-semibold text-white">
+                    {regenerating ? "Regenerating…" : "Regenerate"}
+                  </span>
+                </button>
               )}
-              <span className="text-xs font-semibold text-white">
-                {printing ? "Opening..." : "Save PDF"}
-              </span>
-            </button>
+
+              {/* ── Download / Print Button ── */}
+              <button
+                onClick={handlePrint}
+                disabled={printing || regenerating}
+                className="inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 active:bg-white/30 border border-white/20 rounded-full px-3 py-1.5 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                title="Save as PDF"
+              >
+                {printing ? (
+                  <span className="w-3 h-3 border border-white/50 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Download className="w-3 h-3 text-white" />
+                )}
+                <span className="text-xs font-semibold text-white">
+                  {printing ? "Opening…" : "Save PDF"}
+                </span>
+              </button>
+            </div>
           </div>
+
+          {/* ── Regenerate confirmation overlay ── */}
+          <AnimatePresence>
+            {confirmRegen && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -6 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -6 }}
+                transition={{ duration: 0.18 }}
+                className="summary-print-hide absolute inset-x-4 top-4 z-10 bg-gray-900/95 backdrop-blur-sm border border-white/15 rounded-2xl p-4 shadow-xl"
+              >
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-8 h-8 bg-amber-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <AlertTriangle className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-white mb-0.5">Regenerate Summary?</p>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      The AI will create a completely new summary for this chapter. Your current summary will be replaced. This takes 20–40 seconds.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setConfirmRegen(false)}
+                    className="flex-shrink-0 text-gray-500 hover:text-gray-300 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <button
+                    onClick={() => setConfirmRegen(false)}
+                    className="text-xs font-semibold text-gray-400 hover:text-white px-3 py-1.5 rounded-xl border border-white/10 hover:border-white/20 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleRegenerate}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-500 px-4 py-1.5 rounded-xl transition-colors"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    Yes, Regenerate
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <h1 className="text-[1.25rem] font-black text-white leading-tight mb-1">{chapterName}</h1>
           <p className="text-sm text-green-200 mb-5">{subject} · Bihar Board</p>

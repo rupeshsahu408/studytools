@@ -107,6 +107,7 @@ export default function ChapterPage() {
   const [genError, setGenError] = useState<string | null>(null);
   const [retryingBatch, setRetryingBatch] = useState<"A" | "B" | null>(null);
   const [regeneratingNotes, setRegeneratingNotes] = useState(false);
+  const [regeneratingSummary, setRegeneratingSummary] = useState(false);
 
   const { user } = useAuth();
 
@@ -231,6 +232,26 @@ export default function ChapterPage() {
     }
   }, [chapter, regeneratingNotes]);
 
+  const handleRegenerateSummary = useCallback(async () => {
+    if (!chapter || regeneratingSummary) return;
+    setRegeneratingSummary(true);
+    setGenError(null);
+    try {
+      const { text, subject, classNum, chapterName, language } = chapter;
+      const data = await generateSummary(text, subject, classNum, chapterName, language || "english");
+      const newSummary = data.summary;
+      if (newSummary && chapter.id) {
+        await updateChapterSection(chapter.id, "summary", newSummary);
+        setChapter(prev => prev ? { ...prev, summary: newSummary } : prev);
+      }
+    } catch (err: any) {
+      console.error("Error regenerating summary:", err);
+      setGenError("Could not regenerate summary. Please try again.");
+    } finally {
+      setRegeneratingSummary(false);
+    }
+  }, [chapter, regeneratingSummary]);
+
   // Progress tracking callbacks
   const handleNotesRead = useCallback(() => {
     if (id) markNotesRead(id);
@@ -330,6 +351,8 @@ export default function ChapterPage() {
             summary={chapter.summary as any}
             chapterName={chapter.chapterName}
             subject={chapter.subject}
+            onRegenerate={handleRegenerateSummary}
+            regenerating={regeneratingSummary}
           />
         );
 
