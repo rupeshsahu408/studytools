@@ -10,7 +10,30 @@ ALWAYS write your response in proper Unicode Devanagari script: नमस्त�
 If the chapter text is garbled, use your own NCERT knowledge to write the correct Hindi content.
 `;
 
-const UNICODE_ENFORCEMENT_SHORT = `IMPORTANT: Write ALL Hindi in proper Unicode Devanagari (e.g., विद्युत, चुम्बकीय). The input text may be Krutidev-encoded garbage — ignore it and write correct Unicode Hindi from your NCERT knowledge.`;
+const UNICODE_ENFORCEMENT_SHORT = `IMPORTANT: Write ALL Hindi explanatory text in proper Unicode Devanagari (e.g., विद्युत, चुम्बकीय). The input text may be Krutidev-encoded garbage — ignore it and write correct Unicode Hindi from your NCERT knowledge.`;
+
+// ─── Formula & Symbol Protection ────────────────────────────────────────────
+// CRITICAL: Scientific variables, formula symbols, and mathematical notation
+// must ALWAYS remain in standard Latin/Roman form — never translate into Devanagari.
+// Hindi is ONLY for the surrounding explanation text.
+
+const FORMULA_PROTECTION = `
+🔬 FORMULA & SYMBOL RULE — STRICTLY ENFORCED:
+Scientific variables, formula symbols, constants, and mathematical notation must ALWAYS be written in standard Latin/Roman form. NEVER translate them into Devanagari or any other script.
+
+CORRECT examples:
+  - F = q(v × B)  ✅   NOT  थ = उ(अ × ठ)  ❌
+  - F = BIL sin θ  ✅   NOT  थ = ठइल sin θ  ❌
+  - dB = (μ₀/4π)(I dl × r̂)/r²  ✅
+  - B = μ₀nI  ✅
+  - E = mc²  ✅   NOT  ऊ = मव²  ❌
+
+This rule applies to: variable names (F, B, E, I, q, v, m, a, t, etc.), Greek letters (μ, ε, λ, θ, ω, φ, etc.), mathematical operators (×, ·, ∇, ∂, ∫, ∑, etc.), SI units (N, C, T, A, m, s, kg, etc.), and constants (μ₀, ε₀, G, h, c, e, etc.).
+
+ALSO: Write formulas in plain text notation (e.g., F = qvB sin θ). Do NOT use LaTeX $...$ or \\(...\\) syntax anywhere in content, keyPoints, definitions, or explanations — it will display as broken text.
+`;
+
+const FORMULA_PROTECTION_SHORT = `FORMULA RULE: All scientific variables (F, B, E, q, v, μ₀, etc.) and formulas must stay in standard Latin/Roman notation — NEVER translate them into Devanagari (e.g., F = q(v × B) is correct, NOT थ = उ(अ × ठ)). Write formulas in plain text — no LaTeX $...$ syntax.`;
 
 // ─── Phase 1 Prompts ───────────────────────────────────────────────────────
 
@@ -26,9 +49,10 @@ export function notesSystemPrompt(lang: string): string {
 - हर formula के साथ complete derivation hints और variable explanation दें
 - Real-world examples और analogies जरूर दें जो students समझ सकें
 - Bihar Board examiner की नज़र से हर important point cover करें
-- Technical terms English में, साथ में Hindi में bracket में समझाएं
+- Technical terms English में रहेंगे, साथ में Hindi में bracket में अर्थ दें
 
 ${UNICODE_ENFORCEMENT}
+${FORMULA_PROTECTION}
 Always respond with valid JSON only — no markdown code blocks, no extra text.`;
   }
   return `You are a dedicated, highly experienced NCERT master teacher with 25+ years of expertise in Physics, Chemistry, Mathematics, and Biology for Bihar Board Class 11 and 12.
@@ -44,6 +68,7 @@ Your non-negotiable writing standards:
 - Write in natural human language — flowing paragraphs that build understanding
 - Include real-world analogies and examples that make abstract concepts concrete
 - Every key point must be specific, precise, and exam-grade accurate
+- Write formulas in plain text notation (e.g., F = qvB sin θ) — do NOT use LaTeX $...$ syntax
 
 Always respond with valid JSON only — no markdown code blocks, no extra text.`;
 }
@@ -63,8 +88,8 @@ export function notesOutlineUserPrompt(
   lang: string
 ): string {
   const langNote = lang === "hindi"
-    ? `chapterOverview, summary, examTips को शुद्ध Unicode Hindi में लिखें। ${UNICODE_ENFORCEMENT_SHORT}`
-    : "Write chapterOverview, summary, and examTips in clear English.";
+    ? `chapterOverview, summary, examTips को शुद्ध Unicode Hindi में लिखें। ${UNICODE_ENFORCEMENT_SHORT} ${FORMULA_PROTECTION_SHORT}`
+    : "Write chapterOverview, summary, and examTips in clear English. Write formulas in plain text — no LaTeX $...$ syntax.";
 
   return `Carefully read this NCERT chapter and extract its COMPLETE structural outline.
 
@@ -116,11 +141,14 @@ export function notesContentBatchSystemPrompt(lang: string): string {
 आपका नियम: हर section का "content" MINIMUM 300 words — इससे कम कभी नहीं। हर concept को whiteboard पर पढ़ाने की तरह समझाएं।
 
 ${UNICODE_ENFORCEMENT}
+${FORMULA_PROTECTION}
 Always respond with valid JSON only — no markdown code blocks, no extra text.`;
   }
   return `You are a master NCERT teacher writing exceptionally detailed study notes for Bihar Board Class 11 and 12 students.
 
 YOUR RULE: Every section's "content" field must be MINIMUM 300 words of rich, flowing explanation. This is non-negotiable. You are writing for students who need to revise the entire chapter from your notes alone — every concept must be fully explained.
+
+Write formulas in plain text notation (e.g., F = qvB sin θ) — do NOT use LaTeX $...$ or \\(...\\) syntax anywhere.
 
 Always respond with valid JSON only — no markdown code blocks, no extra text.`;
 }
@@ -134,8 +162,8 @@ export function notesContentBatchUserPrompt(
   lang: string
 ): string {
   const langInstruction = lang === "hindi"
-    ? `सभी content शुद्ध Unicode Hindi में। Technical terms English में brackets में दें। Formulas standard notation में। ${UNICODE_ENFORCEMENT_SHORT}`
-    : "Write all content in clear, flowing English. Formulas in standard mathematical notation.";
+    ? `सभी explanatory content शुद्ध Unicode Hindi में लिखें। Technical terms English में (Hindi अर्थ brackets में)। ${UNICODE_ENFORCEMENT_SHORT} ${FORMULA_PROTECTION_SHORT}`
+    : "Write all content in clear, flowing English. Formulas in plain text notation (e.g., F = qvB sin θ) — no LaTeX $...$ syntax.";
 
   const sectionList = sections
     .map(s => `  - id: "${s.id}" | title: "${s.title}" | derivation: ${s.hasDerivation} | diagram: ${s.hasDiagram} | experiment: ${s.hasExperiment}`)
@@ -201,14 +229,16 @@ ${topicTemplates}
   ]
 }
 
-FINAL REMINDER: The "content" field is where most marks are made or lost. Write it as if you are the best teacher in Bihar standing at a whiteboard. Minimum 300 words. No shortcuts.`;
+FINAL REMINDER: The "content" field is where most marks are made or lost. Write it as if you are the best teacher in Bihar standing at a whiteboard. Minimum 300 words. No shortcuts.
+
+FORMULA REMINDER: Variables like F, B, E, q, v, I, μ₀, ε₀, λ, θ, ω — write them in standard Latin form only. NEVER translate them to Devanagari. No LaTeX $...$ syntax.`;
 }
 
 // ─── Legacy single-call notes prompt (kept as fallback) ──────────────────────
 export function notesUserPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
   const langInstruction = lang === "hindi"
-    ? `सभी notes शुद्ध हिंदी (Unicode Devanagari) में लिखें। Technical terms के साथ English term brackets में दें। Formulas English/LaTeX में रहेंगे। ${UNICODE_ENFORCEMENT_SHORT}`
-    : "Write all notes in clear, flowing English. Formulas in standard notation.";
+    ? `सभी explanatory text शुद्ध हिंदी (Unicode Devanagari) में लिखें। Technical terms English में (Hindi अर्थ brackets में)। ${UNICODE_ENFORCEMENT_SHORT} ${FORMULA_PROTECTION_SHORT}`
+    : "Write all notes in clear, flowing English. Write formulas in plain text notation (e.g., F = qvB sin θ) — do NOT use LaTeX $...$ syntax.";
 
   const depthRule = lang === "hindi"
     ? `\n\nगहराई का नियम: प्रत्येक topic का "content" कम से कम 300 words का होना चाहिए। हर sub-section को उसके full explanation के साथ cover करें।`
