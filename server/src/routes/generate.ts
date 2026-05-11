@@ -123,6 +123,87 @@ async function callNvidiaWithRetry(
   throw lastError;
 }
 
+// ─── Notes Post-Processing ───────────────────────────────────────────────────
+// Safety net that runs on every notes response regardless of whether the prompt
+// was followed perfectly. Two jobs:
+//   1. Strip raw LaTeX delimiters ($...$, \(...\), \[...\]) — keep the inner text
+//   2. Detect and warn about Devanagari characters used as formula variables
+//      (e.g. "थ = उ(अ × ठ)" instead of "F = q(v × B)")
+
+function stripLatex(text: string): string {
+  if (!text || typeof text !== "string") return text;
+  let s = text;
+  // $$...$$ → inner content
+  s = s.replace(/\$\$([^$]*)\$\$/g, "$1");
+  // $...$ → inner content (single line, max 300 chars to avoid over-matching)
+  s = s.replace(/\$([^$\n]{1,300})\$/g, "$1");
+  // \(...\) → inner content
+  s = s.replace(/\\\((.{0,500}?)\\\)/gs, "$1");
+  // \[...\] → inner content
+  s = s.replace(/\\\[(.{0,500}?)\\\]/gs, "$1");
+  // Clean up double spaces left after stripping
+  s = s.replace(/  +/g, " ").trim();
+  return s;
+}
+
+function detectDevanagariVariables(text: string): boolean {
+  // Matches a single/double Devanagari char sitting between math-operator-like chars,
+  // which strongly suggests it was used as a variable name (e.g., थ = उ × ठ)
+  return /[=+\-×÷\/(\s][\u0900-\u097F]{1,2}[=+\-×÷\/)\s]/.test(text);
+}
+
+function cleanNotesObject(notes: any): any {
+  if (!notes || typeof notes !== "object") return notes;
+
+  const cs = (s: any): string => stripLatex(String(s || ""));
+  const ca = (arr: any[]): string[] => Array.isArray(arr) ? arr.map(cs) : [];
+
+  // Warn in server logs if Devanagari variable contamination is detected
+  const fullText = JSON.stringify(notes);
+  if (detectDevanagariVariables(fullText)) {
+    console.warn(
+      "[notes] ⚠️ DEVANAGARI VARIABLES DETECTED — AI translated formula variables into Devanagari. " +
+      "Prompt enforcement may need strengthening. Returning notes as-is (symbols preserved for student readability)."
+    );
+  }
+
+  // Count how many $ signs were found (for logging)
+  const latexCount = (fullText.match(/\$/g) || []).length;
+  if (latexCount > 0) {
+    console.log(`[notes] Stripped ${latexCount} LaTeX delimiter(s) from notes output`);
+  }
+
+  return {
+    ...notes,
+    chapterOverview: cs(notes.chapterOverview),
+    summary: cs(notes.summary),
+    examTips: ca(notes.examTips),
+    topics: Array.isArray(notes.topics)
+      ? notes.topics.map((topic: any) => ({
+          ...topic,
+          content: cs(topic.content),
+          subTopics: Array.isArray(topic.subTopics)
+            ? topic.subTopics.map((st: any) => ({ ...st, content: cs(st.content) }))
+            : [],
+          keyPoints: ca(topic.keyPoints),
+          importantTerms: Array.isArray(topic.importantTerms)
+            ? topic.importantTerms.map((it: any) => ({ ...it, definition: cs(it.definition) }))
+            : [],
+          formulasUsed: Array.isArray(topic.formulasUsed)
+            ? topic.formulasUsed.map((f: any) => ({
+                ...f,
+                formula: cs(f.formula),
+                explanation: cs(f.explanation),
+              }))
+            : [],
+          derivationSteps: ca(topic.derivationSteps),
+          diagramDescription: cs(topic.diagramDescription),
+          examples: ca(topic.examples),
+        }))
+      : [],
+  };
+}
+
 // ─── Phase 1 Endpoints ────────────────────────────────────────────────────
 
 // ── Helper: chunk an array into batches of size n ──
@@ -219,25 +300,27 @@ router.post("/notes", async (req, res) => {
       console.warn(`[notes] ⚠️ LOW CONTENT DEPTH (avg ${Math.round(avgWords)} words) — notes may be shallow`);
     }
 
-    const notes = {
+    const rawNotes = {
       chapterOverview: outlineRaw.chapterOverview || "",
       topics: allTopics,
       summary: outlineRaw.summary || "",
       examTips: outlineRaw.examTips || [],
     };
 
+    const notes = cleanNotesObject(rawNotes);
     return res.json({ notes, language: lang });
 
   } catch (phaseErr: any) {
     // ── FALLBACK: single-call if two-phase fails ──────────────────────────
     console.warn(`[notes] Two-phase failed (${phaseErr.message}) — attempting single-call fallback`);
     try {
-      const notes = await callNvidiaWithRetry(
+      const rawNotes = await callNvidiaWithRetry(
         notesSystemPrompt(lang),
         notesUserPrompt(text, subject, classNum, chapterName, lang),
         { maxTokens: 32768 },
         3
       );
+      const notes = cleanNotesObject(rawNotes);
       return res.json({ notes, language: lang });
     } catch (fallbackErr: any) {
       console.error(`[notes] Fallback also failed:`, fallbackErr.message);
