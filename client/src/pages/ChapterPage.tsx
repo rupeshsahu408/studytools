@@ -10,7 +10,7 @@ import { getChapter, updateChapterSection } from "../lib/firestore";
 import type { Chapter } from "../lib/firestore";
 import {
   generateFormulas, generateMindmap, generateMistakes,
-  generateFlashcards, generateSimulationCatalog,
+  generateFlashcards, generateSimulationCatalog, regenerateQuestionBatch,
 } from "../lib/api";
 import { useProgress } from "../contexts/ProgressContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -102,6 +102,7 @@ export default function ChapterPage() {
   );
   const [generatingSection, setGeneratingSection] = useState<string | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
+  const [retryingBatch, setRetryingBatch] = useState<"A" | "B" | null>(null);
 
   const { user } = useAuth();
 
@@ -179,6 +180,30 @@ export default function ChapterPage() {
     setGenError(null);
   };
 
+  // Retry a specific question batch (A or B) without touching the other
+  const handleRetryBatch = useCallback(async (batch: "A" | "B") => {
+    if (!chapter || retryingBatch) return;
+    setRetryingBatch(batch);
+    setGenError(null);
+    try {
+      const { text, subject, classNum, chapterName, language } = chapter;
+      const { questions: newBatchQuestions } = await regenerateQuestionBatch(
+        text, subject, classNum, chapterName, language || "english", batch
+      );
+      // Merge new batch into existing questions — never overwrite the working batch
+      const merged = { ...(chapter.questions || {}), ...newBatchQuestions };
+      if (chapter.id) {
+        await updateChapterSection(chapter.id, "questions", merged);
+      }
+      setChapter(prev => prev ? { ...prev, questions: merged } : prev);
+    } catch (err: any) {
+      console.error(`Error retrying batch ${batch}:`, err);
+      setGenError(`Could not generate missing questions. Please try again.`);
+    } finally {
+      setRetryingBatch(null);
+    }
+  }, [chapter, retryingBatch]);
+
   // Progress tracking callbacks
   const handleNotesRead = useCallback(() => {
     if (id) markNotesRead(id);
@@ -246,6 +271,8 @@ export default function ChapterPage() {
           ? <QuestionsView
               questions={chapter.questions}
               onQuestionAnswered={handleQuestionAnswered}
+              onRetryBatch={handleRetryBatch}
+              retryingBatch={retryingBatch}
               userId={user?.uid}
               chapterId={chapter.id}
               chapterName={chapter.chapterName}

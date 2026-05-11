@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, EyeOff, Clock, CheckCircle, Trophy, FileText, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Eye, EyeOff, Clock, CheckCircle, Trophy, FileText, ThumbsUp, ThumbsDown, RefreshCw, AlertTriangle } from "lucide-react";
 import FeedbackButton from "./FeedbackButton";
 
 const Q_TYPES = [
@@ -15,16 +15,30 @@ const Q_TYPES = [
   { key: "examImportant",   label: "Exam Important",   color: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300" },
 ];
 
+// Batch A: MCQ / 1M / 2M / True-False / Fill Blanks
+const BATCH_A_KEYS = ["mcq", "oneMarks", "twoMarks", "trueFalse", "fillBlanks"];
+// Batch B: 5M / Assertion-Reason / Case-Based / Exam Important
+const BATCH_B_KEYS = ["fiveMarks", "assertionReason", "caseBased", "examImportant"];
+
+const BATCH_LABELS: Record<string, string> = {
+  mcq: "MCQ", oneMarks: "1 Mark", twoMarks: "2 Marks",
+  trueFalse: "True/False", fillBlanks: "Fill Blanks",
+  fiveMarks: "5 Marks", assertionReason: "Assertion-Reason",
+  caseBased: "Case Based", examImportant: "Exam Important",
+};
+
 interface QuestionsViewProps {
   questions: Record<string, any[]>;
   onQuestionAnswered?: (isWrong: boolean, question: { id: string; question: string; type: string }) => void;
+  onRetryBatch?: (batch: "A" | "B") => void;
+  retryingBatch?: "A" | "B" | null;
   userId?: string;
   chapterId?: string;
   chapterName?: string;
   subject?: string;
 }
 
-export default function QuestionsView({ questions, onQuestionAnswered, userId, chapterId, chapterName, subject }: QuestionsViewProps) {
+export default function QuestionsView({ questions, onQuestionAnswered, onRetryBatch, retryingBatch, userId, chapterId, chapterName, subject }: QuestionsViewProps) {
   const [activeType, setActiveType] = useState(() => {
     const first = Q_TYPES.find(t => (questions[t.key]?.length || 0) > 0);
     return first?.key || "mcq";
@@ -139,8 +153,56 @@ export default function QuestionsView({ questions, onQuestionAnswered, userId, c
     return sum + (arr as any[]).length;
   }, 0);
 
+  // Detect which batches are entirely missing (all types in the batch have 0 questions)
+  const isBatchAMissing = BATCH_A_KEYS.every(k => !questions[k] || questions[k].length === 0);
+  const isBatchBMissing = BATCH_B_KEYS.every(k => !questions[k] || questions[k].length === 0);
+  const hasMissingBatches = onRetryBatch && (isBatchAMissing || isBatchBMissing);
+
   return (
     <div className="max-w-3xl">
+      {/* Missing batch warning banner */}
+      {hasMissingBatches && (
+        <div className="mb-5 rounded-2xl border border-amber-200 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-900/10 p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-1">
+                Kuch question types generate nahi ho sake
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-400 mb-3">
+                The following question types are missing. Click Retry to generate them now — your existing questions will be kept.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {isBatchAMissing && (
+                  <button
+                    onClick={() => onRetryBatch?.("A")}
+                    disabled={!!retryingBatch}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white transition-colors"
+                  >
+                    {retryingBatch === "A"
+                      ? <><RefreshCw className="w-3 h-3 animate-spin" /> Generating…</>
+                      : <><RefreshCw className="w-3 h-3" /> Retry: {BATCH_A_KEYS.map(k => BATCH_LABELS[k]).join(", ")}</>
+                    }
+                  </button>
+                )}
+                {isBatchBMissing && (
+                  <button
+                    onClick={() => onRetryBatch?.("B")}
+                    disabled={!!retryingBatch}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white transition-colors"
+                  >
+                    {retryingBatch === "B"
+                      ? <><RefreshCw className="w-3 h-3 animate-spin" /> Generating…</>
+                      : <><RefreshCw className="w-3 h-3" /> Retry: {BATCH_B_KEYS.map(k => BATCH_LABELS[k]).join(", ")}</>
+                    }
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">

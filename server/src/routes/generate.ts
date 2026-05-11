@@ -137,61 +137,78 @@ router.post("/notes", async (req, res) => {
 });
 
 router.post("/questions", async (req, res) => {
-  const { text, subject, classNum, chapterName, language } = req.body;
+  const { text, subject, classNum, chapterName, language, batch } = req.body;
   if (!text || !subject || !classNum || !chapterName) {
     return res.status(400).json({ error: "Missing required fields" });
   }
   const lang = language || "english";
   const sysPrompt = questionsSystemPrompt(lang);
 
-  // Run both batches in parallel, each with retry + graceful degradation.
-  // If a batch fails after all retries, we return empty arrays for that batch
-  // rather than failing the whole request — partial questions > no questions.
+  // Optional `batch` param: "A" | "B" | undefined (both)
+  // Allows the client to retry only the failed batch without re-running the other.
+  const runA = !batch || batch === "A";
+  const runB = !batch || batch === "B";
+
   const [batchAResult, batchBResult] = await Promise.allSettled([
-    callNvidiaWithRetry(
-      sysPrompt,
-      questionsBatchAPrompt(text, subject, classNum, chapterName, lang),
-      { maxTokens: 8192 },
-      3
-    ),
-    callNvidiaWithRetry(
-      sysPrompt,
-      questionsBatchBPrompt(text, subject, classNum, chapterName, lang),
-      { maxTokens: 8192 },
-      3
-    ),
+    runA
+      ? callNvidiaWithRetry(
+          sysPrompt,
+          questionsBatchAPrompt(text, subject, classNum, chapterName, lang),
+          { maxTokens: 8192 },
+          3
+        )
+      : Promise.resolve(null),
+    runB
+      ? callNvidiaWithRetry(
+          sysPrompt,
+          questionsBatchBPrompt(text, subject, classNum, chapterName, lang),
+          { maxTokens: 8192 },
+          3
+        )
+      : Promise.resolve(null),
   ]);
 
-  const batchA = batchAResult.status === "fulfilled" ? batchAResult.value : {};
-  const batchB = batchBResult.status === "fulfilled" ? batchBResult.value : {};
+  const batchA = batchAResult.status === "fulfilled" ? (batchAResult.value ?? {}) : {};
+  const batchB = batchBResult.status === "fulfilled" ? (batchBResult.value ?? {}) : {};
 
-  if (batchAResult.status === "rejected") {
-    console.error("[generate/questions] Batch A failed after retries:", batchAResult.reason?.message);
+  if (runA && batchAResult.status === "rejected") {
+    console.error("[generate/questions] Batch A failed after retries:", (batchAResult as PromiseRejectedResult).reason?.message);
   }
-  if (batchBResult.status === "rejected") {
-    console.error("[generate/questions] Batch B failed after retries:", batchBResult.reason?.message);
+  if (runB && batchBResult.status === "rejected") {
+    console.error("[generate/questions] Batch B failed after retries:", (batchBResult as PromiseRejectedResult).reason?.message);
   }
 
-  // If BOTH batches failed, return a meaningful error
-  if (batchAResult.status === "rejected" && batchBResult.status === "rejected") {
+  // If every requested batch failed, return a meaningful error
+  const requestedAFailed = runA && batchAResult.status === "rejected";
+  const requestedBFailed = runB && batchBResult.status === "rejected";
+  if (requestedAFailed && requestedBFailed) {
     return res.status(500).json({
       error: "AI could not generate questions. Please try again in a moment.",
     });
   }
 
-  const questions = {
-    mcq:             batchA.mcq             || [],
-    oneMarks:        batchA.oneMarks        || [],
-    twoMarks:        batchA.twoMarks        || [],
-    trueFalse:       batchA.trueFalse       || [],
-    fillBlanks:      batchA.fillBlanks      || [],
-    fiveMarks:       batchB.fiveMarks       || [],
-    assertionReason: batchB.assertionReason || [],
-    caseBased:       batchB.caseBased       || [],
-    examImportant:   batchB.examImportant   || [],
-  };
+  // Only include keys for the batches that were actually requested
+  const questions: Record<string, any[]> = {};
+  if (runA) {
+    questions.mcq             = batchA.mcq             || [];
+    questions.oneMarks        = batchA.oneMarks        || [];
+    questions.twoMarks        = batchA.twoMarks        || [];
+    questions.trueFalse       = batchA.trueFalse       || [];
+    questions.fillBlanks      = batchA.fillBlanks      || [];
+  }
+  if (runB) {
+    questions.fiveMarks       = batchB.fiveMarks       || [];
+    questions.assertionReason = batchB.assertionReason || [];
+    questions.caseBased       = batchB.caseBased       || [];
+    questions.examImportant   = batchB.examImportant   || [];
+  }
 
-  res.json({ questions, language: lang });
+  // Report which batches failed so the client can show targeted retry UI
+  const failedBatches: string[] = [];
+  if (requestedAFailed) failedBatches.push("A");
+  if (requestedBFailed) failedBatches.push("B");
+
+  res.json({ questions, language: lang, failedBatches });
 });
 
 // ─── Phase 2 Endpoints ────────────────────────────────────────────────────

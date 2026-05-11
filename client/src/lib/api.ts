@@ -31,6 +31,14 @@ export async function generateQuestions(text: string, subject: string, classNum:
   return res.data;
 }
 
+export async function regenerateQuestionBatch(
+  text: string, subject: string, classNum: string,
+  chapterName: string, language: string, batch: "A" | "B"
+): Promise<{ questions: Record<string, any[]>; failedBatches: string[] }> {
+  const res = await api.post("/api/generate/questions", { text, subject, classNum, chapterName, language, batch });
+  return res.data;
+}
+
 export async function fetchNCERTChapters(classNum: string, subject: string) {
   const res = await api.get("/api/ncert/chapters", { params: { classNum, subject } });
   return res.data.chapters;
