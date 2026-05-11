@@ -644,3 +644,26 @@ export function onNotificationsSnapshot(
   );
   return onSnapshot(q, snap => callback(snap.docs.length), () => callback(0));
 }
+
+// ─── Feedback ─────────────────────────────────────────────────────────────────
+
+export type FeedbackReason = "garbled_hindi" | "wrong_answer" | "incomplete" | "other";
+
+export interface FeedbackEntry {
+  userId: string;
+  chapterId: string;
+  chapterName: string;
+  subject: string;
+  type: "flashcard" | "question";
+  itemId: string;
+  itemFront: string;
+  itemBack: string;
+  reason: FeedbackReason;
+  note: string;
+  createdAt: any;
+}
+
+export async function submitFeedback(entry: Omit<FeedbackEntry, "createdAt">): Promise<void> {
+  const ref = doc(collection(db, "feedback"));
+  await setDoc(ref, { ...entry, createdAt: serverTimestamp() });
+}

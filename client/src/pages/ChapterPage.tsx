@@ -13,6 +13,7 @@ import {
   generateFlashcards, generateSimulationCatalog,
 } from "../lib/api";
 import { useProgress } from "../contexts/ProgressContext";
+import { useAuth } from "../contexts/AuthContext";
 import Navbar from "../components/Navbar";
 import NotesView from "../components/NotesView";
 import QuestionsView from "../components/QuestionsView";
@@ -101,6 +102,8 @@ export default function ChapterPage() {
   );
   const [generatingSection, setGeneratingSection] = useState<string | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
+
+  const { user } = useAuth();
 
   // Phase 4: progress tracking
   const { markNotesRead, trackQuestionAnswer, markFlashcardsDone, markSimulationSeen } = useProgress();
@@ -240,7 +243,14 @@ export default function ChapterPage() {
 
       case "questions":
         return chapter?.questions
-          ? <QuestionsView questions={chapter.questions} onQuestionAnswered={handleQuestionAnswered} />
+          ? <QuestionsView
+              questions={chapter.questions}
+              onQuestionAnswered={handleQuestionAnswered}
+              userId={user?.uid}
+              chapterId={chapter.id}
+              chapterName={chapter.chapterName}
+              subject={chapter.subject}
+            />
           : <div className="text-gray-400 py-10 text-center text-sm">Questions not available.</div>;
 
       case "formulas":
@@ -297,7 +307,14 @@ export default function ChapterPage() {
             />
           );
         }
-        return <FlashCards cards={chapter.flashcards as any[]} onAllDone={handleFlashcardsDone} />;
+        return <FlashCards
+          cards={chapter.flashcards as any[]}
+          onAllDone={handleFlashcardsDone}
+          userId={user?.uid}
+          chapterId={chapter.id}
+          chapterName={chapter.chapterName}
+          subject={chapter.subject}
+        />;
 
       case "chat":
         return (

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, CheckCircle, AlertCircle, Layers, RefreshCw } from "lucide-react";
+import FeedbackButton from "./FeedbackButton";
 
 interface FlashCard {
   id: string;
@@ -12,6 +13,10 @@ interface FlashCard {
 interface FlashCardsProps {
   cards: FlashCard[];
   onAllDone?: () => void;
+  userId?: string;
+  chapterId?: string;
+  chapterName?: string;
+  subject?: string;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -22,7 +27,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   Application: "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400",
 };
 
-export default function FlashCards({ cards, onAllDone }: FlashCardsProps) {
+export default function FlashCards({ cards, onAllDone, userId, chapterId, chapterName, subject }: FlashCardsProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [knownIds, setKnownIds] = useState<Set<string>>(new Set());
@@ -224,6 +229,21 @@ export default function FlashCards({ cards, onAllDone }: FlashCardsProps) {
                     <div className="text-xs font-bold text-green-600 dark:text-green-400 uppercase tracking-wide mb-3">Answer</div>
                     <p className="text-base text-gray-800 dark:text-gray-200 leading-relaxed">{card?.back}</p>
                     <p className="text-xs text-gray-400 mt-4">Tap to go back</p>
+                    {/* Feedback button — only shown on back, only when feedback context provided */}
+                    {userId && chapterId && chapterName && subject && card && (
+                      <div className="absolute bottom-3 right-3" onClick={e => e.stopPropagation()}>
+                        <FeedbackButton
+                          userId={userId}
+                          chapterId={chapterId}
+                          chapterName={chapterName}
+                          subject={subject}
+                          type="flashcard"
+                          itemId={card.id}
+                          itemFront={card.front}
+                          itemBack={card.back}
+                        />
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               </motion.div>

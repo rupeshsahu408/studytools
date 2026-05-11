@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, Clock, CheckCircle, Trophy, FileText, ThumbsUp, ThumbsDown } from "lucide-react";
+import FeedbackButton from "./FeedbackButton";
 
 const Q_TYPES = [
   { key: "mcq",             label: "MCQ",             color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" },
@@ -17,9 +18,13 @@ const Q_TYPES = [
 interface QuestionsViewProps {
   questions: Record<string, any[]>;
   onQuestionAnswered?: (isWrong: boolean, question: { id: string; question: string; type: string }) => void;
+  userId?: string;
+  chapterId?: string;
+  chapterName?: string;
+  subject?: string;
 }
 
-export default function QuestionsView({ questions, onQuestionAnswered }: QuestionsViewProps) {
+export default function QuestionsView({ questions, onQuestionAnswered, userId, chapterId, chapterName, subject }: QuestionsViewProps) {
   const [activeType, setActiveType] = useState(() => {
     const first = Q_TYPES.find(t => (questions[t.key]?.length || 0) > 0);
     return first?.key || "mcq";
@@ -306,12 +311,26 @@ export default function QuestionsView({ questions, onQuestionAnswered }: Questio
                             )}
                           </AnimatePresence>
 
-                          {canReveal && (
-                            <button onClick={() => toggleReveal(q.id)}
-                              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-green-600 dark:hover:text-green-400 mt-2 transition-colors">
-                              {isRevealed ? <><EyeOff className="w-3.5 h-3.5" /> Hide Answer</> : <><Eye className="w-3.5 h-3.5" /> Show Answer</>}
-                            </button>
-                          )}
+                          <div className="flex items-center justify-between mt-2">
+                            {canReveal && (
+                              <button onClick={() => toggleReveal(q.id)}
+                                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors">
+                                {isRevealed ? <><EyeOff className="w-3.5 h-3.5" /> Hide Answer</> : <><Eye className="w-3.5 h-3.5" /> Show Answer</>}
+                              </button>
+                            )}
+                            {isRevealed && userId && chapterId && chapterName && subject && (
+                              <FeedbackButton
+                                userId={userId}
+                                chapterId={chapterId}
+                                chapterName={chapterName}
+                                subject={subject}
+                                type="question"
+                                itemId={q.id}
+                                itemFront={q.question || ""}
+                                itemBack={q.answer || ""}
+                              />
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -430,12 +449,26 @@ export default function QuestionsView({ questions, onQuestionAnswered }: Questio
                     )}
                   </AnimatePresence>
 
-                  {canReveal && (
-                    <button onClick={() => toggleReveal(q.id)}
-                      className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-green-600 dark:hover:text-green-400 mt-2 transition-colors">
-                      {isRevealed ? <><EyeOff className="w-3.5 h-3.5" /> Hide Answer</> : <><Eye className="w-3.5 h-3.5" /> Show Answer</>}
-                    </button>
-                  )}
+                  <div className="flex items-center justify-between mt-2">
+                    {canReveal && (
+                      <button onClick={() => toggleReveal(q.id)}
+                        className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors">
+                        {isRevealed ? <><EyeOff className="w-3.5 h-3.5" /> Hide Answer</> : <><Eye className="w-3.5 h-3.5" /> Show Answer</>}
+                      </button>
+                    )}
+                    {isRevealed && userId && chapterId && chapterName && subject && (
+                      <FeedbackButton
+                        userId={userId}
+                        chapterId={chapterId}
+                        chapterName={chapterName}
+                        subject={subject}
+                        type="question"
+                        itemId={q.id}
+                        itemFront={q.question || q.statement || q.assertion || ""}
+                        itemBack={q.answer || q.correctAnswer || ""}
+                      />
+                    )}
+                  </div>
                 </div>
               </motion.div>
             );
