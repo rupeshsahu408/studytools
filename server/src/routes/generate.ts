@@ -7,6 +7,7 @@ import {
   questionsSystemPrompt,
   questionsMCQPrompt, questionsTwoMarkP1Prompt, questionsTwoMarkP2Prompt,
   questionsFiveMarkPrompt, questionsBatchAPrompt, questionsBatchBPrompt,
+  examPaperMCQP1Prompt, examPaperMCQP2Prompt, examPaperTwoMarkPrompt, examPaperFiveMarkPrompt,
   formulasSystemPrompt, formulasUserPrompt,
   mindmapSystemPrompt, mindmapUserPrompt,
   mistakesSystemPrompt, mistakesUserPrompt,
@@ -633,6 +634,86 @@ router.post("/questions", async (req, res) => {
     console.warn(`[generate/questions] ⚠️ LOW 5-MARK COUNT (${count5M}) — expected 10-15`);
 
   res.json({ questions: cleanQuestionsObject(questions), language: lang, failedBatches });
+});
+
+// ─── Exam Paper Endpoint ──────────────────────────────────────────────────
+
+router.post("/exampaper", async (req, res) => {
+  const { text, subject, classNum, chapterName, language } = req.body;
+  if (!text || !subject || !chapterName) {
+    return res.status(400).json({ error: "Missing required fields: text, subject, chapterName" });
+  }
+  const lang = (language || "english") as "hindi" | "english";
+  const cls  = classNum || "12";
+
+  // 4 parallel batches: MCQ-P1 (50), MCQ-P2 (50), 2M (20), 5M (6)
+  const [mcqP1Result, mcqP2Result, twoMResult, fiveMResult] = await Promise.allSettled([
+    callNvidiaWithRetry(
+      questionsSystemPrompt(lang),
+      examPaperMCQP1Prompt(text, subject, cls, chapterName, lang),
+      { maxTokens: 20000 }
+    ),
+    callNvidiaWithRetry(
+      questionsSystemPrompt(lang),
+      examPaperMCQP2Prompt(text, subject, cls, chapterName, lang),
+      { maxTokens: 20000 }
+    ),
+    callNvidiaWithRetry(
+      questionsSystemPrompt(lang),
+      examPaperTwoMarkPrompt(text, subject, cls, chapterName, lang),
+      { maxTokens: 14000 }
+    ),
+    callNvidiaWithRetry(
+      questionsSystemPrompt(lang),
+      examPaperFiveMarkPrompt(text, subject, cls, chapterName, lang),
+      { maxTokens: 16000 }
+    ),
+  ]);
+
+  // Extract MCQs from both batches
+  const mcqP1Raw = mcqP1Result.status === "fulfilled" ? (mcqP1Result.value?.oneMarks || []) : [];
+  const mcqP2Raw = mcqP2Result.status === "fulfilled" ? (mcqP2Result.value?.oneMarks || []) : [];
+
+  // Deduplicate MCQs by question text (first 60 chars)
+  const seenMCQ = new Set<string>();
+  const allMCQ: any[] = [];
+  for (const q of [...mcqP1Raw, ...mcqP2Raw]) {
+    if (!q?.question) continue;
+    const key = q.question.trim().toLowerCase().slice(0, 60);
+    if (!seenMCQ.has(key)) {
+      seenMCQ.add(key);
+      allMCQ.push(q);
+    }
+  }
+
+  // Extract 2-mark and 5-mark
+  const twoMarksRaw  = twoMResult.status  === "fulfilled" ? (twoMResult.value?.twoMarks   || []) : [];
+  const fiveMarksRaw = fiveMResult.status === "fulfilled" ? (fiveMResult.value?.fiveMarks  || []) : [];
+
+  const countMCQ = allMCQ.length;
+  const count2M  = twoMarksRaw.length;
+  const count5M  = fiveMarksRaw.length;
+
+  console.log(
+    `[generate/exampaper] lang=${lang} | ` +
+    `MCQ-P1=${mcqP1Raw.length} MCQ-P2=${mcqP2Raw.length} merged=${countMCQ} | ` +
+    `2M=${count2M} | 5M=${count5M}`
+  );
+
+  if (countMCQ < 60)  console.warn(`[generate/exampaper] ⚠️ LOW MCQ COUNT (${countMCQ}) — expected ~100`);
+  if (count2M  < 15)  console.warn(`[generate/exampaper] ⚠️ LOW 2-MARK COUNT (${count2M}) — expected 20`);
+  if (count5M  < 4)   console.warn(`[generate/exampaper] ⚠️ LOW 5-MARK COUNT (${count5M}) — expected 6`);
+
+  // Clean using existing cleaner — strip LaTeX, enforce Unicode
+  const cleaned = cleanQuestionsObject({ oneMarks: allMCQ, twoMarks: twoMarksRaw, fiveMarks: fiveMarksRaw });
+
+  res.json({
+    mcq:       cleaned.oneMarks  || [],
+    twoMarks:  cleaned.twoMarks  || [],
+    fiveMarks: cleaned.fiveMarks || [],
+    language:  lang,
+    counts: { mcq: countMCQ, twoMarks: count2M, fiveMarks: count5M },
+  });
 });
 
 // ─── Phase 2 Endpoints ────────────────────────────────────────────────────

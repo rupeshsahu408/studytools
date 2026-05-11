@@ -864,6 +864,164 @@ export function questionsUserPrompt(chapterText: string, subject: string, classN
   return questionsBatchAPrompt(chapterText, subject, classNum, chapterName, lang);
 }
 
+// ─── Exam Paper Prompts ────────────────────────────────────────────────────
+
+export function examPaperMCQP1Prompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
+  const isHindi = lang === "hindi";
+  return `You are generating questions for a formal Bihar Board exam paper.
+
+CHAPTER: ${chapterName} | ${subject} Class ${classNum}
+LANGUAGE: ${isHindi ? "Hindi (Devanagari script for explanations, technical terms in English)" : "English"}
+
+Generate EXACTLY 50 high-quality MCQ questions (Batch 1: Theoretical + Conceptual + Reasoning focus).
+
+DISTRIBUTION (Batch 1):
+- 20 Pure Theoretical questions (definitions, laws, principles)
+- 15 Conceptual reasoning questions (why/how/what happens if)
+- 15 Reasoning-based questions (compare, contrast, identify)
+
+RULES:
+- Every question must be clearly answerable from the chapter
+- Each question has exactly 4 options (A, B, C, D)
+- Exactly one correct answer per question
+- No repetition across questions
+- Questions must cover different topics of the chapter (full coverage)
+- Difficulty: 40% easy, 40% medium, 20% hard
+
+Return ONLY valid JSON:
+{
+  "oneMarks": [
+    {
+      "id": "ep_mcq_p1_1",
+      "question": "...",
+      "options": ["option1", "option2", "option3", "option4"],
+      "correctAnswer": "exact text of correct option",
+      "explanation": "brief explanation (1 sentence)"
+    }
+  ]
+}
+
+CHAPTER CONTENT:
+${chapterText.slice(0, 12000)}`;
+}
+
+export function examPaperMCQP2Prompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
+  const isHindi = lang === "hindi";
+  return `You are generating questions for a formal Bihar Board exam paper.
+
+CHAPTER: ${chapterName} | ${subject} Class ${classNum}
+LANGUAGE: ${isHindi ? "Hindi (Devanagari script for explanations, technical terms in English)" : "English"}
+
+Generate EXACTLY 50 high-quality MCQ questions (Batch 2: Application + Numerical + Scenario focus).
+
+DISTRIBUTION (Batch 2):
+- 20 Application-based questions (formula application, problem-solving)
+- 15 Numerical/calculation questions (where applicable)
+- 15 Scenario/case-based questions (given a situation, what happens?)
+
+RULES:
+- Every question must be clearly answerable from the chapter
+- Each question has exactly 4 options (A, B, C, D)
+- Exactly one correct answer per question
+- No repetition — these must be DIFFERENT from Batch 1 questions
+- Questions must cover different topics of the chapter (full coverage)
+- Difficulty: 30% easy, 40% medium, 30% hard
+
+Return ONLY valid JSON:
+{
+  "oneMarks": [
+    {
+      "id": "ep_mcq_p2_1",
+      "question": "...",
+      "options": ["option1", "option2", "option3", "option4"],
+      "correctAnswer": "exact text of correct option",
+      "explanation": "brief explanation (1 sentence)"
+    }
+  ]
+}
+
+CHAPTER CONTENT:
+${chapterText.slice(0, 12000)}`;
+}
+
+export function examPaperTwoMarkPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
+  const isHindi = lang === "hindi";
+  return `You are generating short-answer questions for a formal Bihar Board exam paper.
+
+CHAPTER: ${chapterName} | ${subject} Class ${classNum}
+LANGUAGE: ${isHindi ? "Hindi (mix: Devanagari for explanations, English for technical terms)" : "English"}
+
+Generate EXACTLY 20 two-mark short-answer questions. These questions must cover the entire chapter with full depth.
+
+DISTRIBUTION:
+- 6 Theoretical/Definition questions (define, state, write)
+- 5 Reasoning questions (why, how, explain briefly)
+- 5 Application questions (apply concept to situation)
+- 4 Comparison/Difference questions (distinguish between, compare)
+
+ANSWER QUALITY:
+- Each model answer must be 2–4 sentences — complete and exam-ready
+- Answer must be worth exactly 2 marks
+- Clear, student-friendly language
+- No shallow or incomplete answers
+
+Return ONLY valid JSON:
+{
+  "twoMarks": [
+    {
+      "id": "ep_2m_1",
+      "question": "...",
+      "answer": "Complete model answer (2-4 sentences, worth 2 marks)...",
+      "type": "Theoretical|Reasoning|Application|Comparison"
+    }
+  ]
+}
+
+CHAPTER CONTENT:
+${chapterText.slice(0, 10000)}`;
+}
+
+export function examPaperFiveMarkPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
+  const isHindi = lang === "hindi";
+  return `You are generating long-answer questions for a formal Bihar Board exam paper.
+
+CHAPTER: ${chapterName} | ${subject} Class ${classNum}
+LANGUAGE: ${isHindi ? "Hindi (Devanagari for explanations, English for technical terms/formulas)" : "English"}
+
+Generate EXACTLY 6 five-mark long-answer questions. These are the most important questions in the paper.
+
+DISTRIBUTION (one of each type):
+1. Theoretical/Explanatory — Explain a major concept in detail
+2. Conceptual — Deep conceptual question requiring thorough understanding
+3. Application-Based — Apply concepts to solve a real-world or numerical problem
+4. Derivation — Derive an important formula or prove a principle (if applicable)
+5. Long Reasoning/Analytical — Analyze, compare, or reason through a complex scenario
+6. Comprehensive — Covers multiple sub-topics of the chapter
+
+ANSWER QUALITY (critical):
+- Each answer must be detailed, structured, and worth full 5 marks
+- 8–12 key points per answer
+- Answers must feel like a model answer written by a Bihar Board topper
+- Include: explanation, examples, formulas (where applicable), conclusion
+- No shallow, short, or incomplete answers
+
+Return ONLY valid JSON:
+{
+  "fiveMarks": [
+    {
+      "id": "ep_5m_1",
+      "question": "...",
+      "answer": "Full detailed model answer (6-10 sentences, structured, worth 5 marks)...",
+      "keyPoints": ["point 1", "point 2", "point 3", "point 4", "point 5"],
+      "type": "Theoretical|Conceptual|Application|Derivation|Analytical|Comprehensive"
+    }
+  ]
+}
+
+CHAPTER CONTENT:
+${chapterText.slice(0, 12000)}`;
+}
+
 // ─── Phase 2 Prompts ───────────────────────────────────────────────────────
 
 export function formulasSystemPrompt(): string {

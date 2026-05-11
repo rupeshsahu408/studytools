@@ -113,6 +113,16 @@ export async function analyzeWeakAreas(chapters: WeakAreaChapterInput[]): Promis
   return res.data;
 }
 
+// ─── Exam Paper ────────────────────────────────────────────────────────────
+
+export async function generateExamPaper(
+  text: string, subject: string, classNum: string,
+  chapterName: string, language: string
+) {
+  const res = await api.post("/api/generate/exampaper", { text, subject, classNum, chapterName, language }, { timeout: 180000 });
+  return res.data;
+}
+
 export async function generateSummary(
   text: string, subject: string, classNum: string,
   chapterName: string, language: string
