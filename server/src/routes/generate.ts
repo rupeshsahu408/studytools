@@ -234,6 +234,46 @@ function cleanQuestionsObject(questions: Record<string, any[]>): Record<string, 
   return out;
 }
 
+function cleanFormulasArray(formulas: any[]): any[] {
+  if (!Array.isArray(formulas)) return formulas;
+  const cs = (s: any): string => stripLatex(String(s || ""));
+  const cleaned = formulas.map(f => ({
+    ...f,
+    ...(f.name             !== undefined && { name:             cs(f.name) }),
+    // latex field: strip outer $...$ delimiters only — KaTeX reads the inner expression directly
+    ...(f.latex            !== undefined && { latex:            cs(f.latex) }),
+    ...(f.plain_text       !== undefined && { plain_text:       cs(f.plain_text) }),
+    ...(f.si_unit          !== undefined && { si_unit:          cs(f.si_unit) }),
+    ...(f.derivation_hint  !== undefined && { derivation_hint:  cs(f.derivation_hint) }),
+    ...(f.chapter_section  !== undefined && { chapter_section:  cs(f.chapter_section) }),
+    ...(Array.isArray(f.variables) && {
+      variables: f.variables.map((v: any) => ({
+        ...v,
+        ...(v.meaning !== undefined && { meaning: cs(v.meaning) }),
+        ...(v.unit    !== undefined && { unit:    cs(v.unit) }),
+      })),
+    }),
+  }));
+  const latex = (JSON.stringify(cleaned).match(/\$/g) || []).length;
+  if (latex > 0) console.log(`[formulas] Stripped ${latex} LaTeX delimiter(s)`);
+  return cleaned;
+}
+
+function cleanMistakesArray(mistakes: any[]): any[] {
+  if (!Array.isArray(mistakes)) return mistakes;
+  const cs = (s: any): string => stripLatex(String(s || ""));
+  const cleaned = mistakes.map(m => ({
+    ...m,
+    ...(m.mistake      !== undefined && { mistake:      cs(m.mistake) }),
+    ...(m.correct      !== undefined && { correct:      cs(m.correct) }),
+    ...(m.marks_impact !== undefined && { marks_impact: cs(m.marks_impact) }),
+    ...(m.category     !== undefined && { category:     cs(m.category) }),
+  }));
+  const latex = (JSON.stringify(cleaned).match(/\$/g) || []).length;
+  if (latex > 0) console.log(`[mistakes] Stripped ${latex} LaTeX delimiter(s)`);
+  return cleaned;
+}
+
 function cleanFlashcardsArray(cards: any[]): any[] {
   if (!Array.isArray(cards)) return cards;
   const cs = (s: any): string => stripLatex(String(s || ""));
@@ -485,7 +525,7 @@ router.post("/formulas", async (req, res) => {
     formulasUserPrompt(text, subject, classNum || "11", chapterName, lang),
     { maxTokens: 8192 }
   );
-  res.json({ formulas: parsed.formulas || [], language: lang });
+  res.json({ formulas: cleanFormulasArray(parsed.formulas || []), language: lang });
 });
 
 router.post("/mindmap", async (req, res) => {
@@ -512,7 +552,7 @@ router.post("/mistakes", async (req, res) => {
     mistakesUserPrompt(text, subject, classNum || "11", chapterName, lang),
     { maxTokens: 6144 }
   );
-  res.json({ mistakes: parsed.mistakes || [], language: lang });
+  res.json({ mistakes: cleanMistakesArray(parsed.mistakes || []), language: lang });
 });
 
 router.post("/flashcards", async (req, res) => {
