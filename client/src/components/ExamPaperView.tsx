@@ -43,6 +43,28 @@ interface Props {
 
 const OPTION_LABELS = ["(A)", "(B)", "(C)", "(D)"];
 
+function escHtml(str: string): string {
+  if (!str) return "";
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function openWithBlob(html: string) {
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const tab = window.open(url, "_blank");
+  if (!tab) {
+    alert("Pop-ups blocked. Please allow pop-ups for this site and try again.");
+    URL.revokeObjectURL(url);
+    return;
+  }
+  setTimeout(() => URL.revokeObjectURL(url), 120_000);
+}
+
 function buildPaperHTML(
   paper: ExamPaperData,
   meta: { schoolName: string; examDate: string; duration: string; subject: string; classNum: string; chapterName: string }
@@ -53,63 +75,70 @@ function buildPaperHTML(
   const fiveMarkStart = mcq.length + twoMarks.length + 1;
 
   const mcqRows = mcq.map((q, i) => {
-    const opts = (q.options || []).map((o, oi) => `<span style="margin-right:18px">${OPTION_LABELS[oi]} ${o}</span>`).join("");
-    return `<div style="margin-bottom:10px">
-      <div><strong>${i + 1}.</strong> ${q.question}</div>
-      <div style="margin-left:18px;margin-top:4px;color:#222">${opts}</div>
+    const opts = (q.options || []).map((o, oi) => `<span style="display:inline-block;margin-right:16px;min-width:120px">${OPTION_LABELS[oi]} ${escHtml(o)}</span>`).join("");
+    return `<div style="margin-bottom:12px;break-inside:avoid;page-break-inside:avoid">
+      <div><strong>${i + 1}.</strong> ${escHtml(q.question)}</div>
+      <div style="margin-left:18px;margin-top:5px;color:#222;line-height:1.7">${opts}</div>
     </div>`;
   }).join("");
 
-  const twoMarkRows = twoMarks.map((q, i) => `<div style="margin-bottom:12px">
-    <div><strong>${mcq.length + i + 1}.</strong> ${q.question}</div>
-    <div style="margin-left:18px;height:40px;border-bottom:1px dashed #999;margin-top:6px"></div>
-    <div style="margin-left:18px;height:40px;border-bottom:1px dashed #999;margin-top:2px"></div>
+  const twoMarkRows = twoMarks.map((q, i) => `<div style="margin-bottom:14px;break-inside:avoid;page-break-inside:avoid">
+    <div><strong>${mcq.length + i + 1}.</strong> ${escHtml(q.question)}</div>
+    <div style="margin-left:18px;height:38px;border-bottom:1px dashed #999;margin-top:8px"></div>
+    <div style="margin-left:18px;height:38px;border-bottom:1px dashed #999;margin-top:2px"></div>
   </div>`).join("");
 
-  const fiveMarkRows = fiveMarks.map((q, i) => `<div style="margin-bottom:16px">
-    <div><strong>${fiveMarkStart + i}.</strong> ${q.question}</div>
-    ${Array.from({ length: 8 }, () => `<div style="margin-left:18px;height:32px;border-bottom:1px dashed #bbb;margin-top:2px"></div>`).join("")}
+  const fiveMarkRows = fiveMarks.map((q, i) => `<div style="margin-bottom:18px;break-inside:avoid;page-break-inside:avoid">
+    <div><strong>${fiveMarkStart + i}.</strong> ${escHtml(q.question)}</div>
+    ${Array.from({ length: 8 }, () => `<div style="margin-left:18px;height:30px;border-bottom:1px dashed #ccc;margin-top:2px"></div>`).join("")}
   </div>`).join("");
 
   return `<!DOCTYPE html>
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<title>Exam Paper — ${chapterName}</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Exam Paper — ${escHtml(chapterName)}</title>
 <style>
   * { box-sizing: border-box; }
   body { font-family: 'Times New Roman', Times, serif; margin: 0; padding: 0; font-size: 12pt; color: #000; background: #fff; }
-  .page { max-width: 800px; margin: 0 auto; padding: 30px 40px; }
+  .page { max-width: 820px; margin: 0 auto; padding: 32px 44px; }
   .header-box { border: 3px double #000; padding: 14px 20px; text-align: center; margin-bottom: 18px; }
   .school-name { font-size: 16pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
   .exam-title { font-size: 13pt; font-weight: bold; margin: 6px 0; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0; }
-  .meta-row { display: flex; justify-content: space-between; font-size: 11pt; margin-top: 8px; }
+  .meta-row { display: flex; justify-content: space-between; font-size: 11pt; margin-top: 8px; flex-wrap: wrap; gap: 4px; }
   .instructions { border: 1px solid #555; padding: 10px 16px; margin: 14px 0 20px; font-size: 10.5pt; }
-  .instructions p { margin: 3px 0; }
-  .section-header { background: #f0f0f0; border: 1px solid #555; padding: 6px 14px; margin: 22px 0 14px; font-weight: bold; font-size: 11.5pt; text-align: center; }
-  .mcq-col { columns: 2; column-gap: 30px; }
+  .instructions p { margin: 4px 0; line-height: 1.5; }
+  .section-header { background: #efefef; border: 1px solid #555; padding: 6px 14px; margin: 24px 0 14px; font-weight: bold; font-size: 11.5pt; text-align: center; }
+  .mcq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 28px; }
+  .no-print-btn { display: inline-block; margin: 12px 0 20px; padding: 8px 20px; background: #1a5276; color: #fff; border: none; border-radius: 6px; font-size: 11pt; cursor: pointer; font-family: inherit; }
   @media print {
     body { margin: 0; }
-    .page { padding: 15px 25px; max-width: 100%; }
-    .no-break { page-break-inside: avoid; }
-    .section-header { background: #e8e8e8 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { padding: 14px 22px; max-width: 100%; }
+    .section-header { background: #efefef !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .instructions { background: #fafafa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .no-print-btn { display: none !important; }
   }
 </style>
 </head>
 <body>
 <div class="page">
+
+  <div style="text-align:center;margin-bottom:10px" class="no-print-btn" onclick="window.print()">
+    🖨️ Save as PDF / Print
+  </div>
+
   <div class="header-box">
-    <div class="school-name">${schoolName || "Bihar Board — Practice Examination"}</div>
+    <div class="school-name">${escHtml(schoolName || "Bihar Board — Practice Examination")}</div>
     <div class="exam-title">ANNUAL EXAMINATION / वार्षिक परीक्षा</div>
     <div class="meta-row">
-      <span><strong>Class / कक्षा :</strong> ${classNum}</span>
-      <span><strong>Subject / विषय :</strong> ${subject}</span>
-      <span><strong>Date / दिनांक :</strong> ${examDate}</span>
+      <span><strong>Class / कक्षा :</strong> ${escHtml(classNum)}</span>
+      <span><strong>Subject / विषय :</strong> ${escHtml(subject)}</span>
+      <span><strong>Date / दिनांक :</strong> ${escHtml(examDate)}</span>
     </div>
     <div class="meta-row" style="margin-top:6px">
-      <span><strong>Chapter :</strong> ${chapterName}</span>
-      <span><strong>Time / समय :</strong> ${duration}</span>
+      <span><strong>Chapter :</strong> ${escHtml(chapterName)}</span>
+      <span><strong>Time / समय :</strong> ${escHtml(duration)}</span>
       <span><strong>Max Marks / पूर्णांक :</strong> ${maxMarks}</span>
     </div>
   </div>
@@ -121,32 +150,32 @@ function buildPaperHTML(
     <p>(iii) <strong>Section B</strong> — ${twoMarks.length} Short Answer Questions, each carrying <strong>2 marks</strong>. Total: ${twoMarks.length * 2} marks.</p>
     <p>(iv) <strong>Section C</strong> — ${fiveMarks.length} Long Answer Questions, each carrying <strong>5 marks</strong>. Total: ${fiveMarks.length * 5} marks.</p>
     <p>(v) All questions are compulsory. / सभी प्रश्न अनिवार्य हैं।</p>
-    <p>(vi) Write your answers neatly and clearly.</p>
+    <p>(vi) Write your answers neatly and clearly. / उत्तर स्पष्ट और सुव्यवस्थित लिखें।</p>
   </div>
 
   <!-- Section A -->
   <div class="section-header">
-    SECTION A — OBJECTIVE QUESTIONS / वस्तुनिष्ठ प्रश्न (${mcq.length} × 1 = ${mcq.length} Marks)
+    SECTION A — OBJECTIVE QUESTIONS / वस्तुनिष्ठ प्रश्न &nbsp;(${mcq.length} &times; 1 = ${mcq.length} Marks)
   </div>
-  <p style="font-size:10.5pt;margin-bottom:12px"><em>Choose the correct option for each question. / प्रत्येक प्रश्न के लिए सही विकल्प चुनें।</em></p>
-  <div class="mcq-col">${mcqRows}</div>
+  <p style="font-size:10.5pt;margin-bottom:14px"><em>Choose the correct option. / सही विकल्प चुनें।</em></p>
+  <div class="mcq-grid">${mcqRows}</div>
 
   <!-- Section B -->
   <div class="section-header">
-    SECTION B — SHORT ANSWER QUESTIONS / लघु उत्तरीय प्रश्न (${twoMarks.length} × 2 = ${twoMarks.length * 2} Marks)
+    SECTION B — SHORT ANSWER QUESTIONS / लघु उत्तरीय प्रश्न &nbsp;(${twoMarks.length} &times; 2 = ${twoMarks.length * 2} Marks)
   </div>
-  <p style="font-size:10.5pt;margin-bottom:12px"><em>Answer each question in 2–3 sentences. / प्रत्येक प्रश्न का उत्तर 2–3 वाक्यों में दें।</em></p>
+  <p style="font-size:10.5pt;margin-bottom:14px"><em>Answer in 2–3 sentences. / प्रत्येक प्रश्न का उत्तर 2–3 वाक्यों में दें।</em></p>
   ${twoMarkRows}
 
   <!-- Section C -->
   <div class="section-header">
-    SECTION C — LONG ANSWER QUESTIONS / दीर्घ उत्तरीय प्रश्न (${fiveMarks.length} × 5 = ${fiveMarks.length * 5} Marks)
+    SECTION C — LONG ANSWER QUESTIONS / दीर्घ उत्तरीय प्रश्न &nbsp;(${fiveMarks.length} &times; 5 = ${fiveMarks.length * 5} Marks)
   </div>
-  <p style="font-size:10.5pt;margin-bottom:12px"><em>Answer the following in detail. / विस्तार से उत्तर दें।</em></p>
+  <p style="font-size:10.5pt;margin-bottom:14px"><em>Answer in detail. / विस्तार से उत्तर दें।</em></p>
   ${fiveMarkRows}
 
-  <div style="margin-top:30px;text-align:center;font-size:10pt;color:#555">
-    — × — × — End of Question Paper / प्रश्न पत्र समाप्त — × — × —
+  <div style="margin-top:32px;text-align:center;font-size:10pt;color:#555;border-top:1px solid #ccc;padding-top:12px">
+    &#8212; &times; &#8212; &times; &#8212; &nbsp; End of Question Paper / प्रश्न पत्र समाप्त &nbsp; &#8212; &times; &#8212; &times; &#8212;
   </div>
 </div>
 </body>
@@ -178,11 +207,12 @@ function buildAnswerKeyHTML(
       o => o.trim().toLowerCase() === (q.correctAnswer || "").trim().toLowerCase()
     );
     const label = correctIdx >= 0 ? ["A", "B", "C", "D"][correctIdx] : q.correctAnswer;
+    const shortQ = q.question.slice(0, 80) + (q.question.length > 80 ? "…" : "");
     return `<tr>
       <td style="padding:4px 8px;border:1px solid #ccc;font-weight:bold">${i + 1}</td>
-      <td style="padding:4px 8px;border:1px solid #ccc;max-width:400px">${q.question.slice(0, 80)}${q.question.length > 80 ? "…" : ""}</td>
-      <td style="padding:4px 8px;border:1px solid #ccc;font-weight:bold;color:#006600;text-align:center">${label}</td>
-      <td style="padding:4px 8px;border:1px solid #ccc">${q.correctAnswer}</td>
+      <td style="padding:4px 8px;border:1px solid #ccc;max-width:400px">${escHtml(shortQ)}</td>
+      <td style="padding:4px 8px;border:1px solid #ccc;font-weight:bold;color:#006600;text-align:center">${escHtml(label)}</td>
+      <td style="padding:4px 8px;border:1px solid #ccc">${escHtml(q.correctAnswer)}</td>
     </tr>`;
   }).join("");
 
@@ -190,7 +220,8 @@ function buildAnswerKeyHTML(
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<title>Answer Key — ${chapterName}</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Answer Key — ${escHtml(chapterName)}</title>
 <style>
   body { font-family: 'Times New Roman', Times, serif; margin: 0; padding: 0; font-size: 12pt; color: #000; background: #fff; }
   .page { max-width: 820px; margin: 0 auto; padding: 30px 40px; }
@@ -198,17 +229,25 @@ function buildAnswerKeyHTML(
   .title { font-size: 15pt; font-weight: bold; margin-bottom: 6px; }
   .meta { font-size: 11pt; }
   .quick-key { background: #f5f5f5; border: 1px solid #999; padding: 12px 18px; margin: 16px 0; font-size: 10.5pt; line-height: 2; }
+  .no-print-btn { display: inline-block; margin: 12px 0 20px; padding: 8px 20px; background: #1a5276; color: #fff; border: none; border-radius: 6px; font-size: 11pt; cursor: pointer; font-family: inherit; }
   table { width: 100%; border-collapse: collapse; font-size: 10.5pt; }
   th { background: #e0e0e0; padding: 6px 10px; border: 1px solid #999; text-align: left; }
-  @media print { body { margin:0; } .page { padding:15px 25px; max-width:100%; } }
+  @media print {
+    body { margin: 0; }
+    .page { padding: 15px 25px; max-width: 100%; }
+    .no-print-btn { display: none !important; }
+  }
 </style>
 </head>
 <body>
 <div class="page">
+  <div style="text-align:center;margin-bottom:10px">
+    <button class="no-print-btn" onclick="window.print()">🖨️ Save as PDF / Print</button>
+  </div>
   <div class="header-box">
     <div class="title">OBJECTIVE ANSWER KEY / वस्तुनिष्ठ उत्तर कुंजी</div>
-    <div class="meta">${schoolName} &nbsp;|&nbsp; Class ${classNum} — ${subject} &nbsp;|&nbsp; ${chapterName}</div>
-    <div class="meta" style="margin-top:4px">Date: ${examDate} &nbsp;|&nbsp; Total MCQs: ${mcq.length}</div>
+    <div class="meta">${escHtml(schoolName)} &nbsp;|&nbsp; Class ${escHtml(classNum)} — ${escHtml(subject)} &nbsp;|&nbsp; ${escHtml(chapterName)}</div>
+    <div class="meta" style="margin-top:4px">Date: ${escHtml(examDate)} &nbsp;|&nbsp; Total MCQs: ${mcq.length}</div>
   </div>
 
   <h3 style="margin-bottom:8px">Quick Answer Key / संक्षिप्त उत्तर कुंजी</h3>
@@ -230,19 +269,11 @@ function buildAnswerKeyHTML(
   </table>
 
   <div style="margin-top:24px;text-align:center;font-size:10pt;color:#666">
-    — End of Answer Key / उत्तर कुंजी समाप्त —
+    &#8212; End of Answer Key / उत्तर कुंजी समाप्त &#8212;
   </div>
 </div>
 </body>
 </html>`;
-}
-
-function openAndPrint(html: string) {
-  const w = window.open("", "_blank");
-  if (!w) { alert("Please allow pop-ups to download the PDF."); return; }
-  w.document.write(html);
-  w.document.close();
-  setTimeout(() => { w.focus(); w.print(); }, 600);
 }
 
 export default function ExamPaperView({ chapterText, subject, classNum, chapterName, language }: Props) {
@@ -279,12 +310,12 @@ export default function ExamPaperView({ chapterText, subject, classNum, chapterN
 
   const handleDownloadPaper = () => {
     if (!paper) return;
-    openAndPrint(buildPaperHTML(paper, meta));
+    openWithBlob(buildPaperHTML(paper, meta));
   };
 
   const handleDownloadAnswerKey = () => {
     if (!paper) return;
-    openAndPrint(buildAnswerKeyHTML(paper, meta));
+    openWithBlob(buildAnswerKeyHTML(paper, meta));
   };
 
   const getMCQAnswerLabel = (q: MCQQuestion): string => {
