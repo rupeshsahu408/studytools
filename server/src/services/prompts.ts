@@ -289,28 +289,49 @@ Your questions are precise, well-structured, and your model answers would earn f
 Always respond with valid JSON only — no markdown code blocks, no extra text.`;
 }
 
-// ─── Dedicated MCQ Batch ──────────────────────────────────────────────────────
-// Runs as a separate parallel call to generate a massive MCQ bank
-export function questionsMCQPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
+// ─── Dedicated MCQ Batches ────────────────────────────────────────────────────
+// Two parallel calls, each targeting 50-60 MCQs → combined total 100-120+
+// focus "P1" = conceptual + theoretical + reasoning
+// focus "P2" = application + formula/numerical + scenario + derivation
+
+export function questionsMCQPrompt(
+  chapterText: string, subject: string, classNum: string,
+  chapterName: string, lang: string, focus: "P1" | "P2"
+): string {
+
   if (lang === "hindi") {
-    return `इस NCERT chapter से एक विशाल MCQ प्रश्न बैंक तैयार करें। आपका लक्ष्य है: chapter के हर section, हर topic, और हर concept से अधिक से अधिक MCQ प्रश्न generate करना।
+    const focusH = focus === "P1"
+      ? `इस batch में केवल ये प्रकार के MCQ बनाएं:
+   • Conceptual/Theoretical (परिभाषा, नियम, सिद्धांत पर आधारित) — जैसे "निम्नलिखित में से कौन सी परिभाषा सही है?"
+   • Reasoning-based (कारण-आधारित) — जैसे "ऐसा क्यों होता है?", "कौन सा कारण सही है?"
+   • Knowledge/Recall — NCERT chapter के specific facts, statements, laws का सीधा परीक्षण`
+      : `इस batch में केवल ये प्रकार के MCQ बनाएं:
+   • Application-based — दी गई situation/scenario में concept को apply करना
+   • Formula/Numerical — formula use करके value निकालना या quantities compare करना
+   • Diagram/Graph-based — किसी graph, diagram, या device से जुड़े प्रश्न
+   • Match the following / Correct sequence type — items को सही order या pair में match करना
+   • Derivation-linked — किसी derivation का specific step, condition, या result`;
+
+    return `इस NCERT chapter से MCQ प्रश्न बैंक तैयार करें — Part ${focus === "P1" ? "1 (Conceptual & Reasoning)" : "2 (Application & Numerical)"}.
 
 विषय: ${subject}, कक्षा: ${classNum}, अध्याय: ${chapterName}
 ${UNICODE_ENFORCEMENT_SHORT}
 ${FORMULA_PROTECTION_SHORT}
 
-🔴 अनिवार्य नियम:
-1. Chapter को systematically scan करें — हर section और subtopic से MCQs बनाएं
-2. कम से कम 60-80 MCQ प्रश्न generate करें। जितना हो सके उतना ज़्यादा।
-3. MCQ के प्रकार (इस distribution को follow करें):
-   - Conceptual/theoretical (40%): परिभाषाएं, नियम, सिद्धांत पर आधारित
-   - Reasoning-based (25%): "क्यों होता है?", "कौन सा सही कारण है?" — सोचने वाले प्रश्न
-   - Application-based (20%): दी गई situation में concept apply करना
-   - Formula/numerical-based (10%): formula use करके value find करना
-   - Derivation-related (5%): derivation के किसी step से जुड़े प्रश्न
-4. हर MCQ में exactly 4 options हों (A, B, C, D) — केवल एक सही उत्तर
-5. Distractors realistic हों — common misconceptions पर based
-6. सभी प्रश्न और उत्तर हिंदी (Unicode Devanagari) में। Formulas और variables English में।
+🔴 FOCUS — इस batch का प्रकार:
+${focusH}
+
+🔴 अनिवार्य accuracy नियम (इन्हें तोड़ना बिल्कुल स्वीकार्य नहीं):
+• हर MCQ का सही उत्तर NCERT textbook के अनुसार 100% factually correct होना चाहिए
+• हर answer लिखने से पहले mentally verify करें — गलत answer एक छात्र को नुकसान पहुंचाता है
+• correctAnswer field में वही option letter लिखें (A/B/C/D) जो सच में सही है
+• सभी 4 options में से केवल एक ही सही हो — बाकी तीन clearly गलत हों लेकिन realistic लगें
+• कभी भी ambiguous या "दोनों सही हैं" वाली situation न बनाएं
+
+🔴 मात्रा नियम:
+• कम से कम 50-60 MCQ प्रश्न generate करें — जितना हो सके उतना ज़्यादा
+• Chapter के हर section और subtopic को cover करें
+• हर question अलग topic/concept को test करे — दोहराव बिल्कुल नहीं
 
 Chapter Content:
 ${chapterText.slice(0, 120000)}
@@ -319,36 +340,50 @@ ${chapterText.slice(0, 120000)}
 {
   "mcq": [
     {
-      "id": "mcq_1",
+      "id": "mcq_${focus}_1",
       "question": "हिंदी में precise MCQ प्रश्न",
       "options": ["A) विकल्प1", "B) विकल्प2", "C) विकल्प3", "D) विकल्प4"],
       "correctAnswer": "A",
-      "explanation": "हिंदी में: यह उत्तर सही क्यों है और बाकी गलत क्यों हैं"
+      "explanation": "हिंदी में: यह उत्तर सही क्यों है — NCERT के अनुसार"
     }
   ]
 }
 
-🔴 याद रखें: जितने ज़्यादा high-quality MCQ, उतना बेहतर। Chapter के हर कोने को cover करें। कम से कम 60 MCQ ज़रूरी हैं।`;
+🔴 याद रखें: कम से कम 50-60 MCQ। सभी उत्तर NCERT के अनुसार 100% सही। हर available token use करें।`;
   }
 
-  return `Generate a MASSIVE MCQ question bank from this NCERT chapter. Your goal: systematically scan every section, every concept, and every topic in the chapter and extract the maximum possible number of high-quality MCQs.
+  const focusE = focus === "P1"
+    ? `This batch covers ONLY these MCQ types:
+   • Conceptual/Theoretical: definitions, laws, principles — "Which correctly defines...?", "Which statement is true about...?"
+   • Reasoning-based: "Why does X occur?", "Which reason correctly explains...?" — test understanding, not just memory
+   • Knowledge/Recall: specific NCERT facts, statements, laws tested directly`
+    : `This batch covers ONLY these MCQ types:
+   • Application-based: apply a concept to a given real-world situation or scenario
+   • Formula/Numerical: use a formula to find a value or compare quantities
+   • Diagram/Graph-based: questions about graphs, diagrams, or device operation
+   • Sequence/Match type: correct order of steps, or matching items to their descriptions
+   • Derivation-linked: a specific step, condition, or result from an important derivation`;
+
+  return `Generate MCQs from this NCERT chapter — Part ${focus === "P1" ? "1 (Conceptual & Reasoning)" : "2 (Application & Numerical)"}.
 
 Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
 ${FORMULA_PROTECTION_SHORT}
 
-🔴 MANDATORY RULES:
-1. Go through the chapter SECTION BY SECTION — generate MCQs from every topic
-2. Generate minimum 60–80 MCQs. More is better. Use every available token.
-3. MCQ TYPE DISTRIBUTION (follow this mix):
-   - Conceptual/Theoretical (40%): definitions, laws, principles — "Which of the following correctly defines...?"
-   - Reasoning-based (25%): "Why does X happen?", "Which reason correctly explains...?" — make students think
-   - Application-based (20%): apply the concept to a given situation or scenario
-   - Formula/Numerical (10%): use a formula to find a value or compare quantities
-   - Derivation-related (5%): a step or result from a key derivation
-4. Each MCQ must have exactly 4 options (A, B, C, D) with exactly one correct answer
-5. Distractors must be realistic — based on common student misconceptions, not obviously wrong
-6. Vary difficulty: 30% easy, 50% medium, 20% hard
-7. No two questions should test the exact same fact
+🔴 FOCUS — This batch type:
+${focusE}
+
+🔴 ACCURACY RULES — Non-negotiable:
+• Every correct answer must be 100% factually verified against NCERT content
+• Before writing each answer, mentally confirm it is unambiguously correct
+• The correctAnswer field must hold the letter (A/B/C/D) of the only true option
+• All 4 options must be distinct — exactly one correct, three plausibly wrong (based on common misconceptions)
+• Never create ambiguous questions or "both A and C" situations
+• A wrong answer in a student's question bank is worse than no question at all
+
+🔴 QUANTITY RULES:
+• Generate minimum 50–60 MCQs — use every available output token
+• Cover every section and subtopic in the chapter
+• No two questions should test the same specific fact
 
 Chapter Content:
 ${chapterText.slice(0, 120000)}
@@ -357,16 +392,16 @@ Return ONLY this exact JSON (no extra text, no markdown):
 {
   "mcq": [
     {
-      "id": "mcq_1",
-      "question": "Precise, clear MCQ question testing a specific concept",
+      "id": "mcq_${focus}_1",
+      "question": "Precise, unambiguous MCQ question",
       "options": ["A) option1", "B) option2", "C) option3", "D) option4"],
       "correctAnswer": "A",
-      "explanation": "Clear explanation of why this answer is correct and why the others are wrong"
+      "explanation": "Why this is correct per NCERT, and why the others are wrong"
     }
   ]
 }
 
-🔴 REMEMBER: More high-quality MCQs = better student preparation. Cover the entire chapter thoroughly. Minimum 60 MCQs required. Use all available tokens.`;
+🔴 REMEMBER: Minimum 50–60 MCQs. Every answer must be 100% correct. Use all available tokens.`;
 }
 
 // Batch A: oneMarks + twoMarks + trueFalse + fillBlanks (MCQ handled separately)
