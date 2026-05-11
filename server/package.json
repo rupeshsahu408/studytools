@@ -12,6 +12,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@anthro-ai/krutidev-unicode": "^0.1.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/multer": "^2.1.0",
@@ -24,6 +25,7 @@
     "multer": "^2.1.1",
     "openai": "^6.37.0",
     "pdf-parse": "^1.1.1",
+    "type-hindi": "^1.0.2",
     "typescript": "^6.0.3",
     "uuid": "^14.0.0"
   },
