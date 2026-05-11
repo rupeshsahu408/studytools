@@ -63,127 +63,78 @@ You create questions exactly in the Bihar Board pattern and marking scheme.
 Always respond with valid JSON only - no markdown code blocks, no extra text.`;
 }
 
-export function questionsUserPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
+// Batch A: MCQ + oneMarks + twoMarks + trueFalse + fillBlanks
+export function questionsBatchAPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
   const langInstruction = lang === "hindi"
     ? "सभी प्रश्न और उत्तर हिंदी में लिखें।"
     : "Write all questions and answers in English.";
 
-  return `Create a comprehensive question bank for the following NCERT chapter in Bihar Board exam pattern.
+  return `Create a question bank (Batch A) for this NCERT chapter in Bihar Board exam pattern.
 
-Subject: ${subject}
-Class: ${classNum}
-Chapter: ${chapterName}
+Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
 ${langInstruction}
 
 Chapter Content:
-${chapterText.slice(0, 10000)}
+${chapterText.slice(0, 8000)}
 
-Return ONLY this exact JSON structure with as many questions as possible:
+Return ONLY this exact JSON (no extra text):
 {
   "mcq": [
-    {
-      "id": "mcq_1",
-      "question": "question text",
-      "options": ["A) option1", "B) option2", "C) option3", "D) option4"],
-      "correctAnswer": "A",
-      "explanation": "why this is correct"
-    }
+    {"id":"mcq_1","question":"question","options":["A) opt1","B) opt2","C) opt3","D) opt4"],"correctAnswer":"A","explanation":"why"}
   ],
   "oneMarks": [
-    {
-      "id": "1m_1",
-      "question": "question text",
-      "answer": "concise answer",
-      "explanation": "brief explanation"
-    }
+    {"id":"1m_1","question":"question","answer":"concise answer","explanation":"brief explanation"}
   ],
   "twoMarks": [
-    {
-      "id": "2m_1",
-      "question": "question text",
-      "answer": "2-3 sentence answer",
-      "explanation": "explanation"
-    }
-  ],
-  "fiveMarks": [
-    {
-      "id": "5m_1",
-      "question": "question text",
-      "answer": "detailed answer with all points",
-      "keyPoints": ["point 1", "point 2", "point 3", "point 4", "point 5"],
-      "explanation": "marking scheme hints"
-    }
-  ],
-  "assertionReason": [
-    {
-      "id": "ar_1",
-      "assertion": "Assertion statement",
-      "reason": "Reason statement",
-      "options": ["A) Both A and R are true and R is the correct explanation of A", "B) Both A and R are true but R is not the correct explanation of A", "C) A is true but R is false", "D) A is false but R is true"],
-      "correctAnswer": "A",
-      "explanation": "explanation"
-    }
-  ],
-  "caseBased": [
-    {
-      "id": "cb_1",
-      "paragraph": "A real-world scenario, situation, or problem paragraph of 4-6 sentences directly related to a key concept from this chapter. Make it practical and relatable for Bihar Board students.",
-      "questions": [
-        {
-          "id": "cb_1_q1",
-          "question": "A 1-mark question based on the paragraph",
-          "answer": "Concise 1-mark answer",
-          "marks": 1
-        },
-        {
-          "id": "cb_1_q2",
-          "question": "Another 1-mark question based on the paragraph",
-          "answer": "Concise 1-mark answer",
-          "marks": 1
-        },
-        {
-          "id": "cb_1_q3",
-          "question": "A 2-mark question requiring brief explanation",
-          "answer": "2-mark answer in 2-3 sentences",
-          "marks": 2
-        },
-        {
-          "id": "cb_1_q4",
-          "question": "A 2-mark application question based on the scenario",
-          "answer": "2-mark answer with key points",
-          "marks": 2
-        }
-      ]
-    }
+    {"id":"2m_1","question":"question","answer":"2-3 sentence answer","explanation":"explanation"}
   ],
   "trueFalse": [
-    {
-      "id": "tf_1",
-      "statement": "statement",
-      "answer": true,
-      "explanation": "why"
-    }
+    {"id":"tf_1","statement":"statement","answer":true,"explanation":"why"}
   ],
   "fillBlanks": [
-    {
-      "id": "fb_1",
-      "question": "The _____ is the unit of force.",
-      "answer": "Newton",
-      "explanation": "brief explanation"
-    }
-  ],
-  "examImportant": [
-    {
-      "id": "ei_1",
-      "question": "Most likely board exam question",
-      "answer": "model answer",
-      "marks": 5,
-      "explanation": "why this is important"
-    }
+    {"id":"fb_1","question":"The _____ is the unit of force.","answer":"Newton","explanation":"brief explanation"}
   ]
 }
 
-Generate at least: 20 MCQ, 15 one-mark, 15 two-mark, 10 five-mark, 8 assertion-reason, 3 case-based sets (each with exactly 4 sub-questions), 10 true-false, 10 fill-blanks, 8 exam-important questions.`;
+Generate exactly: 10 MCQ, 8 one-mark, 8 two-mark, 6 true-false, 6 fill-blanks.`;
+}
+
+// Batch B: fiveMarks + assertionReason + caseBased + examImportant
+export function questionsBatchBPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
+  const langInstruction = lang === "hindi"
+    ? "सभी प्रश्न और उत्तर हिंदी में लिखें।"
+    : "Write all questions and answers in English.";
+
+  return `Create a question bank (Batch B) for this NCERT chapter in Bihar Board exam pattern.
+
+Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
+${langInstruction}
+
+Chapter Content:
+${chapterText.slice(0, 8000)}
+
+Return ONLY this exact JSON (no extra text):
+{
+  "fiveMarks": [
+    {"id":"5m_1","question":"question","answer":"detailed answer","keyPoints":["point 1","point 2","point 3"],"explanation":"marking scheme hints"}
+  ],
+  "assertionReason": [
+    {"id":"ar_1","assertion":"Assertion statement","reason":"Reason statement","options":["A) Both A and R are true and R is the correct explanation of A","B) Both A and R are true but R is not the correct explanation of A","C) A is true but R is false","D) A is false but R is true"],"correctAnswer":"A","explanation":"explanation"}
+  ],
+  "caseBased": [
+    {"id":"cb_1","paragraph":"A real-world 4-6 sentence scenario related to a key concept from this chapter.","questions":[{"id":"cb_1_q1","question":"1-mark question","answer":"concise answer","marks":1},{"id":"cb_1_q2","question":"another 1-mark question","answer":"concise answer","marks":1},{"id":"cb_1_q3","question":"2-mark question","answer":"2-mark answer","marks":2},{"id":"cb_1_q4","question":"2-mark application question","answer":"2-mark answer","marks":2}]}
+  ],
+  "examImportant": [
+    {"id":"ei_1","question":"Most likely board exam question","answer":"model answer","marks":5,"explanation":"why important"}
+  ]
+}
+
+Generate exactly: 5 five-mark, 4 assertion-reason, 2 case-based sets (each with exactly 4 sub-questions), 4 exam-important questions.`;
+}
+
+// Keep old name as alias used elsewhere — delegates to batch A+B merge (handled in route)
+export function questionsUserPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
+  return questionsBatchAPrompt(chapterText, subject, classNum, chapterName, lang);
 }
 
 // ─── Phase 2 Prompts ───────────────────────────────────────────────────────

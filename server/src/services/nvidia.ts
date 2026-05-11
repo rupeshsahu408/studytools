@@ -14,10 +14,15 @@ function getClient(): OpenAI {
 }
 
 // Standard two-message call (system + user)
+export interface NvidiaCallOptions {
+  maxTokens?: number;
+}
+
 export async function callNvidia(
   systemPrompt: string,
   userPrompt: string,
-  fullMessages?: Array<{ role: string; content: string }>
+  fullMessages?: Array<{ role: string; content: string }>,
+  options?: NvidiaCallOptions
 ): Promise<string> {
   const client = getClient();
 
@@ -32,7 +37,7 @@ export async function callNvidia(
     model: MODEL,
     messages,
     temperature: 0.7,
-    max_tokens: 8000,
+    max_tokens: options?.maxTokens ?? 4096,
   });
   return response.choices[0]?.message?.content || "";
 }

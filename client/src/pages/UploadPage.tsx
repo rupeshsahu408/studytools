@@ -100,10 +100,12 @@ export default function UploadPage() {
 
       navigate(`/chapter/${chapterId}`);
     } catch (e: any) {
-      if (e.message?.includes("MAX_CHAPTERS_REACHED")) {
+      const serverMsg = e?.response?.data?.error;
+      const msg = serverMsg || e.message || "Something went wrong. Please try again.";
+      if (msg.includes("MAX_CHAPTERS_REACHED")) {
         setError("You've reached the 5-chapter limit. Please delete a chapter first.");
       } else {
-        setError(e.message || "Something went wrong. Please try again.");
+        setError(msg);
       }
       setLoading(false);
     }

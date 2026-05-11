@@ -2,7 +2,8 @@ import express from "express";
 import { callNvidia } from "../services/nvidia";
 import {
   notesSystemPrompt, notesUserPrompt,
-  questionsSystemPrompt, questionsUserPrompt,
+  questionsSystemPrompt,
+  questionsBatchAPrompt, questionsBatchBPrompt,
   formulasSystemPrompt, formulasUserPrompt,
   mindmapSystemPrompt, mindmapUserPrompt,
   mistakesSystemPrompt, mistakesUserPrompt,
@@ -15,14 +16,31 @@ const router = express.Router();
 
 function safeParseJSON(raw: string): any {
   let cleaned = raw.trim();
+  // Strip markdown code fences if present
   const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (fenceMatch) cleaned = fenceMatch[1].trim();
+  // Find the outermost { ... } block
   const firstBrace = cleaned.indexOf("{");
-  const lastBrace = cleaned.lastIndexOf("}");
-  if (firstBrace !== -1 && lastBrace !== -1) {
-    cleaned = cleaned.slice(firstBrace, lastBrace + 1);
+  if (firstBrace === -1) throw new Error("No JSON object found in AI response");
+  cleaned = cleaned.slice(firstBrace);
+  // If the JSON was truncated (token limit hit), find the last complete top-level key
+  // by walking back from the last valid closing brace
+  let lastBrace = cleaned.lastIndexOf("}");
+  if (lastBrace === -1) throw new Error("Truncated AI response — no closing brace found");
+  cleaned = cleaned.slice(0, lastBrace + 1);
+  // Verify it parses; if not, try to fix common truncation patterns
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    // Try trimming trailing incomplete array/object entries by removing last array item
+    const lastComma = cleaned.lastIndexOf(",");
+    if (lastComma !== -1) {
+      const trimmed = cleaned.slice(0, lastComma) + cleaned.slice(cleaned.lastIndexOf(",") + 1).replace(/[^}\]]*$/, "");
+      try { return JSON.parse(trimmed + "}}"); } catch {}
+      try { return JSON.parse(trimmed + "}]}"); } catch {}
+    }
+    throw new Error("Could not parse AI response as JSON");
   }
-  return JSON.parse(cleaned);
 }
 
 // ─── Phase 1 Endpoints ────────────────────────────────────────────────────
@@ -47,11 +65,29 @@ router.post("/questions", async (req, res) => {
     return res.status(400).json({ error: "Missing required fields" });
   }
   const lang = language || "english";
-  const raw = await callNvidia(
-    questionsSystemPrompt(lang),
-    questionsUserPrompt(text, subject, classNum, chapterName, lang)
-  );
-  const questions = safeParseJSON(raw);
+  const sysPrompt = questionsSystemPrompt(lang);
+
+  // Run both batches in parallel — each is small enough to complete reliably
+  const [rawA, rawB] = await Promise.all([
+    callNvidia(sysPrompt, questionsBatchAPrompt(text, subject, classNum, chapterName, lang), undefined, { maxTokens: 4096 }),
+    callNvidia(sysPrompt, questionsBatchBPrompt(text, subject, classNum, chapterName, lang), undefined, { maxTokens: 4096 }),
+  ]);
+
+  const batchA = safeParseJSON(rawA);
+  const batchB = safeParseJSON(rawB);
+
+  const questions = {
+    mcq:            batchA.mcq            || [],
+    oneMarks:       batchA.oneMarks       || [],
+    twoMarks:       batchA.twoMarks       || [],
+    trueFalse:      batchA.trueFalse      || [],
+    fillBlanks:     batchA.fillBlanks     || [],
+    fiveMarks:      batchB.fiveMarks      || [],
+    assertionReason:batchB.assertionReason|| [],
+    caseBased:      batchB.caseBased      || [],
+    examImportant:  batchB.examImportant  || [],
+  };
+
   res.json({ questions, language: lang });
 });
 
