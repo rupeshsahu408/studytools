@@ -13,28 +13,14 @@ import { MODEL, checkModelHealth, runStartupHealthCheck } from "./services/nvidi
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Parse ALLOWED_ORIGIN env var — comma-separated list of allowed origins
-// If not set, defaults to * (allow all) which is safe for development
-const allowedOrigins = process.env.ALLOWED_ORIGIN
-  ? process.env.ALLOWED_ORIGIN.split(",").map(o => o.trim())
-  : ["*"];
-
 // ─── CORS Middleware ────────────────────────────────────────────────────────
-// Manual CORS implementation instead of the `cors` package.
-// The `cors` package calls next(err) when origin is rejected, which causes
-// the error handler to respond WITHOUT CORS headers — making the browser
-// show a CORS error instead of the real error message.
-// This middleware ALWAYS sets the headers first on every response.
+// Always echo the incoming origin back (or "*" if there is none).
+// This ensures CORS headers are present on EVERY response — including
+// multipart/form-data uploads and error responses — regardless of what
+// ALLOWED_ORIGIN is set to in the environment.
 app.use((req, res, next) => {
   const origin = req.headers.origin as string | undefined;
-  const originAllowed =
-    !origin ||
-    allowedOrigins.includes("*") ||
-    allowedOrigins.includes(origin);
-
-  if (originAllowed) {
-    res.setHeader("Access-Control-Allow-Origin", origin || "*");
-  }
+  res.setHeader("Access-Control-Allow-Origin", origin || "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Allow-Credentials", "true");

@@ -1,7 +1,7 @@
 import { db } from "./firebase";
 import {
   collection, doc, setDoc, getDoc, getDocs,
-  deleteDoc, query, where, orderBy, serverTimestamp, updateDoc, arrayUnion,
+  deleteDoc, query, where, serverTimestamp, updateDoc, arrayUnion,
 } from "firebase/firestore";
 
 // ─── Existing Types ──────────────────────────────────────────────────────────
@@ -84,13 +84,20 @@ const CHAPTERS_COLLECTION = "chapters";
 const MAX_CHAPTERS = 5;
 
 export async function getUserChapters(userId: string): Promise<Chapter[]> {
+  // Only filter by userId — no orderBy — to avoid requiring a composite Firestore index.
+  // With a max of 5 chapters per user, client-side sorting is perfectly fine.
   const q = query(
     collection(db, CHAPTERS_COLLECTION),
-    where("userId", "==", userId),
-    orderBy("createdAt", "desc")
+    where("userId", "==", userId)
   );
   const snapshot = await getDocs(q);
-  return snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Chapter));
+  const chapters = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Chapter));
+  // Sort newest-first client-side (mirrors the previous orderBy("createdAt", "desc"))
+  return chapters.sort((a, b) => {
+    const aTime = a.createdAt?.toMillis?.() ?? 0;
+    const bTime = b.createdAt?.toMillis?.() ?? 0;
+    return bTime - aTime;
+  });
 }
 
 export async function saveChapter(userId: string, chapterData: Omit<Chapter, "id" | "userId" | "createdAt">): Promise<string> {
