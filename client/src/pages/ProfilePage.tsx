@@ -85,6 +85,11 @@ export default function ProfilePage() {
   const [goalInput, setGoalInput] = useState(10);
   const [editingGoal, setEditingGoal] = useState(false);
 
+  // Save errors
+  const [saveError, setSaveError] = useState("");
+  const [examDateError, setExamDateError] = useState("");
+  const [goalError, setGoalError] = useState("");
+
   // Weak areas
   const [analyzingWeak, setAnalyzingWeak] = useState(false);
   const [weakAreas, setWeakAreas] = useState<WeakAreaResult[]>([]);
@@ -108,9 +113,15 @@ export default function ProfilePage() {
 
   const handleSaveProfile = async () => {
     setSaving(true);
+    setSaveError("");
     try {
       await updateProfile({ name: editName, class: editClass, school: editSchool, district: editDistrict });
       setEditing(false);
+    } catch (e: any) {
+      const msg = e?.code === "permission-denied"
+        ? "Permission denied — your Firestore security rules may not be deployed. Go to Firebase Console → Firestore → Rules and publish them."
+        : e?.message || "Failed to save profile. Please check your connection and try again.";
+      setSaveError(msg);
     } finally {
       setSaving(false);
     }
@@ -118,16 +129,27 @@ export default function ProfilePage() {
 
   const handleSaveExamDate = async () => {
     setSavingExamDate(true);
+    setExamDateError("");
     try {
       await setExamDate(examDateInput || null);
+    } catch (e: any) {
+      const msg = e?.code === "permission-denied"
+        ? "Permission denied — Firestore rules may not be deployed."
+        : e?.message || "Failed to save exam date. Please try again.";
+      setExamDateError(msg);
     } finally {
       setSavingExamDate(false);
     }
   };
 
   const handleSaveGoal = async () => {
-    await setDailyGoal(goalInput);
-    setEditingGoal(false);
+    setGoalError("");
+    try {
+      await setDailyGoal(goalInput);
+      setEditingGoal(false);
+    } catch (e: any) {
+      setGoalError(e?.message || "Failed to save goal. Please try again.");
+    }
   };
 
   const handleAnalyzeWeakAreas = async () => {
@@ -267,13 +289,18 @@ export default function ProfilePage() {
                         {BIHAR_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
                       </select>
                     </div>
+                    {saveError && (
+                      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl px-3 py-2 text-xs">
+                        {saveError}
+                      </div>
+                    )}
                     <div className="flex gap-2 pt-1">
                       <button onClick={handleSaveProfile} disabled={saving}
                         className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-semibold py-2 rounded-xl transition-colors flex items-center justify-center gap-2">
                         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                         {saving ? "Saving..." : "Save"}
                       </button>
-                      <button onClick={() => setEditing(false)}
+                      <button onClick={() => { setEditing(false); setSaveError(""); }}
                         className="px-4 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-sm font-medium py-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                         <X className="w-4 h-4" />
                       </button>
@@ -359,15 +386,20 @@ export default function ProfilePage() {
               </div>
 
               {editingGoal ? (
-                <div className="flex items-center gap-3">
-                  <input type="number" value={goalInput} onChange={e => setGoalInput(Math.max(1, Math.min(100, Number(e.target.value))))}
-                    min="1" max="100"
-                    className="w-24 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-center text-gray-900 dark:text-white focus:outline-none focus:border-green-500" />
-                  <span className="text-sm text-gray-500 dark:text-gray-400">questions/day</span>
-                  <button onClick={handleSaveGoal}
-                    className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-2 rounded-xl transition-colors">
-                    Save
-                  </button>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <input type="number" value={goalInput} onChange={e => setGoalInput(Math.max(1, Math.min(100, Number(e.target.value))))}
+                      min="1" max="100"
+                      className="w-24 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-center text-gray-900 dark:text-white focus:outline-none focus:border-green-500" />
+                    <span className="text-sm text-gray-500 dark:text-gray-400">questions/day</span>
+                    <button onClick={handleSaveGoal}
+                      className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-2 rounded-xl transition-colors">
+                      Save
+                    </button>
+                  </div>
+                  {goalError && (
+                    <p className="text-xs text-red-500 dark:text-red-400">{goalError}</p>
+                  )}
                 </div>
               ) : (
                 <>
@@ -412,7 +444,7 @@ export default function ProfilePage() {
                 <h3 className="font-bold text-gray-900 dark:text-white">Exam Countdown</h3>
               </div>
 
-              <div className="flex gap-3 mb-4">
+              <div className="flex gap-3 mb-2">
                 <input type="date" value={examDateInput}
                   onChange={e => setExamDateInput(e.target.value)}
                   min={new Date().toISOString().split("T")[0]}
@@ -423,6 +455,9 @@ export default function ProfilePage() {
                   Set
                 </button>
               </div>
+              {examDateError && (
+                <p className="text-xs text-red-500 dark:text-red-400 mb-3">{examDateError}</p>
+              )}
 
               {userData?.examDate && daysRemaining !== null && (
                 <div className={`rounded-2xl p-5 text-center ${
