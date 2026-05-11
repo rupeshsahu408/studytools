@@ -26,6 +26,11 @@ export async function generateNotes(text: string, subject: string, classNum: str
   return res.data;
 }
 
+export async function regenerateNotes(text: string, subject: string, classNum: string, chapterName: string, language: string) {
+  const res = await api.post("/api/generate/notes", { text, subject, classNum, chapterName, language }, { timeout: 180000 });
+  return res.data;
+}
+
 export async function generateQuestions(text: string, subject: string, classNum: string, chapterName: string, language: string) {
   const res = await api.post("/api/generate/questions", { text, subject, classNum, chapterName, language });
   return res.data;

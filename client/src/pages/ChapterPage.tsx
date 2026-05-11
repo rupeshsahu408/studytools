@@ -11,6 +11,7 @@ import type { Chapter } from "../lib/firestore";
 import {
   generateFormulas, generateMindmap, generateMistakes,
   generateFlashcards, generateSimulationCatalog, regenerateQuestionBatch,
+  regenerateNotes,
 } from "../lib/api";
 import { useProgress } from "../contexts/ProgressContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -103,6 +104,7 @@ export default function ChapterPage() {
   const [generatingSection, setGeneratingSection] = useState<string | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
   const [retryingBatch, setRetryingBatch] = useState<"A" | "B" | null>(null);
+  const [regeneratingNotes, setRegeneratingNotes] = useState(false);
 
   const { user } = useAuth();
 
@@ -204,6 +206,26 @@ export default function ChapterPage() {
     }
   }, [chapter, retryingBatch]);
 
+  const handleRegenerateNotes = useCallback(async () => {
+    if (!chapter || regeneratingNotes) return;
+    setRegeneratingNotes(true);
+    setGenError(null);
+    try {
+      const { text, subject, classNum, chapterName, language } = chapter;
+      const data = await regenerateNotes(text, subject, classNum, chapterName, language || "english");
+      const newNotes = data.notes;
+      if (newNotes && chapter.id) {
+        await updateChapterSection(chapter.id, "notes", newNotes);
+        setChapter(prev => prev ? { ...prev, notes: newNotes } : prev);
+      }
+    } catch (err: any) {
+      console.error("Error regenerating notes:", err);
+      setGenError("Could not regenerate notes. Please try again.");
+    } finally {
+      setRegeneratingNotes(false);
+    }
+  }, [chapter, regeneratingNotes]);
+
   // Progress tracking callbacks
   const handleNotesRead = useCallback(() => {
     if (id) markNotesRead(id);
@@ -263,7 +285,13 @@ export default function ChapterPage() {
     switch (activeSection) {
       case "notes":
         return chapter?.notes
-          ? <NotesView notes={chapter.notes} subject={chapter.subject} onRead={handleNotesRead} />
+          ? <NotesView
+              notes={chapter.notes}
+              subject={chapter.subject}
+              onRead={handleNotesRead}
+              onRegenerate={handleRegenerateNotes}
+              regenerating={regeneratingNotes}
+            />
           : <div className="text-gray-400 py-10 text-center text-sm">Notes not available.</div>;
 
       case "questions":
