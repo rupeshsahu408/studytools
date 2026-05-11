@@ -1130,38 +1130,63 @@ LaTeX rules: fractions → \\frac{num}{den}, subscripts → x_{n}, superscripts 
 }
 
 export function mindmapSystemPrompt(): string {
-  return `You are a master educator who specializes in creating crystal-clear conceptual mind maps for NCERT chapters. You identify the deep structure of knowledge — how concepts connect, depend on, and build upon each other. Your mind maps help Bihar Board students understand the "big picture" of every chapter at a glance.
+  return `You are a master NCERT educator and Bihar Board exam specialist. Your job is to create a COMPLETE, DEEP concept mind map for an entire chapter — covering every section, every law, every formula, every definition, every application, and every experiment mentioned.
+
+Your mind maps are used by students for full-chapter revision. NOTHING should be left out. A student reading your mind map should be able to reconstruct the entire chapter from it.
 
 ${UNICODE_ENFORCEMENT_SHORT}
 Always respond with valid JSON only — no markdown code blocks, no extra text.`;
 }
 
-export function mindmapUserPrompt(chapterText: string, subject: string, chapterName: string): string {
-  return `Create a deep, well-structured concept mind map for this NCERT chapter. It should capture the full knowledge structure — every major concept and how they relate.
+export function mindmapUserPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, language: string): string {
+  const langNote = language === "hindi"
+    ? "Write all labels and explanations in Hindi (Unicode Devanagari). Scientific terms, formulas, and proper nouns may remain in English."
+    : "Write all labels and explanations in clear English.";
 
-Subject: ${subject}, Chapter: ${chapterName}
+  return `Create a COMPREHENSIVE concept mind map for this complete NCERT chapter. Every section of the chapter must appear somewhere in the map — do not skip or summarise away any topic.
 
-Chapter Content:
-${chapterText.slice(0, 120000)}
+Subject: ${subject} | Class: ${classNum} | Chapter: ${chapterName}
+Language instruction: ${langNote}
 
-Return ONLY this exact JSON. Structure it as a hierarchical tree (max 3 levels deep, max 6 children per node):
+Chapter Content (read fully before building the map):
+${chapterText.slice(0, 150000)}
+
+MANDATORY COVERAGE — your map MUST include nodes for:
+✓ Every named law, theorem, or principle (e.g., Gauss's Law, Newton's Laws, Hooke's Law)
+✓ Every formula — label it with the quantity it calculates
+✓ Every definition (e.g., Electric Field, SHM, Entropy)
+✓ Every phenomenon or effect described
+✓ Every experiment or device mentioned
+✓ All applications and real-world examples given
+✓ Every unit, dimension, or physical quantity introduced
+✓ Any graphs, curves, or diagrams described in the text
+✓ Special cases, limiting conditions, and exceptions
+
+Return ONLY valid JSON with this structure (4 levels deep, up to 12 main topics):
 {
   "title": "${chapterName}",
   "root": {
     "id": "root",
-    "label": "Short chapter title (3-4 words max)",
-    "explanation": "One powerful sentence capturing the central idea of this entire chapter",
+    "label": "Chapter title (4-5 words)",
+    "explanation": "2-3 sentences: what this chapter is fundamentally about, its central idea, and why it matters in Physics/Chemistry/Maths.",
     "children": [
       {
         "id": "n1",
-        "label": "Main Topic Name (3-5 words)",
-        "explanation": "2-3 sentence explanation — what this topic is, why it matters, and how it connects to the chapter's central theme",
+        "label": "Main Topic (3-5 words)",
+        "explanation": "2-3 sentences explaining this topic, its importance, and how it connects to the chapter's central theme. Mention any key formula or law if directly applicable.",
         "children": [
           {
             "id": "n1_1",
-            "label": "Subtopic Name",
-            "explanation": "1-2 precise sentences. Include key formula or law if applicable.",
-            "children": []
+            "label": "Sub-topic (3-5 words)",
+            "explanation": "2 precise sentences. State the formula, law, or definition explicitly. e.g., 'F = qE where F is force, q is charge, E is electric field strength.'",
+            "children": [
+              {
+                "id": "n1_1_1",
+                "label": "Key Detail / Formula / Special Case",
+                "explanation": "1-2 sentences giving the specific formula, unit, condition, or exam-important fact.",
+                "children": []
+              }
+            ]
           }
         ]
       }
@@ -1169,12 +1194,15 @@ Return ONLY this exact JSON. Structure it as a hierarchical tree (max 3 levels d
   }
 }
 
-Rules:
-- Root has 4-8 main topic children covering ALL major areas of the chapter
-- Each main topic may have 2-5 subtopic children
+STRICT RULES:
+- Root node must have 6-12 children — one for each MAJOR SECTION of the chapter
+- Each main topic must have 3-6 sub-topic children — never leave a main topic with 0 or 1 child
+- Sub-topics may have 1-4 leaf children for formulas, special cases, or key facts
 - Leaf nodes have empty children arrays
-- Labels must be SHORT and descriptive (3-6 words max)
-- Explanations must be student-friendly, clear, and teach something — not just name the topic`;
+- Labels: SHORT, specific, descriptive (3-6 words max) — never vague like "Introduction" or "Summary"
+- Explanations: student-friendly, teach something real — include numbers, formulas, units where applicable
+- If a formula is key to a topic, write it explicitly in the explanation (e.g., "v = u + at")
+- Cover the ENTIRE chapter — scan from first paragraph to last before finalising`;
 }
 
 export function mistakesSystemPrompt(lang: string): string {

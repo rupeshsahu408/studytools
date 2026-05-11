@@ -151,7 +151,7 @@ export default function ChapterPage() {
         const data = await generateFormulas(text, subject, classNum, chapterName, language);
         result = data.formulas || [];
       } else if (sectionKey === "mindmap") {
-        const data = await generateMindmap(text, subject, chapterName);
+        const data = await generateMindmap(text, subject, classNum, chapterName, language || "english");
         result = data.mindmap || null;
       } else if (sectionKey === "mistakes") {
         const data = await generateMistakes(text, subject, classNum, chapterName, language);

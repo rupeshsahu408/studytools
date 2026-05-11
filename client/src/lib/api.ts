@@ -56,8 +56,8 @@ export async function generateFormulas(text: string, subject: string, classNum: 
   return res.data;
 }
 
-export async function generateMindmap(text: string, subject: string, chapterName: string) {
-  const res = await api.post("/api/generate/mindmap", { text, subject, chapterName });
+export async function generateMindmap(text: string, subject: string, classNum: string, chapterName: string, language: string) {
+  const res = await api.post("/api/generate/mindmap", { text, subject, classNum, chapterName, language });
   return res.data;
 }
 

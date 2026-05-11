@@ -733,16 +733,16 @@ router.post("/formulas", async (req, res) => {
 });
 
 router.post("/mindmap", async (req, res) => {
-  const { text, subject, chapterName } = req.body;
+  const { text, subject, chapterName, classNum, language } = req.body;
   if (!text || !subject || !chapterName) {
     return res.status(400).json({ error: "Missing required fields" });
   }
   const parsed = await callNvidiaWithRetry(
     mindmapSystemPrompt(),
-    mindmapUserPrompt(text, subject, chapterName),
-    { maxTokens: 6144 }
+    mindmapUserPrompt(text, subject, classNum || "11", chapterName, language || "english"),
+    { maxTokens: 12288 }
   );
-  res.json({ mindmap: parsed, language: "auto" });
+  res.json({ mindmap: parsed, language: language || "auto" });
 });
 
 router.post("/mistakes", async (req, res) => {
