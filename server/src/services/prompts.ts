@@ -650,6 +650,95 @@ Your style:
 
 // ─── Phase 4 Prompts ───────────────────────────────────────────────────────
 
+// ─── Summary / One-Shot Revision ─────────────────────────────────────────────
+
+export function summarySystemPrompt(lang: string): string {
+  if (lang === "hindi") {
+    return `आप Bihar Board Class 11-12 के सबसे अनुभवी revision specialist हैं। आपका काम है: एक complete, powerful, और crisp chapter revision तैयार करना जो छात्र exam से एक रात पहले पढ़ सकें।
+
+आपकी revision में हर ज़रूरी concept, formula, और exam-critical fact होना चाहिए — पूरी तरह से, लेकिन concise रूप में। हर शब्द marks दिलाने के लिए होना चाहिए।
+
+${UNICODE_ENFORCEMENT}
+${FORMULA_PROTECTION}
+Always respond with valid JSON only — no markdown code blocks, no extra text.`;
+  }
+  return `You are the sharpest revision specialist for Bihar Board Class 11-12. Your job: produce a complete, powerful, and crisp chapter revision that a student can read the night before an exam and feel fully prepared.
+
+Your revision must cover every essential concept, formula, and exam-critical fact — completely, but concisely. Write like the best teacher in the room: clear, confident, zero fluff. Every sentence must help the student score marks.
+
+${FORMULA_PROTECTION_SHORT}
+Write formulas in plain text notation — no LaTeX $...$ syntax.
+Always respond with valid JSON only — no markdown code blocks, no extra text.`;
+}
+
+export function summaryUserPrompt(
+  chapterText: string, subject: string, classNum: string,
+  chapterName: string, lang: string
+): string {
+  const langInst = lang === "hindi"
+    ? `सारी explanations सरल, प्राकृतिक हिंदी (Unicode Devanagari) में। Formulas और technical terms English में रहेंगे। ${UNICODE_ENFORCEMENT_SHORT} ${FORMULA_PROTECTION_SHORT}`
+    : `Write all text in clear, natural English. Formulas in plain text — no LaTeX $...$ syntax. ${FORMULA_PROTECTION_SHORT}`;
+
+  return `Create a complete "One-Shot Revision" summary for this NCERT chapter. A student reading this should feel they have fully revised the entire chapter and are ready for the exam.
+
+Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
+${langInst}
+
+Chapter Content:
+${chapterText.slice(0, 150000)}
+
+Return ONLY this exact JSON (no extra text, no markdown fences):
+{
+  "chapterEssence": "3-4 rich sentences: what is the central idea of this chapter, why it matters in the big picture of ${subject}, what real-world phenomenon or application it explains, and what a student who truly understands it gains.",
+  "readTime": <integer: estimated minutes to read this summary, between 4 and 10>,
+  "concepts": [
+    {
+      "id": "c1",
+      "title": "Concept title (4-6 words max)",
+      "explanation": "3-4 sentences: what it is, the key insight the student must understand (not just memorize), any critical condition or exception, and why Bihar Board examiners test it.",
+      "keyFormula": "The single most important formula for this concept in plain text (e.g. F = q(v × B)), or null if no formula applies.",
+      "examWeight": "high"
+    }
+  ],
+  "formulaSnapshot": [
+    {
+      "formula": "Plain text formula (e.g. B = μ₀nI)",
+      "context": "One crisp line: what this formula gives and when to use it"
+    }
+  ],
+  "examSpotlight": {
+    "highValueTopics": [
+      "Topic most likely to carry 5 marks in Bihar Board exam — be specific",
+      "Second most important exam topic from this chapter",
+      "Third most tested topic"
+    ],
+    "questionPatterns": [
+      "Specific question pattern Bihar Board uses — e.g. 'Derive the expression for magnetic field at the center of a circular loop carrying current I'",
+      "Another common question pattern with a concrete example",
+      "A third pattern"
+    ],
+    "mustMemorize": [
+      "A specific fact, value, or statement that cannot be derived and must be memorized — e.g. 'μ₀ = 4π × 10⁻⁷ T·m/A'",
+      "Another non-derivable must-know item",
+      "A third must-memorize item",
+      "A fourth must-memorize item"
+    ]
+  },
+  "lastNightRevision": [
+    "One complete, exam-ready sentence with the single most critical fact, law, or formula in this chapter. Specific and precise.",
+    "Point 2", "Point 3", "Point 4", "Point 5",
+    "Point 6", "Point 7", "Point 8", "Point 9",
+    "Point 10 — ends with a formula, definition, or value a student must not forget"
+  ]
+}
+
+RULES:
+- concepts: 6-10 entries covering ALL major sections — never skip an important topic. Set examWeight to "high", "medium", or "low".
+- formulaSnapshot: include EVERY formula, law, and mathematical relationship from the chapter — even minor ones.
+- lastNightRevision: exactly 10 points. Each is a complete standalone sentence a student could quote in an exam.
+- Be a master teacher, not a summarizer — every word earns marks.`;
+}
+
 export function weakAreasSystemPrompt(): string {
   return `You are a senior educational analyst and Bihar Board expert with 25+ years of experience diagnosing student learning gaps and prescribing precise, actionable improvement plans.
 

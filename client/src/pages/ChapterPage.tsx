@@ -4,14 +4,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen, HelpCircle, ArrowLeft, Atom, FlaskConical,
   Calculator, Leaf, Calendar, Sigma, Network, AlertTriangle,
-  Layers, MessageCircle, HelpingHand, Loader2, Beaker, Users,
+  Layers, MessageCircle, HelpingHand, Loader2, Beaker, Users, Zap,
 } from "lucide-react";
 import { getChapter, updateChapterSection } from "../lib/firestore";
 import type { Chapter } from "../lib/firestore";
 import {
   generateFormulas, generateMindmap, generateMistakes,
   generateFlashcards, generateSimulationCatalog, regenerateQuestionBatch,
-  regenerateNotes,
+  regenerateNotes, generateSummary,
 } from "../lib/api";
 import { useProgress } from "../contexts/ProgressContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -25,6 +25,7 @@ import FlashCards from "../components/FlashCards";
 import DoubtChat from "../components/DoubtChat";
 import SimulationsView from "../components/SimulationsView";
 import DiscussionView from "../components/DiscussionView";
+import SummaryView from "../components/SummaryView";
 
 const SUBJECT_ICONS: Record<string, any> = {
   Physics: Atom, Chemistry: FlaskConical, Mathematics: Calculator, Biology: Leaf,
@@ -33,6 +34,7 @@ const SUBJECT_ICONS: Record<string, any> = {
 const SIDEBAR_ITEMS = [
   { key: "notes",       label: "Notes",              icon: BookOpen,       phase: 1 },
   { key: "questions",   label: "Questions",           icon: HelpCircle,    phase: 1 },
+  { key: "summary",     label: "Quick Revision",      icon: Zap,           phase: 2 },
   { key: "formulas",    label: "Formulas",            icon: Sigma,         phase: 2 },
   { key: "mindmap",     label: "Concept Map",         icon: Network,       phase: 2 },
   { key: "mistakes",    label: "Ye Galti Mat Karo",   icon: AlertTriangle, phase: 2 },
@@ -136,7 +138,10 @@ export default function ChapterPage() {
     try {
       let result: any;
       const { text, subject, classNum, chapterName, language } = chapter;
-      if (sectionKey === "formulas") {
+      if (sectionKey === "summary") {
+        const data = await generateSummary(text, subject, classNum, chapterName, language || "english");
+        result = data.summary || null;
+      } else if (sectionKey === "formulas") {
         const data = await generateFormulas(text, subject, classNum, chapterName, language);
         result = data.formulas || [];
       } else if (sectionKey === "mindmap") {
@@ -167,7 +172,7 @@ export default function ChapterPage() {
   // Auto-trigger generation on first visit to Phase 2/3 sections
   useEffect(() => {
     if (!chapter || loading) return;
-    const lazyKeys = ["formulas", "mindmap", "mistakes", "flashcards", "simulations"];
+    const lazyKeys = ["summary", "formulas", "mindmap", "mistakes", "flashcards", "simulations"];
     if (
       lazyKeys.includes(activeSection) &&
       !chapter[activeSection as keyof Chapter] &&
@@ -307,6 +312,26 @@ export default function ChapterPage() {
               subject={chapter.subject}
             />
           : <div className="text-gray-400 py-10 text-center text-sm">Questions not available.</div>;
+
+      case "summary":
+        if (isGenerating("summary")) return <SectionGenerating label="Quick Revision" />;
+        if (!chapter.summary) {
+          return (
+            <SectionEmpty
+              label="Quick Revision"
+              description="AI will create a complete one-shot revision of this chapter — key concepts, all formulas, exam spotlight, and 10 last-night revision points. Read it once and feel fully prepared."
+              onGenerate={() => generateSection("summary")}
+              generating={generatingSection === "summary"}
+            />
+          );
+        }
+        return (
+          <SummaryView
+            summary={chapter.summary as any}
+            chapterName={chapter.chapterName}
+            subject={chapter.subject}
+          />
+        );
 
       case "formulas":
         if (isGenerating("formulas")) return <SectionGenerating label="Formula Sheet" />;

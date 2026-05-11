@@ -31,6 +31,7 @@ export interface Chapter {
   mistakes?: any[];
   flashcards?: any[];
   simulations?: SimulationEntry[];
+  summary?: any;
   // Phase 4 — Progress tracking
   notesRead?: boolean;
   questionsAttempted?: number;

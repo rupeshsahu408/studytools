@@ -112,3 +112,11 @@ export async function analyzeWeakAreas(chapters: WeakAreaChapterInput[]): Promis
   const res = await api.post("/api/generate/weakareas", { chapters }, { timeout: 90000 });
   return res.data;
 }
+
+export async function generateSummary(
+  text: string, subject: string, classNum: string,
+  chapterName: string, language: string
+) {
+  const res = await api.post("/api/generate/summary", { text, subject, classNum, chapterName, language }, { timeout: 90000 });
+  return res.data;
+}

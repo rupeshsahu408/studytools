@@ -12,6 +12,7 @@ import {
   flashcardsSystemPrompt, flashcardsUserPrompt,
   simulationCatalogSystemPrompt, simulationCatalogUserPrompt,
   weakAreasSystemPrompt, weakAreasUserPrompt,
+  summarySystemPrompt, summaryUserPrompt,
 } from "../services/prompts";
 import { keywordMatchSimulations, mergeSimulations } from "../services/simulations";
 
@@ -598,6 +599,69 @@ router.post("/simulations", async (req, res) => {
   console.log(`[generate/simulations] AI: ${aiPicks.length} | Keyword: ${keywordPicks.length} | Final: ${final.length}`);
 
   res.json({ simulations: final });
+});
+
+// ─── Summary clean ───────────────────────────────────────────────────────
+
+function cleanSummaryObject(raw: any): any {
+  if (!raw || typeof raw !== "object") return raw;
+  const s = { ...raw };
+
+  if (typeof s.chapterEssence === "string") s.chapterEssence = stripLatex(s.chapterEssence);
+
+  if (Array.isArray(s.concepts)) {
+    s.concepts = s.concepts.map((c: any) => ({
+      ...c,
+      title: typeof c.title === "string" ? stripLatex(c.title) : c.title,
+      explanation: typeof c.explanation === "string" ? stripLatex(c.explanation) : c.explanation,
+      keyFormula: c.keyFormula && typeof c.keyFormula === "string" ? stripLatex(c.keyFormula) : null,
+      examWeight: ["high", "medium", "low"].includes(c.examWeight) ? c.examWeight : "medium",
+    }));
+  }
+
+  if (Array.isArray(s.formulaSnapshot)) {
+    s.formulaSnapshot = s.formulaSnapshot.map((f: any) => ({
+      formula: typeof f.formula === "string" ? stripLatex(f.formula) : f.formula,
+      context: typeof f.context === "string" ? stripLatex(f.context) : f.context,
+    }));
+  }
+
+  if (s.examSpotlight && typeof s.examSpotlight === "object") {
+    const es = s.examSpotlight;
+    if (Array.isArray(es.highValueTopics)) es.highValueTopics = es.highValueTopics.map((t: any) => typeof t === "string" ? stripLatex(t) : t);
+    if (Array.isArray(es.questionPatterns)) es.questionPatterns = es.questionPatterns.map((t: any) => typeof t === "string" ? stripLatex(t) : t);
+    if (Array.isArray(es.mustMemorize)) es.mustMemorize = es.mustMemorize.map((t: any) => typeof t === "string" ? stripLatex(t) : t);
+    s.examSpotlight = es;
+  }
+
+  if (Array.isArray(s.lastNightRevision)) {
+    s.lastNightRevision = s.lastNightRevision.map((p: any) => typeof p === "string" ? stripLatex(p) : p);
+  }
+
+  return s;
+}
+
+// ─── Summary / One-Shot Revision ─────────────────────────────────────────
+
+router.post("/summary", async (req, res) => {
+  const { text, subject, classNum, chapterName, language } = req.body;
+  if (!text || !subject || !chapterName) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+  const lang = language || "english";
+
+  try {
+    const parsed = await callNvidiaWithRetry(
+      summarySystemPrompt(lang),
+      summaryUserPrompt(text, subject, classNum || "11", chapterName, lang),
+      { maxTokens: 8192 }
+    );
+    const summary = cleanSummaryObject(parsed);
+    res.json({ summary });
+  } catch (err: any) {
+    console.error("[generate/summary] error:", err?.message);
+    res.status(500).json({ error: "Failed to generate summary. Please try again." });
+  }
 });
 
 // ─── Phase 4 Endpoint ────────────────────────────────────────────────────
