@@ -4,7 +4,7 @@ import {
   Atom, BarChart2, Battery, X, Sparkles, ChevronRight,
   Play, BookOpen, AlertCircle, Library,
 } from "lucide-react";
-import { streamChatMessage } from "../lib/api";
+import { sendChatMessage } from "../lib/api";
 import type { SimulationEntry } from "../lib/firestore";
 import SimulationLibrary from "./SimulationLibrary";
 
@@ -74,20 +74,44 @@ export default function SimulationsView({
 
   const available = simulations.filter(s => SIM_REGISTRY[s.id]);
 
+  const explainTypewriterRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const handleExplain = useCallback(async () => {
     if (!activeSim || explain.loading) return;
+    if (explainTypewriterRef.current) { clearInterval(explainTypewriterRef.current); explainTypewriterRef.current = null; }
+
     setExplain({ loading: true, text: "", error: "" });
     try {
       const query = language === "hindi"
-        ? `इस simulation को हिंदी में समझाओ: ${activeSim.title}. वर्तमान स्थिति: ${simContext}. इसे class 11-12 Bihar Board के छात्र के लिए आसान भाषा में explain करो।`
+        ? `इस simulation को हिंदी में समझाओ: ${activeSim.title}. वर्तमान स्थिति: ${simContext}. इसे class 11-12 Bihar Board के छात्र के लिए आसान Hindi में explain करो।`
         : `Explain what is happening in this simulation: ${activeSim.title}. Current state: ${simContext}. Explain for a Class 11-12 Bihar Board student in simple language.`;
-      await streamChatMessage(
+
+      // Fetch full response (reliable non-streaming)
+      const data = await sendChatMessage(
         [{ role: "user", content: query }],
-        chapterText, chapterName, subject, language,
-        (fullText) => setExplain({ loading: true, text: fullText, error: "" })
+        chapterText, chapterName, subject, language
       );
+      const fullText: string = data.reply || "";
+
+      // Typewriter: reveal text gradually at ~400 chars/sec
+      await new Promise<void>((resolve) => {
+        if (!fullText) { resolve(); return; }
+        let index = 0;
+        const CHARS_PER_TICK = 8;
+        const INTERVAL_MS   = 20;
+        explainTypewriterRef.current = setInterval(() => {
+          index = Math.min(index + CHARS_PER_TICK, fullText.length);
+          setExplain({ loading: true, text: fullText.slice(0, index), error: "" });
+          if (index >= fullText.length) {
+            if (explainTypewriterRef.current) { clearInterval(explainTypewriterRef.current); explainTypewriterRef.current = null; }
+            resolve();
+          }
+        }, INTERVAL_MS);
+      });
+
       setExplain(prev => ({ ...prev, loading: false }));
     } catch {
+      if (explainTypewriterRef.current) { clearInterval(explainTypewriterRef.current); explainTypewriterRef.current = null; }
       setExplain({ loading: false, text: "", error: "Could not get explanation. Please try again." });
     }
   }, [activeSim, simContext, language, chapterText, chapterName, subject, explain.loading]);

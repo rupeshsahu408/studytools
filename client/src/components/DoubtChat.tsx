@@ -4,7 +4,7 @@ import {
   Trash2, Pencil, Check, X, ChevronLeft, MessageSquare,
   Clock, Loader2,
 } from "lucide-react";
-import { streamChatMessage } from "../lib/api";
+import { sendChatMessage } from "../lib/api";
 import {
   subscribeChatSessions, createChatSession, saveChatMessages,
   renameChatSession, toggleChatPin, deleteChatSession,
@@ -244,10 +244,15 @@ export default function DoubtChat({
     setTimeout(() => inputRef.current?.focus(), 100);
   }, []);
 
-  // ── Send a message (streaming) ─────────────────────────────────────────────
+  // ── Send a message — fetch full reply then typewriter-animate it ────────────
+  const typewriterRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || loading) return;
+
+    // Clear any leftover typewriter from a previous message
+    if (typewriterRef.current) { clearInterval(typewriterRef.current); typewriterRef.current = null; }
 
     const userMsg: ChatMessage = { role: "user", content: trimmed };
     const newMessages = [...messages, userMsg];
@@ -255,29 +260,42 @@ export default function DoubtChat({
     setInput("");
     setError("");
     setLoading(true);
-    setStreamingText(""); // empty string = streaming started, bubble is visible
+    setStreamingText(""); // "" = show bouncing dots while waiting for AI
 
-    // Capture these at call-time to avoid stale-closure issues in the async flow
     const capturedSessionId = activeSessionId;
-    const capturedIsFirst   = messages.length === 0;
-    const autoTitle         = capturedIsFirst ? makeTitle(trimmed) : undefined;
+    const isFirstMessage    = messages.length === 0;
+    const autoTitle         = isFirstMessage ? makeTitle(trimmed) : undefined;
 
     try {
-      const fullReply = await streamChatMessage(
-        newMessages,
-        chapterText,
-        chapterName,
-        subject,
-        language,
-        (fullText) => setStreamingText(fullText)
-      );
+      // ── 1. Fetch the full AI response (reliable, no SSE/proxy issues) ────────
+      const data = await sendChatMessage(newMessages, chapterText, chapterName, subject, language);
+      const fullReply: string = data.reply || "";
 
+      // ── 2. Typewriter animation — reveal text at ~400 chars/sec ─────────────
+      // This gives the exact ChatGPT-like effect: text flows naturally word by word.
+      await new Promise<void>((resolve) => {
+        if (!fullReply) { resolve(); return; }
+        let index = 0;
+        const CHARS_PER_TICK = 8;  // 8 chars × 50fps = ~400 chars/sec
+        const INTERVAL_MS   = 20;  // 20ms = 50 ticks/sec
+
+        typewriterRef.current = setInterval(() => {
+          index = Math.min(index + CHARS_PER_TICK, fullReply.length);
+          setStreamingText(fullReply.slice(0, index));
+          if (index >= fullReply.length) {
+            if (typewriterRef.current) { clearInterval(typewriterRef.current); typewriterRef.current = null; }
+            resolve();
+          }
+        }, INTERVAL_MS);
+      });
+
+      // ── 3. Commit final message to state ─────────────────────────────────────
       const reply: ChatMessage = { role: "assistant", content: fullReply };
       const finalMessages = [...newMessages, reply];
       setMessages(finalMessages);
       setStreamingText(null);
 
-      // Persist to Firestore
+      // ── 4. Persist to Firestore ───────────────────────────────────────────────
       let sessionId = capturedSessionId;
       if (!sessionId) {
         sessionId = await createChatSession(userId, chapterId, chapterName, subject, autoTitle || "New Chat");
@@ -286,6 +304,7 @@ export default function DoubtChat({
       await saveChatMessages(sessionId, finalMessages, autoTitle);
 
     } catch {
+      if (typewriterRef.current) { clearInterval(typewriterRef.current); typewriterRef.current = null; }
       setError(isHindi ? "जवाब नहीं मिला। दोबारा कोशिश करो।" : "Could not get a response. Please try again.");
       setMessages(prev => prev.slice(0, -1));
       setStreamingText(null);
