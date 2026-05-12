@@ -1,0 +1,52 @@
+Next implementation includes two important improvements that need to be properly designed and fixed.
+
+---
+
+## 1. Social Media Icons in User Profiles
+
+When a user visits another user’s profile, the social links should be displayed properly using relevant icons.
+
+* If a user has added a website link, the website icon should be shown.
+* If they have added an Instagram link, the Instagram icon should be shown.
+* If they have added a Reddit link, the Reddit icon should be shown.
+* Similarly for other supported social platforms.
+
+These icons should not just be static — they should be clickable:
+
+* Clicking on the Instagram icon should redirect to the user’s Instagram profile
+* Clicking on the Reddit icon should open their Reddit profile
+* Website icon should open the provided website link
+
+This should feel clean, modern, and intuitive like real social media platforms. The profile UI should dynamically detect which links exist and only show relevant icons.
+
+---
+
+## 2. Message Delete / Unsend Feature in Discussion Page
+
+In the discussion (chat/community) page, users should be able to remove their own messages.
+
+* If User A sends a message and later wants to remove it, they should be able to delete or “unsend” it.
+* This should work like Instagram DM:
+
+  * The message should be completely removed from the chat for everyone
+  * It should not just be hidden — it should be fully unsent/removed from the conversation
+
+Add a delete option (e.g., three-dot menu or long press action) for each user’s own message.
+
+---
+
+## Final Requirements
+
+Please implement both features carefully:
+
+* Proper social media icon rendering with correct redirection
+* Fully functional message delete/unsend system in discussion/chat
+
+After implementation, thoroughly test:
+
+* Icons appear only when links exist
+* All links redirect correctly
+* Message deletion works instantly for all users
+* No broken UI or inconsistent chat behavior remains
+
+Make sure everything is smooth, reliable, and production-ready.

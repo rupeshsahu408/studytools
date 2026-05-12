@@ -648,6 +648,19 @@ export async function getDiscussionReplies(chapterId: string, postId: string): P
   });
 }
 
+export async function deleteDiscussionReply(
+  chapterId: string, postId: string, replyId: string
+): Promise<void> {
+  await deleteDoc(doc(db, "discussions", chapterId, "posts", postId, "replies", replyId));
+  // Decrement reply count on parent post
+  const postRef = doc(db, "discussions", chapterId, "posts", postId);
+  const snap = await getDoc(postRef);
+  if (snap.exists()) {
+    const current = snap.data().replyCount || 0;
+    await updateDoc(postRef, { replyCount: Math.max(0, current - 1) });
+  }
+}
+
 // ─── Phase 5 — Notifications ─────────────────────────────────────────────────
 
 export interface NotificationItem {

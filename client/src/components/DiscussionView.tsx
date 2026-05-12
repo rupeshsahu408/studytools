@@ -8,7 +8,7 @@ import { useProgress } from "../contexts/ProgressContext";
 import {
   subscribeDiscussionPosts, createDiscussionPost,
   addUpvotePost, removeUpvotePost,
-  deleteDiscussionPost,
+  deleteDiscussionPost, deleteDiscussionReply,
   getDiscussionReplies, addDiscussionReply,
   addUpvoteReply, removeUpvoteReply,
   createReplyNotification,
@@ -390,10 +390,11 @@ function ReplyList({
           {!loading && replies.map(reply => {
             // Always show the current user's resolved name (respects anonymous mode + fixes old email entries)
             const replyDisplayName = (!reply.isAI && reply.uid === currentUid) ? userName : reply.userName;
+            const isOwnReply = !reply.isAI && reply.uid === currentUid;
             return (
             <div
               key={reply.id}
-              className={`flex items-start gap-2.5 animate-post-in ${
+              className={`group flex items-start gap-2.5 animate-post-in ${
                 reply.isAI
                   ? "bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/30 rounded-xl p-3"
                   : ""
@@ -420,6 +421,24 @@ function ReplyList({
                   />
                 </div>
               </div>
+              {isOwnReply && (
+                <button
+                  onClick={async () => {
+                    if (!confirm("Unsend this reply? It will be removed for everyone.")) return;
+                    try {
+                      setReplies(prev => prev.filter(r => r.id !== reply.id));
+                      await deleteDiscussionReply(chapterId, postId, reply.id);
+                    } catch (e) {
+                      console.error(e);
+                      await loadReplies();
+                    }
+                  }}
+                  className="flex-shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100 p-1.5 rounded-lg text-gray-300 dark:text-gray-700 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                  title="Unsend reply"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
             </div>
             );
           })}
