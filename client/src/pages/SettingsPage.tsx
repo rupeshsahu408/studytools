@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Camera, Save, Check, Loader2, Globe, EyeOff, ArrowLeft,
-  Settings, User,
+  Settings, User, UserX, ShieldOff,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -10,8 +10,11 @@ import Navbar from "../components/Navbar";
 import {
   subscribeToSocialUser,
   updateSocialProfile,
+  getBlockedUsers,
+  unblockUser,
   type SocialUser,
 } from "../lib/firestore";
+import BlueTick from "../components/BlueTick";
 import { storage } from "../lib/firebase";
 
 const GRADIENTS = [
@@ -66,6 +69,33 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+
+  const [blockedList, setBlockedList] = useState<SocialUser[]>([]);
+  const [loadingBlocked, setLoadingBlocked] = useState(false);
+  const [unblockingUid, setUnblockingUid] = useState<string | null>(null);
+
+  // Load blocked users list whenever blocked UIDs change
+  useEffect(() => {
+    if (!user?.uid) return;
+    setLoadingBlocked(true);
+    getBlockedUsers(user.uid)
+      .then(setBlockedList)
+      .catch(console.error)
+      .finally(() => setLoadingBlocked(false));
+  }, [user?.uid, socialUser?.blockedUsers?.length]);
+
+  const handleUnblockUser = async (targetUid: string) => {
+    if (!user?.uid) return;
+    setUnblockingUid(targetUid);
+    try {
+      await unblockUser(user.uid, targetUid);
+      setBlockedList(prev => prev.filter(u => u.uid !== targetUid));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setUnblockingUid(null);
+    }
+  };
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -358,6 +388,57 @@ export default function SettingsPage() {
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* ── Blocked Users ── */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
+              <SectionHeader icon={<UserX className="w-4 h-4" />} title="Blocked Users" />
+
+              {loadingBlocked ? (
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…
+                </div>
+              ) : blockedList.length === 0 ? (
+                <div className="flex items-center gap-3 py-2">
+                  <div className="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center flex-shrink-0">
+                    <ShieldOff className="w-4 h-4 text-gray-400" />
+                  </div>
+                  <p className="text-sm text-gray-400 dark:text-gray-500">No blocked users. You can block someone from their profile.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {blockedList.map(blocked => (
+                    <div key={blocked.uid} className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-2.5">
+                      {blocked.photoURL ? (
+                        <img src={blocked.photoURL} alt={blocked.displayName} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-bold text-white">
+                            {(blocked.displayName || "?")[0].toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{blocked.displayName}</p>
+                          {blocked.username && <BlueTick size={12} />}
+                        </div>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">@{blocked.username}</p>
+                      </div>
+                      <button
+                        onClick={() => handleUnblockUser(blocked.uid)}
+                        disabled={unblockingUid === blocked.uid}
+                        className="flex-shrink-0 text-xs font-semibold text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 border border-red-100 dark:border-red-800/30 px-2.5 py-1.5 rounded-xl transition-colors disabled:opacity-50"
+                      >
+                        {unblockingUid === blocked.uid ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Unblock"}
+                      </button>
+                    </div>
+                  ))}
+                  <p className="text-xs text-gray-400 dark:text-gray-600 mt-2">
+                    Blocked users cannot interact with you or see your content.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* ── Error ── */}

@@ -12,9 +12,10 @@ import {
   getUserByUsername, subscribeToSocialUser,
   sendFriendRequest, cancelFriendRequest,
   acceptFriendRequest, declineFriendRequest,
-  removeFriend,
+  removeFriend, blockUser, unblockUser,
   type SocialUser,
 } from "../lib/firestore";
+import BlueTick from "../components/BlueTick";
 
 const AVATAR_GRADIENTS = [
   "from-violet-500 to-purple-600",
@@ -77,6 +78,7 @@ export default function PublicProfilePage() {
   const [notFound, setNotFound] = useState(false);
   const [myData, setMyData] = useState<SocialUser | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [blockLoading, setBlockLoading] = useState(false);
 
   useEffect(() => {
     if (!username) return;
@@ -139,6 +141,25 @@ export default function PublicProfilePage() {
     finally { setActionLoading(false); }
   };
 
+  const iBlockedThem = !!(myData?.blockedUsers?.includes(profile?.uid || ""));
+
+  const handleBlock = async () => {
+    if (!user || !profile || blockLoading) return;
+    if (!confirm(`Block @${profile.username}? They won't be able to interact with you.`)) return;
+    setBlockLoading(true);
+    try { await blockUser(user.uid, profile.uid); }
+    catch (e) { console.error(e); }
+    finally { setBlockLoading(false); }
+  };
+
+  const handleUnblock = async () => {
+    if (!user || !profile || blockLoading) return;
+    setBlockLoading(true);
+    try { await unblockUser(user.uid, profile.uid); }
+    catch (e) { console.error(e); }
+    finally { setBlockLoading(false); }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
@@ -172,6 +193,35 @@ export default function PublicProfilePage() {
 
   const displayName = isAnonymousProfile ? "Anonymous" : profile.displayName;
   const displayBio = isAnonymousProfile ? null : profile.bio;
+
+  // If current user has blocked this profile, show a restricted view
+  if (iBlockedThem && !isViewingSelf) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+        <Navbar />
+        <div className="pt-14 flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+          <div className="w-20 h-20 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mb-4">
+            <UserX className="w-10 h-10 text-red-400" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">User Blocked</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-xs">You've blocked @{profile.username}. Unblock to view their profile.</p>
+          <div className="flex gap-3">
+            <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-600 dark:text-gray-400 font-medium hover:underline text-sm">
+              <ArrowLeft className="w-4 h-4" /> Go back
+            </button>
+            <button
+              onClick={handleUnblock}
+              disabled={blockLoading}
+              className="flex items-center gap-2 text-sm font-bold bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white px-4 py-2 rounded-xl transition-colors"
+            >
+              {blockLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              Unblock @{profile.username}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -253,13 +303,33 @@ export default function PublicProfilePage() {
                   Edit Profile
                 </Link>
               )}
+              {!isViewingSelf && (
+                <button
+                  onClick={iBlockedThem ? handleUnblock : handleBlock}
+                  disabled={blockLoading}
+                  title={iBlockedThem ? "Unblock user" : "Block user"}
+                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border transition-colors disabled:opacity-60 ${
+                    iBlockedThem
+                      ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30"
+                      : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-800/40"
+                  }`}
+                >
+                  {blockLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+                      <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                    </svg>
+                  )}
+                  {iBlockedThem ? "Unblock" : "Block"}
+                </button>
+              )}
             </div>
           </div>
 
           {/* Profile Info */}
           <div className="mb-5">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl font-black text-gray-900 dark:text-white">{displayName}</h1>
+              {!isAnonymousProfile && profile.username && <BlueTick size={20} />}
               {isAnonymousProfile && (
                 <span className="flex items-center gap-1 text-xs font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
                   <EyeOff className="w-3 h-3" /> Anonymous
@@ -268,7 +338,14 @@ export default function PublicProfilePage() {
             </div>
 
             {!isAnonymousProfile && (
-              <p className="text-green-600 dark:text-green-400 font-medium text-sm">@{profile.username}</p>
+              <div className="flex items-center gap-3 flex-wrap mt-0.5">
+                <p className="text-green-600 dark:text-green-400 font-medium text-sm">@{profile.username}</p>
+                {(profile.coins ?? 0) > 0 && (
+                  <span className="flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full border border-amber-100 dark:border-amber-800/30">
+                    🪙 {profile.coins} Topper Coins
+                  </span>
+                )}
+              </div>
             )}
 
             {isAnonymousProfile ? (

@@ -736,21 +736,23 @@ export default function DiscussionView({
         </div>
       ) : (
         <div className="space-y-3">
-          {posts.map(post => (
-            <PostCard
-              key={post.id}
-              post={post}
-              currentUid={uid}
-              chapterId={chapterId}
-              chapterName={chapterName}
-              subject={subject}
-              language={language}
-              chapterText={chapterText}
-              userName={displayName}
-              onDelete={handleDelete}
-              onLike={handleLike}
-            />
-          ))}
+          {posts
+            .filter(post => !(socialUser?.blockedUsers || []).includes(post.uid))
+            .map(post => (
+              <PostCard
+                key={post.id}
+                post={post}
+                currentUid={uid}
+                chapterId={chapterId}
+                chapterName={chapterName}
+                subject={subject}
+                language={language}
+                chapterText={chapterText}
+                userName={displayName}
+                onDelete={handleDelete}
+                onLike={handleLike}
+              />
+            ))}
         </div>
       )}
     </div>

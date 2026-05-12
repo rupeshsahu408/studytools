@@ -1,0 +1,63 @@
+Next implementation includes three major features that need to be carefully designed and integrated into the system.
+
+---
+
+## 1. Verified Blue Tick System (Instagram-like)
+
+We need to introduce a blue tick verification system similar to Instagram.
+
+* Every user will receive a blue tick once they complete username selection during onboarding.
+* This blue tick should be visible across the entire platform wherever the username is displayed.
+* It should be consistent and always appear next to the username (e.g., in profiles, Discover page, chat/discussion, and any user listing).
+
+This is not a manual verification system for now — every user will automatically get the blue tick as part of their profile identity system.
+
+---
+
+## 2. Coin System (600 Coins per User)
+
+Each user should receive **600 coins** automatically when they sign up or create a new account.
+
+* These coins must be stored in the user’s profile data.
+* The coin balance should be visible on their profile page.
+* When another user visits their profile, the coin count should also be displayed clearly.
+
+This coin system will be used later for platform features, but for now it should just be properly implemented and visible.
+
+---
+
+## 3. User Blocking System
+
+Add a feature where users can block other users.
+
+* If User A blocks User B:
+
+  * User B should not be able to interact with User A
+  * User B should not see User A’s content or profile
+  * User A should not receive any messages or interactions from User B
+
+Blocked users should be managed properly in the backend.
+
+Also:
+
+* A dedicated section should exist where users can view and manage blocked users
+* Decide the best UI placement for this (settings or privacy section) so it does not disturb the user experience
+
+---
+
+## Final Requirements
+
+Please implement all three features carefully:
+
+* Blue tick system across the platform
+* 600 coins per user with proper display on profiles
+* Fully functional block/unblock system
+
+After implementation, thoroughly test everything to ensure:
+
+* Blue tick appears everywhere correctly
+* Coins are assigned and displayed properly
+* Blocking system works without loopholes or UI issues
+* No conflicts with existing features like Discover, chat, or anonymous mode
+
+Make sure everything is stable, consistent, and production-ready.

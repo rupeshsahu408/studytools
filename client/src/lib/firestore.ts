@@ -934,6 +934,8 @@ export interface SocialUser {
   district?: string;
   socialLinks?: SocialLinks;
   isAnonymous?: boolean;
+  coins?: number;
+  blockedUsers?: string[];
 }
 
 export async function checkUsernameAvailable(username: string): Promise<boolean> {
@@ -963,6 +965,8 @@ export async function setupUserProfile(
       friends: [],
       friendRequestsSent: [],
       friendRequestsReceived: [],
+      blockedUsers: [],
+      coins: 600,
     }, { merge: true });
   });
 }
@@ -989,6 +993,8 @@ export async function getUserById(uid: string): Promise<SocialUser | null> {
     district: data.profile?.district || "",
     socialLinks: data.socialLinks || {},
     isAnonymous: data.isAnonymous || false,
+    coins: data.coins ?? (data.username ? 600 : 0),
+    blockedUsers: data.blockedUsers || [],
   };
 }
 
@@ -1034,6 +1040,8 @@ export function subscribeToSocialUser(
       district: data.profile?.district || "",
       socialLinks: data.socialLinks || {},
       isAnonymous: data.isAnonymous || false,
+      coins: data.coins ?? (data.username ? 600 : 0),
+      blockedUsers: data.blockedUsers || [],
     });
   });
 }
@@ -1138,6 +1146,8 @@ function docToSocialUser(d: DocumentSnapshot): SocialUser | null {
     district: data.profile?.district || "",
     socialLinks: data.socialLinks || {},
     isAnonymous: false,
+    coins: data.coins ?? 600,
+    blockedUsers: data.blockedUsers || [],
   };
 }
 
@@ -1170,4 +1180,38 @@ export async function searchUsersByPrefix(prefix: string): Promise<SocialUser[]>
   );
   const snap = await getDocs(q);
   return snap.docs.map(docToSocialUser).filter(Boolean) as SocialUser[];
+}
+
+// ─── Block / Unblock ──────────────────────────────────────────────────────────
+
+export async function blockUser(uid: string, targetUid: string): Promise<void> {
+  const batch = writeBatch(db);
+  // Add to blocked list
+  batch.set(doc(db, "users", uid), { blockedUsers: arrayUnion(targetUid) }, { merge: true });
+  // Remove from friends (both sides)
+  batch.set(doc(db, "users", uid), { friends: arrayRemove(targetUid) }, { merge: true });
+  batch.set(doc(db, "users", targetUid), { friends: arrayRemove(uid) }, { merge: true });
+  // Cancel any pending requests (both directions)
+  batch.set(doc(db, "users", uid), {
+    friendRequestsSent: arrayRemove(targetUid),
+    friendRequestsReceived: arrayRemove(targetUid),
+  }, { merge: true });
+  batch.set(doc(db, "users", targetUid), {
+    friendRequestsSent: arrayRemove(uid),
+    friendRequestsReceived: arrayRemove(uid),
+  }, { merge: true });
+  await batch.commit();
+}
+
+export async function unblockUser(uid: string, targetUid: string): Promise<void> {
+  await setDoc(doc(db, "users", uid), { blockedUsers: arrayRemove(targetUid) }, { merge: true });
+}
+
+export async function getBlockedUsers(uid: string): Promise<SocialUser[]> {
+  const userSnap = await getDoc(doc(db, "users", uid));
+  if (!userSnap.exists()) return [];
+  const blockedUids: string[] = userSnap.data().blockedUsers || [];
+  if (blockedUids.length === 0) return [];
+  const results = await Promise.all(blockedUids.map(buid => getUserById(buid)));
+  return results.filter(Boolean) as SocialUser[];
 }

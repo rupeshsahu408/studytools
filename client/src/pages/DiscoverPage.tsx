@@ -4,6 +4,7 @@ import {
   Compass, Search, Loader2, UserPlus, UserCheck, UserMinus,
   Users, Clock, Bell, UserX, ChevronDown, X,
 } from "lucide-react";
+import BlueTick from "../components/BlueTick";
 import { useAuth } from "../contexts/AuthContext";
 import Navbar from "../components/Navbar";
 import {
@@ -148,9 +149,12 @@ function UserCard({
       </Link>
       <div className="flex-1 min-w-0">
         <Link to={`/u/${user.username}`} className="block">
-          <p className="text-sm font-semibold text-gray-900 dark:text-white leading-snug truncate group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">
-            {user.displayName}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white leading-snug truncate group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">
+              {user.displayName}
+            </p>
+            {user.username && <BlueTick size={13} />}
+          </div>
           <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
             @{user.username}
             {(user.streak || 0) > 0 && <span className="ml-1.5">· 🔥 {user.streak}</span>}
@@ -202,6 +206,7 @@ function DiscoverTab({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const PAGE_SIZE = 20;
+  const blockedUids = myProfile?.blockedUsers || [];
 
   // Initial feed load
   const loadFeed = useCallback(async (reset = false) => {
@@ -213,7 +218,7 @@ function DiscoverTab({
     }
     try {
       const { users, lastDoc: newLast } = await getDiscoverUsers(PAGE_SIZE, reset ? null : lastDoc);
-      const filtered = users.filter(u => u.uid !== currentUid);
+      const filtered = users.filter(u => u.uid !== currentUid && !blockedUids.includes(u.uid));
       if (reset) {
         setFeedUsers(filtered);
       } else {
@@ -240,7 +245,7 @@ function DiscoverTab({
     setLoadingMore(true);
     try {
       const { users, lastDoc: newLast } = await getDiscoverUsers(PAGE_SIZE, lastDoc);
-      const filtered = users.filter(u => u.uid !== currentUid);
+      const filtered = users.filter(u => u.uid !== currentUid && !blockedUids.includes(u.uid));
       setFeedUsers(prev => {
         const existing = new Set(prev.map(u => u.uid));
         return [...prev, ...filtered.filter(u => !existing.has(u.uid))];
@@ -267,7 +272,7 @@ function DiscoverTab({
     debounceRef.current = setTimeout(async () => {
       try {
         const results = await searchUsersByPrefix(q);
-        setSearchResults(results.filter(u => u.uid !== currentUid));
+        setSearchResults(results.filter(u => u.uid !== currentUid && !blockedUids.includes(u.uid)));
       } catch (e) {
         console.error("Search error:", e);
         setSearchResults([]);

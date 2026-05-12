@@ -18,6 +18,7 @@ import {
 } from "../lib/firestore";
 import { storage } from "../lib/firebase";
 import Navbar from "../components/Navbar";
+import BlueTick from "../components/BlueTick";
 
 const SOCIAL_GRADIENTS = [
   "from-violet-500 to-purple-600",
@@ -350,9 +351,12 @@ export default function ProfilePage() {
 
               {/* Name + username */}
               <div className="mb-3">
-                <h2 className="text-lg font-black text-gray-900 dark:text-white">{displayName}</h2>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-lg font-black text-gray-900 dark:text-white">{displayName}</h2>
+                  {socialUser?.username && <BlueTick size={18} />}
+                </div>
                 {socialUser?.username && (
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap mt-0.5">
                     <p className="text-green-600 dark:text-green-400 font-medium text-sm flex items-center gap-1">
                       @{socialUser.username}
                     </p>
@@ -361,8 +365,13 @@ export default function ProfilePage() {
                     </span>
                   </div>
                 )}
-                <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
                   <span>{socialUser?.friends?.length ?? 0} {(socialUser?.friends?.length ?? 0) === 1 ? "friend" : "friends"}</span>
+                  {(socialUser?.coins ?? 0) > 0 && (
+                    <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-semibold bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full border border-amber-100 dark:border-amber-800/30">
+                      🪙 {socialUser!.coins!} Topper Coins
+                    </span>
+                  )}
                   {(socialUser?.friendRequestsReceived?.length ?? 0) > 0 && (
                     <span className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-bold px-2 py-0.5 rounded-full">
                       {socialUser!.friendRequestsReceived!.length} request{socialUser!.friendRequestsReceived!.length !== 1 ? "s" : ""}
