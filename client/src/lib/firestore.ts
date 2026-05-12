@@ -494,6 +494,49 @@ export async function getLeaderboard(weekKey?: string): Promise<LeaderboardEntry
 
 // ─── Phase 5 — Discussions ───────────────────────────────────────────────────
 
+export function subscribeDiscussionPosts(
+  chapterId: string,
+  callback: (posts: DiscussionPost[]) => void
+): () => void {
+  const q = collection(db, "discussions", chapterId, "posts");
+  return onSnapshot(
+    q,
+    snap => {
+      const posts = snap.docs.map(d => ({ id: d.id, ...d.data() } as DiscussionPost));
+      callback(posts.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis?.() ?? 0;
+        const bTime = b.createdAt?.toMillis?.() ?? 0;
+        return bTime - aTime;
+      }));
+    },
+    () => callback([])
+  );
+}
+
+export async function addUpvotePost(chapterId: string, postId: string, uid: string): Promise<void> {
+  const ref = doc(db, "discussions", chapterId, "posts", postId);
+  await updateDoc(ref, { upvotes: arrayUnion(uid) });
+}
+
+export async function removeUpvotePost(chapterId: string, postId: string, uid: string): Promise<void> {
+  const ref = doc(db, "discussions", chapterId, "posts", postId);
+  await updateDoc(ref, { upvotes: arrayRemove(uid) });
+}
+
+export async function addUpvoteReply(
+  chapterId: string, postId: string, replyId: string, uid: string
+): Promise<void> {
+  const ref = doc(db, "discussions", chapterId, "posts", postId, "replies", replyId);
+  await updateDoc(ref, { upvotes: arrayUnion(uid) });
+}
+
+export async function removeUpvoteReply(
+  chapterId: string, postId: string, replyId: string, uid: string
+): Promise<void> {
+  const ref = doc(db, "discussions", chapterId, "posts", postId, "replies", replyId);
+  await updateDoc(ref, { upvotes: arrayRemove(uid) });
+}
+
 export async function createDiscussionPost(
   chapterId: string, uid: string, userName: string, text: string
 ): Promise<string> {

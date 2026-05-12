@@ -1,25 +1,32 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
-  MessageSquare, ThumbsUp, Reply, Bot, Trash2,
-  Send, ChevronDown, ChevronUp, Sparkles, Loader2,
-  MessageCircle, User,
+  Heart, MessageCircle, Trash2, Send, ChevronDown, ChevronUp,
+  Sparkles, Loader2, Bot, Users, Flame,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useProgress } from "../contexts/ProgressContext";
 import {
-  getDiscussionPosts, createDiscussionPost, toggleUpvotePost, deleteDiscussionPost,
-  getDiscussionReplies, addDiscussionReply, toggleUpvoteReply, createReplyNotification,
+  subscribeDiscussionPosts, createDiscussionPost,
+  addUpvotePost, removeUpvotePost,
+  deleteDiscussionPost,
+  getDiscussionReplies, addDiscussionReply,
+  addUpvoteReply, removeUpvoteReply,
+  createReplyNotification,
   type DiscussionPost, type DiscussionReply,
 } from "../lib/firestore";
 import { sendChatMessage } from "../lib/api";
 
+// ─── Props ────────────────────────────────────────────────────────────────────
+
 interface DiscussionViewProps {
   chapterId: string;
   chapterName: string;
-  subject: string;
-  language: string;
-  chapterText: string;
+  subject?: string;
+  language?: string;
+  chapterText?: string;
 }
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatTimeAgo(ts: any): string {
   if (!ts) return "";
@@ -33,41 +40,119 @@ function formatTimeAgo(ts: any): string {
   } catch { return ""; }
 }
 
+const AVATAR_PALETTES = [
+  { from: "from-violet-500", to: "to-purple-600" },
+  { from: "from-blue-500", to: "to-indigo-600" },
+  { from: "from-rose-500", to: "to-pink-600" },
+  { from: "from-amber-500", to: "to-orange-600" },
+  { from: "from-teal-500", to: "to-cyan-600" },
+  { from: "from-green-500", to: "to-emerald-600" },
+];
+
+function getAvatarPalette(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_PALETTES[Math.abs(hash) % AVATAR_PALETTES.length];
+}
+
 function getInitials(name: string): string {
   return name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "?";
 }
 
 function Avatar({ name, isAI = false, size = "sm" }: { name: string; isAI?: boolean; size?: "sm" | "md" }) {
-  const sz = size === "sm" ? "w-7 h-7 text-xs" : "w-9 h-9 text-sm";
+  const sz = size === "md" ? "w-9 h-9 text-sm" : "w-7 h-7 text-xs";
   if (isAI) {
     return (
-      <div className={`${sz} rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center flex-shrink-0`}>
+      <div className={`${sz} rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center flex-shrink-0 shadow-sm`}>
         <Bot className="w-3.5 h-3.5 text-white" />
       </div>
     );
   }
+  const { from, to } = getAvatarPalette(name);
   return (
-    <div className={`${sz} rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0`}>
-      <span className="text-white font-bold">{getInitials(name)}</span>
+    <div className={`${sz} rounded-full bg-gradient-to-br ${from} ${to} flex items-center justify-center flex-shrink-0 shadow-sm`}>
+      <span className="text-white font-bold leading-none">{getInitials(name)}</span>
     </div>
   );
 }
+
+// ─── Animated Like Button ─────────────────────────────────────────────────────
+
+function LikeButton({
+  count,
+  liked,
+  onLike,
+  size = "sm",
+}: {
+  count: number;
+  liked: boolean;
+  onLike: () => void;
+  size?: "sm" | "xs";
+}) {
+  const [animating, setAnimating] = useState(false);
+  const [showBurst, setShowBurst] = useState(false);
+
+  const handleClick = () => {
+    if (!liked) {
+      setAnimating(true);
+      setShowBurst(true);
+      setTimeout(() => setAnimating(false), 400);
+      setTimeout(() => setShowBurst(false), 500);
+    }
+    onLike();
+  };
+
+  const iconSz = size === "xs" ? "w-3 h-3" : "w-3.5 h-3.5";
+  const textSz = size === "xs" ? "text-[11px]" : "text-xs";
+
+  return (
+    <button
+      onClick={handleClick}
+      className={`relative group flex items-center gap-1 ${textSz} font-semibold transition-all duration-150 select-none ${
+        liked
+          ? "text-rose-500 dark:text-rose-400"
+          : "text-gray-400 dark:text-gray-500 hover:text-rose-500 dark:hover:text-rose-400"
+      }`}
+    >
+      {/* Burst ring (only when liking) */}
+      {showBurst && (
+        <span
+          className="absolute inset-0 rounded-full border-2 border-rose-400 animate-like-burst pointer-events-none"
+          style={{ top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "24px", height: "24px" }}
+        />
+      )}
+
+      <Heart
+        className={`${iconSz} transition-colors ${animating ? "animate-like-pop" : ""} ${
+          liked ? "fill-rose-500 dark:fill-rose-400" : "fill-none group-hover:fill-rose-300/40"
+        }`}
+      />
+      <span className={`tabular-nums transition-all ${liked ? "text-rose-500 dark:text-rose-400" : ""}`}>
+        {count > 0 ? count : ""}
+      </span>
+    </button>
+  );
+}
+
+// ─── Reply Thread ─────────────────────────────────────────────────────────────
 
 interface ReplyListProps {
   chapterId: string;
   postId: string;
   postAuthorUid: string;
+  postText: string;
   currentUid: string;
   chapterName: string;
-  subject: string;
-  language: string;
-  chapterText: string;
+  subject?: string;
+  language?: string;
+  chapterText?: string;
   userName: string;
   replyCount: number;
 }
 
 function ReplyList({
-  chapterId, postId, postAuthorUid, currentUid, chapterName, subject, language, chapterText, userName, replyCount
+  chapterId, postId, postAuthorUid, postText, currentUid,
+  chapterName, subject, language, chapterText, userName, replyCount,
 }: ReplyListProps) {
   const [replies, setReplies] = useState<DiscussionReply[]>([]);
   const [expanded, setExpanded] = useState(false);
@@ -75,23 +160,24 @@ function ReplyList({
   const [replyText, setReplyText] = useState("");
   const [posting, setPosting] = useState(false);
   const [aiAnswering, setAiAnswering] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const loadReplies = useCallback(async () => {
-    if (loading) return;
     setLoading(true);
     try {
       const data = await getDiscussionReplies(chapterId, postId);
       setReplies(data);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
   }, [chapterId, postId]);
 
   const handleExpand = () => {
-    if (!expanded) loadReplies();
-    setExpanded(e => !e);
+    const next = !expanded;
+    setExpanded(next);
+    if (next) {
+      loadReplies();
+      setTimeout(() => inputRef.current?.focus(), 150);
+    }
   };
 
   const handleReply = async () => {
@@ -101,161 +187,245 @@ function ReplyList({
     try {
       await addDiscussionReply(chapterId, postId, currentUid, userName, text, false);
       setReplyText("");
-      // Notify the post author if it's a different user
       if (postAuthorUid && postAuthorUid !== currentUid) {
         createReplyNotification(postAuthorUid, chapterId, postId, userName, text, chapterName)
           .catch(console.warn);
       }
       await loadReplies();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setPosting(false);
-    }
+      setTimeout(() => inputRef.current?.focus(), 50);
+    } catch (e) { console.error(e); }
+    finally { setPosting(false); }
   };
 
-  const handleAIAnswer = async (postText: string) => {
-    if (aiAnswering) return;
+  const handleAIAnswer = async () => {
+    if (aiAnswering || !chapterText) return;
     setAiAnswering(true);
-    if (!expanded) {
-      await loadReplies();
-      setExpanded(true);
-    }
+    if (!expanded) { setExpanded(true); await loadReplies(); }
     try {
       const query = language === "hindi"
         ? `एक छात्र ने यह सवाल पूछा है: "${postText}". इसे इस chapter के context में आसान Hindi में explain करो।`
         : `A student asked: "${postText}". Please answer this in the context of this chapter in clear, simple language.`;
       const data = await sendChatMessage(
         [{ role: "user", content: query }],
-        chapterText,
-        chapterName,
-        subject,
-        language
+        chapterText, chapterName, subject || "Science", language || "english"
       );
       await addDiscussionReply(chapterId, postId, "ai", "AI Tutor", data.reply, true);
       await loadReplies();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setAiAnswering(false);
-    }
+    } catch (e) { console.error(e); }
+    finally { setAiAnswering(false); }
   };
 
-  const handleUpvoteReply = async (replyId: string) => {
-    try {
-      await toggleUpvoteReply(chapterId, postId, replyId, currentUid);
-      setReplies(prev => prev.map(r => {
-        if (r.id !== replyId) return r;
-        const upvoted = r.upvotes.includes(currentUid);
-        return {
-          ...r,
-          upvotes: upvoted
-            ? r.upvotes.filter(u => u !== currentUid)
-            : [...r.upvotes, currentUid],
-        };
-      }));
-    } catch (e) { console.error(e); }
-  };
+  const handleUpvoteReply = useCallback((reply: DiscussionReply) => {
+    const wasLiked = reply.upvotes.includes(currentUid);
+    setReplies(prev => prev.map(r => {
+      if (r.id !== reply.id) return r;
+      return {
+        ...r,
+        upvotes: wasLiked
+          ? r.upvotes.filter(u => u !== currentUid)
+          : [...r.upvotes, currentUid],
+      };
+    }));
+    if (wasLiked) {
+      removeUpvoteReply(chapterId, postId, reply.id, currentUid).catch(console.error);
+    } else {
+      addUpvoteReply(chapterId, postId, reply.id, currentUid).catch(console.error);
+    }
+  }, [currentUid, chapterId, postId]);
+
+  const totalReplies = replies.length || replyCount;
 
   return (
-    <div className="mt-3">
+    <div className="mt-2.5">
+      {/* Action row */}
       <div className="flex items-center gap-3 flex-wrap">
         <button
           onClick={handleExpand}
-          className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 hover:text-green-600 dark:hover:text-green-400 transition-colors">
-          <Reply className="w-3.5 h-3.5" />
-          {replyCount > 0 ? `${replyCount} ${replyCount === 1 ? "reply" : "replies"}` : "Reply"}
+          className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
+            expanded
+              ? "text-green-600 dark:text-green-400"
+              : "text-gray-400 dark:text-gray-500 hover:text-green-600 dark:hover:text-green-400"
+          }`}
+        >
+          <MessageCircle className="w-3.5 h-3.5" />
+          {totalReplies > 0 ? `${totalReplies} ${totalReplies === 1 ? "reply" : "replies"}` : "Reply"}
           {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
         </button>
-        <button
-          onClick={() => handleAIAnswer("")}
-          disabled={aiAnswering}
-          className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 hover:text-green-700 disabled:opacity-50 transition-colors font-medium">
-          {aiAnswering
-            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            : <Sparkles className="w-3.5 h-3.5" />
-          }
-          {aiAnswering ? "AI thinking..." : "Ask AI"}
-        </button>
+
+        {chapterText && (
+          <button
+            onClick={handleAIAnswer}
+            disabled={aiAnswering}
+            className="flex items-center gap-1.5 text-xs font-semibold text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 disabled:opacity-50 transition-colors"
+          >
+            {aiAnswering
+              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              : <Sparkles className="w-3.5 h-3.5" />
+            }
+            {aiAnswering ? "AI thinking…" : "Ask AI"}
+          </button>
+        )}
       </div>
 
-      
-        {expanded && (
-          <div
-            className="mt-3 ml-4 pl-4 border-l-2 border-gray-100 dark:border-gray-800 space-y-3">
+      {/* Replies panel */}
+      {expanded && (
+        <div className="mt-3 ml-3 pl-4 border-l-2 border-gray-100 dark:border-gray-800 space-y-3">
+          {loading && (
+            <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…
+            </div>
+          )}
 
-            {loading && (
-              <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading replies...
-              </div>
-            )}
-
-            {!loading && replies.map(reply => (
-              <div
-                key={reply.id}
-                className={`flex items-start gap-2.5 ${reply.isAI ? "bg-green-50 dark:bg-green-900/10 rounded-xl p-3" : ""}`}>
-                <Avatar name={reply.userName} isAI={reply.isAI} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                    <span className="text-xs font-semibold text-gray-900 dark:text-white">{reply.userName}</span>
-                    {reply.isAI && (
-                      <span className="text-xs bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded-full font-medium">
-                        AI Tutor
-                      </span>
-                    )}
-                    <span className="text-xs text-gray-400 dark:text-gray-500">{formatTimeAgo(reply.createdAt)}</span>
-                  </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{reply.text}</p>
-                  <button
-                    onClick={() => handleUpvoteReply(reply.id)}
-                    className={`flex items-center gap-1 text-xs mt-1.5 transition-colors ${
-                      reply.upvotes.includes(currentUid)
-                        ? "text-green-600 dark:text-green-400"
-                        : "text-gray-400 dark:text-gray-500 hover:text-green-600 dark:hover:text-green-400"
-                    }`}>
-                    <ThumbsUp className="w-3 h-3" />
-                    {reply.upvotes.length > 0 && reply.upvotes.length}
-                  </button>
+          {!loading && replies.map(reply => (
+            <div
+              key={reply.id}
+              className={`flex items-start gap-2.5 animate-post-in ${
+                reply.isAI
+                  ? "bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/30 rounded-xl p-3"
+                  : ""
+              }`}
+            >
+              <Avatar name={reply.userName} isAI={reply.isAI} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                  <span className="text-xs font-semibold text-gray-900 dark:text-white">{reply.userName}</span>
+                  {reply.isAI && (
+                    <span className="text-[10px] bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded-full font-semibold uppercase tracking-wide">
+                      AI Tutor
+                    </span>
+                  )}
+                  <span className="text-[10px] text-gray-400 dark:text-gray-500">{formatTimeAgo(reply.createdAt)}</span>
+                </div>
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{reply.text}</p>
+                <div className="mt-1.5">
+                  <LikeButton
+                    count={reply.upvotes.length}
+                    liked={reply.upvotes.includes(currentUid)}
+                    onLike={() => handleUpvoteReply(reply)}
+                    size="xs"
+                  />
                 </div>
               </div>
-            ))}
+            </div>
+          ))}
 
-            {!loading && replies.length === 0 && (
-              <p className="text-xs text-gray-400 dark:text-gray-500 py-1">No replies yet. Be the first!</p>
-            )}
+          {!loading && replies.length === 0 && (
+            <p className="text-xs text-gray-400 dark:text-gray-500 py-1">No replies yet — be the first!</p>
+          )}
 
-            {/* Reply input */}
-            <div className="flex items-center gap-2 pt-1">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
-                <User className="w-3 h-3 text-white" />
-              </div>
-              <div className="flex-1 flex items-center gap-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2">
-                <input
-                  type="text"
-                  value={replyText}
-                  onChange={e => setReplyText(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter") handleReply(); }}
-                  placeholder="Write a reply..."
-                  className="flex-1 text-xs bg-transparent outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                  disabled={posting}
-                />
-                <button
-                  onClick={handleReply}
-                  disabled={!replyText.trim() || posting}
-                  className="text-green-600 dark:text-green-400 hover:text-green-700 disabled:opacity-40 transition-colors flex-shrink-0">
-                  {posting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                </button>
-              </div>
+          {/* Reply input */}
+          <div className="flex items-center gap-2 pt-0.5">
+            <div className="flex-1 flex items-center gap-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 focus-within:border-green-400 dark:focus-within:border-green-600 transition-colors">
+              <input
+                ref={inputRef}
+                type="text"
+                value={replyText}
+                onChange={e => setReplyText(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") handleReply(); }}
+                placeholder="Write a reply…"
+                className="flex-1 text-xs bg-transparent outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                disabled={posting}
+              />
+              <button
+                onClick={handleReply}
+                disabled={!replyText.trim() || posting}
+                className="text-green-600 dark:text-green-400 hover:text-green-700 disabled:opacity-40 transition-colors flex-shrink-0"
+              >
+                {posting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+              </button>
             </div>
           </div>
-        )}
-      
+        </div>
+      )}
     </div>
   );
 }
 
+// ─── Post Card ────────────────────────────────────────────────────────────────
+
+function PostCard({
+  post,
+  currentUid,
+  chapterId,
+  chapterName,
+  subject,
+  language,
+  chapterText,
+  userName,
+  onDelete,
+  onLike,
+}: {
+  post: DiscussionPost;
+  currentUid: string;
+  chapterId: string;
+  chapterName: string;
+  subject?: string;
+  language?: string;
+  chapterText?: string;
+  userName: string;
+  onDelete: (id: string) => void;
+  onLike: (post: DiscussionPost) => void;
+}) {
+  return (
+    <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-4 md:p-5 hover:border-gray-200 dark:hover:border-gray-700 transition-colors animate-post-in">
+      {/* Header */}
+      <div className="flex items-start gap-3 mb-3">
+        <Avatar name={post.userName} size="md" />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+            <span className="text-sm font-semibold text-gray-900 dark:text-white">{post.userName}</span>
+            {post.uid === currentUid && (
+              <span className="text-[10px] bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded-full font-semibold">
+                You
+              </span>
+            )}
+            <span className="text-xs text-gray-400 dark:text-gray-500">{formatTimeAgo(post.createdAt)}</span>
+          </div>
+          <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{post.text}</p>
+        </div>
+        {post.uid === currentUid && (
+          <button
+            onClick={() => onDelete(post.id)}
+            className="flex-shrink-0 p-1.5 rounded-lg text-gray-300 dark:text-gray-700 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            title="Delete post"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
+      {/* Divider */}
+      <div className="h-px bg-gray-50 dark:bg-gray-800 mb-2.5" />
+
+      {/* Actions row */}
+      <div className="flex items-center gap-4">
+        <LikeButton
+          count={post.upvotes.length}
+          liked={post.upvotes.includes(currentUid)}
+          onLike={() => onLike(post)}
+        />
+        <ReplyList
+          chapterId={chapterId}
+          postId={post.id}
+          postAuthorUid={post.uid}
+          postText={post.text}
+          currentUid={currentUid}
+          chapterName={chapterName}
+          subject={subject}
+          language={language}
+          chapterText={chapterText}
+          userName={userName}
+          replyCount={post.replyCount}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 export default function DiscussionView({
-  chapterId, chapterName, subject, language, chapterText
+  chapterId, chapterName, subject, language, chapterText,
 }: DiscussionViewProps) {
   const { user } = useAuth();
   const { userData } = useProgress();
@@ -264,26 +434,23 @@ export default function DiscussionView({
   const [postText, setPostText] = useState("");
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const userName = userData?.profile?.name || user?.displayName || user?.email?.split("@")[0] || "Student";
   const uid = user?.uid || "";
 
-  const loadPosts = useCallback(async () => {
-    try {
-      const data = await getDiscussionPosts(chapterId);
-      setPosts(data);
-    } catch (e) {
-      console.error(e);
-      setError("Could not load discussions.");
-    } finally {
+  // ── Real-time subscription ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (!chapterId) return;
+    setLoading(true);
+    const unsub = subscribeDiscussionPosts(chapterId, (newPosts) => {
+      setPosts(newPosts);
       setLoading(false);
-    }
+    });
+    return unsub;
   }, [chapterId]);
 
-  useEffect(() => {
-    loadPosts();
-  }, [loadPosts]);
-
+  // ── Post ───────────────────────────────────────────────────────────────────
   const handlePost = async () => {
     const text = postText.trim();
     if (!text || posting || !uid) return;
@@ -292,164 +459,164 @@ export default function DiscussionView({
     try {
       await createDiscussionPost(chapterId, uid, userName, text);
       setPostText("");
-      await loadPosts();
-    } catch (e) {
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+      }
+    } catch {
       setError("Could not post. Please try again.");
     } finally {
       setPosting(false);
     }
   };
 
-  const handleUpvote = async (postId: string) => {
+  // ── Like (fully optimistic — no await before UI update) ────────────────────
+  const handleLike = useCallback((post: DiscussionPost) => {
     if (!uid) return;
-    try {
-      await toggleUpvotePost(chapterId, postId, uid);
-      setPosts(prev => prev.map(p => {
-        if (p.id !== postId) return p;
-        const upvoted = p.upvotes.includes(uid);
-        return {
-          ...p,
-          upvotes: upvoted
-            ? p.upvotes.filter(u => u !== uid)
-            : [...p.upvotes, uid],
-        };
-      }));
-    } catch (e) { console.error(e); }
-  };
+    const wasLiked = post.upvotes.includes(uid);
 
+    setPosts(prev => prev.map(p => {
+      if (p.id !== post.id) return p;
+      return {
+        ...p,
+        upvotes: wasLiked
+          ? p.upvotes.filter(u => u !== uid)
+          : [...p.upvotes, uid],
+      };
+    }));
+
+    if (wasLiked) {
+      removeUpvotePost(chapterId, post.id, uid).catch(() => {
+        setPosts(prev => prev.map(p => p.id === post.id ? { ...p, upvotes: [...p.upvotes, uid] } : p));
+      });
+    } else {
+      addUpvotePost(chapterId, post.id, uid).catch(() => {
+        setPosts(prev => prev.map(p => p.id === post.id ? { ...p, upvotes: p.upvotes.filter(u => u !== uid) } : p));
+      });
+    }
+  }, [uid, chapterId]);
+
+  // ── Delete ─────────────────────────────────────────────────────────────────
   const handleDelete = async (postId: string) => {
     if (!confirm("Delete this post?")) return;
     try {
       await deleteDiscussionPost(chapterId, postId);
-      setPosts(prev => prev.filter(p => p.id !== postId));
     } catch (e) { console.error(e); }
   };
 
-  return (
-    <div className="max-w-3xl">
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-2">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <MessageCircle className="w-5 h-5 text-green-600" />
-          Chapter Discussion
-          {posts.length > 0 && (
-            <span className="text-sm font-normal text-gray-400 ml-1">{posts.length} posts</span>
-          )}
-        </h2>
-      </div>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
-        Ask doubts, share tips, or discuss concepts from <strong>{chapterName}</strong>. You can also get an instant AI answer on any post.
-      </p>
+  const isGlobalRoom = chapterId.startsWith("_room_");
 
-      {/* Post composer */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-4 mb-6">
-        <div className="flex items-start gap-3">
-          <Avatar name={userName} size="md" />
-          <div className="flex-1">
-            <textarea
-              value={postText}
-              onChange={e => setPostText(e.target.value)}
-              placeholder={language === "hindi"
-                ? `${chapterName} के बारे में कोई सवाल या tip share करो...`
-                : `Ask a question or share a tip about ${chapterName}...`
-              }
-              rows={3}
-              className="w-full text-sm bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-4 py-3 outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 resize-none transition-colors focus:border-green-300 dark:focus:border-green-700"
-              disabled={posting}
-            />
-            <div className="flex items-center justify-between mt-2">
-              {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
-              <div className="ml-auto">
-                <button
-                  onClick={handlePost}
-                  disabled={!postText.trim() || posting}
-                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">
-                  {posting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                  {posting ? "Posting..." : "Post"}
-                </button>
+  return (
+    <div className="max-w-2xl">
+
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5 gap-3">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <Users className="w-5 h-5 text-green-600 dark:text-green-400" />
+            {isGlobalRoom ? "Community Discussion" : "Chapter Discussion"}
+            {!loading && posts.length > 0 && (
+              <span className="text-sm font-normal text-gray-400 dark:text-gray-500">
+                {posts.length} {posts.length === 1 ? "post" : "posts"}
+              </span>
+            )}
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+            {isGlobalRoom
+              ? "Ask doubts, share tips, and help fellow Bihar Board students."
+              : `Discuss concepts from ${chapterName}. Ask doubts or share tips with other students.`
+            }
+          </p>
+        </div>
+        {!loading && posts.length > 0 && (
+          <div className="flex items-center gap-1.5 flex-shrink-0 text-xs text-gray-400 dark:text-gray-500">
+            <Flame className="w-3.5 h-3.5 text-orange-400" />
+            <span>Live</span>
+          </div>
+        )}
+      </div>
+
+      {/* Composer */}
+      {uid && (
+        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-4 mb-5 shadow-sm">
+          <div className="flex items-start gap-3">
+            <Avatar name={userName} size="md" />
+            <div className="flex-1 min-w-0">
+              <textarea
+                ref={textareaRef}
+                value={postText}
+                onChange={e => {
+                  setPostText(e.target.value);
+                  e.target.style.height = "auto";
+                  e.target.style.height = Math.min(e.target.scrollHeight, 160) + "px";
+                }}
+                onKeyDown={e => {
+                  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) handlePost();
+                }}
+                placeholder={
+                  isGlobalRoom
+                    ? "Ask a question or share something useful for Bihar Board students…"
+                    : (language === "hindi"
+                        ? `${chapterName} के बारे में कोई सवाल या tip share करो…`
+                        : `Ask a question or share a tip about ${chapterName}…`)
+                }
+                rows={2}
+                style={{ resize: "none", minHeight: "60px", maxHeight: "160px" }}
+                className="w-full text-sm bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-3.5 py-2.5 outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-green-300 dark:focus:border-green-700 transition-colors overflow-y-auto"
+                disabled={posting}
+              />
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-[10px] text-gray-300 dark:text-gray-700">Ctrl+Enter to post</span>
+                <div className="flex items-center gap-2">
+                  {error && <p className="text-xs text-red-500">{error}</p>}
+                  <button
+                    onClick={handlePost}
+                    disabled={!postText.trim() || posting}
+                    className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors"
+                  >
+                    {posting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    {posting ? "Posting…" : "Post"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Posts list */}
+      {/* Posts */}
       {loading ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {[1, 2, 3].map(i => (
             <div key={i} className="h-28 bg-gray-100 dark:bg-gray-800 rounded-2xl animate-pulse" />
           ))}
         </div>
       ) : posts.length === 0 ? (
-        <div
-          className="text-center py-16">
+        <div className="text-center py-16 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl">
           <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <MessageSquare className="w-8 h-8 text-green-600 dark:text-green-400" />
+            <MessageCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
           </div>
-          <h3 className="text-base font-bold text-gray-900 dark:text-white mb-2">No discussions yet</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Be the first to start a discussion about this chapter!
+          <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">No posts yet</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
+            Be the first to start a discussion! Ask a doubt or share a helpful tip.
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          
-            {posts.map((post, i) => (
-              <div
-                key={post.id}
-                className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-5">
-
-                {/* Post header */}
-                <div className="flex items-start gap-3 mb-3">
-                  <Avatar name={post.userName} size="md" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-semibold text-gray-900 dark:text-white">{post.userName}</span>
-                      <span className="text-xs text-gray-400 dark:text-gray-500">{formatTimeAgo(post.createdAt)}</span>
-                    </div>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mt-1.5 whitespace-pre-wrap">
-                      {post.text}
-                    </p>
-                  </div>
-                  {post.uid === uid && (
-                    <button
-                      onClick={() => handleDelete(post.id)}
-                      className="text-gray-300 dark:text-gray-700 hover:text-red-500 dark:hover:text-red-400 transition-colors flex-shrink-0">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-
-                {/* Post actions */}
-                <div className="flex items-center gap-3 mb-2">
-                  <button
-                    onClick={() => handleUpvote(post.id)}
-                    className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
-                      post.upvotes.includes(uid)
-                        ? "text-green-600 dark:text-green-400"
-                        : "text-gray-400 dark:text-gray-500 hover:text-green-600 dark:hover:text-green-400"
-                    }`}>
-                    <ThumbsUp className="w-3.5 h-3.5" />
-                    {post.upvotes.length > 0 ? post.upvotes.length : "Like"}
-                  </button>
-                </div>
-
-                {/* Replies */}
-                <ReplyList
-                  chapterId={chapterId}
-                  postId={post.id}
-                  postAuthorUid={post.uid}
-                  currentUid={uid}
-                  chapterName={chapterName}
-                  subject={subject}
-                  language={language}
-                  chapterText={chapterText}
-                  userName={userName}
-                  replyCount={post.replyCount}
-                />
-              </div>
-            ))}
-          
+        <div className="space-y-3">
+          {posts.map(post => (
+            <PostCard
+              key={post.id}
+              post={post}
+              currentUid={uid}
+              chapterId={chapterId}
+              chapterName={chapterName}
+              subject={subject}
+              language={language}
+              chapterText={chapterText}
+              userName={userName}
+              onDelete={handleDelete}
+              onLike={handleLike}
+            />
+          ))}
         </div>
       )}
     </div>

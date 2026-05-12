@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import {
-  Trophy, Users, BookOpen, Copy, Check, LogIn, LogOut,
-  Plus, Loader2, ChevronRight, Crown, Medal, Award,
+  Trophy, Users, Copy, Check, LogIn, LogOut,
+  Plus, Loader2, Crown, Medal, Award,
   GraduationCap, Flame, Share2,
   Trash2, UserPlus, Bell, X, MessageSquare, ArrowRight,
+  MessageCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -16,6 +17,7 @@ import {
   type LeaderboardEntry, type ClassRoom, type ClassMember, type SharedChapter, type NotificationItem,
 } from "../lib/firestore";
 import Navbar from "../components/Navbar";
+import DiscussionView from "../components/DiscussionView";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -68,12 +70,10 @@ function LeaderboardTab({ currentUid, school, district }: { currentUid: string; 
 
   const weekKey = getWeekKey(weekOffset);
   const weekLabel = weekOffset === 0 ? "This Week" : weekOffset === 1 ? "Last Week" : `${weekOffset} weeks ago`;
-
   const top3 = filtered.slice(0, 3);
 
   return (
     <div>
-      {/* Week selector */}
       <div className="flex items-center justify-between mb-5">
         <div>
           <h3 className="text-base font-bold text-gray-900 dark:text-white">{weekLabel}</h3>
@@ -95,7 +95,6 @@ function LeaderboardTab({ currentUid, school, district }: { currentUid: string; 
         </div>
       </div>
 
-      {/* Filter tabs */}
       <div className="flex gap-2 mb-5">
         {[
           { key: "all", label: "All Bihar" },
@@ -136,7 +135,6 @@ function LeaderboardTab({ currentUid, school, district }: { currentUid: string; 
         </div>
       ) : (
         <>
-          {/* Top 3 podium */}
           {top3.length >= 2 && (
             <div className="grid grid-cols-3 gap-3 mb-6">
               {[top3[1], top3[0], top3[2]].filter(Boolean).map((entry, idx) => {
@@ -163,7 +161,6 @@ function LeaderboardTab({ currentUid, school, district }: { currentUid: string; 
             </div>
           )}
 
-          {/* Full list */}
           <div className="space-y-2">
             {filtered.map((entry, i) => {
               const rank = i + 1;
@@ -222,6 +219,56 @@ function LeaderboardTab({ currentUid, school, district }: { currentUid: string; 
   );
 }
 
+// ─── Discussion Tab ───────────────────────────────────────────────────────────
+
+const DISCUSSION_ROOMS = [
+  { id: "general",   label: "General",   emoji: "💬" },
+  { id: "physics",   label: "Physics",   emoji: "⚛️" },
+  { id: "chemistry", label: "Chemistry", emoji: "🧪" },
+  { id: "math",      label: "Math",      emoji: "📐" },
+  { id: "biology",   label: "Biology",   emoji: "🌿" },
+];
+
+function DiscussionTab() {
+  const [room, setRoom] = useState("general");
+  const current = DISCUSSION_ROOMS.find(r => r.id === room) || DISCUSSION_ROOMS[0];
+
+  return (
+    <div>
+      {/* Room selector */}
+      <div className="mb-5">
+        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2.5">
+          Choose a room
+        </p>
+        <div className="flex gap-2 flex-wrap">
+          {DISCUSSION_ROOMS.map(r => (
+            <button
+              key={r.id}
+              onClick={() => setRoom(r.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold transition-all border ${
+                room === r.id
+                  ? "bg-green-600 text-white border-green-600 shadow-sm"
+                  : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-green-300 dark:hover:border-green-700 hover:text-green-700 dark:hover:text-green-400"
+              }`}
+            >
+              <span>{r.emoji}</span>
+              {r.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Discussion feed — re-mounts on room change for fresh subscription */}
+      <DiscussionView
+        key={room}
+        chapterId={`_room_${room}`}
+        chapterName={`${current.label} Discussion`}
+        subject={current.label}
+      />
+    </div>
+  );
+}
+
 // ─── My Class Tab ─────────────────────────────────────────────────────────────
 
 function MyClassTab({
@@ -245,18 +292,15 @@ function MyClassTab({
   const [sharedChapters, setSharedChapters] = useState<SharedChapter[]>([]);
   const [loadingClass, setLoadingClass] = useState(true);
 
-  // Teacher - create class
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createClassName, setCreateClassName] = useState("");
   const [creatingClass, setCreatingClass] = useState(false);
   const [createError, setCreateError] = useState("");
 
-  // Student - join class
   const [joinCode, setJoinCode] = useState("");
   const [joiningClass, setJoiningClass] = useState(false);
   const [joinError, setJoinError] = useState("");
 
-  // Share chapter
   const [sharingChapterId, setSharingChapterId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -296,7 +340,7 @@ function MyClassTab({
       await refreshUserData();
       setShowCreateForm(false);
       setCreateClassName("");
-    } catch (e: any) {
+    } catch {
       setCreateError("Could not create class. Please try again.");
     } finally {
       setCreatingClass(false);
@@ -313,7 +357,7 @@ function MyClassTab({
       if (!cls) { setJoinError("Class not found. Check the invite code."); return; }
       await joinClass(cls.id, uid, displayName, school, district, classNum);
       await refreshUserData();
-    } catch (e: any) {
+    } catch {
       setJoinError("Could not join class. Please try again.");
     } finally {
       setJoiningClass(false);
@@ -325,13 +369,9 @@ function MyClassTab({
     if (!confirm(`Leave "${myClass.className}"? You can rejoin anytime with the invite code.`)) return;
     try {
       await leaveClass(classId, uid);
-      setMyClass(null);
-      setMembers([]);
-      setSharedChapters([]);
+      setMyClass(null); setMembers([]); setSharedChapters([]);
       await refreshUserData();
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
   };
 
   const handleShareChapter = async (chapterId: string) => {
@@ -345,11 +385,8 @@ function MyClassTab({
         chapter.chapterName, chapter.subject, chapter.classNum, chapter.language
       );
       await loadClassData(classId);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setSharingChapterId(null);
-    }
+    } catch (e) { console.error(e); }
+    finally { setSharingChapterId(null); }
   };
 
   const handleUnshare = async (chapterId: string) => {
@@ -378,12 +415,10 @@ function MyClassTab({
     );
   }
 
-  // ── No class yet ──────────────────────────────────────────────────────────
   if (!classId || !myClass) {
     return (
       <div>
         {isTeacher ? (
-          // Teacher: create class
           <div>
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/10 border border-green-100 dark:border-green-800 rounded-2xl p-6 mb-6 text-center">
               <div className="w-16 h-16 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -391,7 +426,7 @@ function MyClassTab({
               </div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Create Your Class</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 max-w-sm mx-auto">
-                Create a class, share an invite code with your students, and track their progress — all in one place.
+                Create a class, share an invite code with your students, and track their progress.
               </p>
               {!showCreateForm ? (
                 <button
@@ -430,7 +465,6 @@ function MyClassTab({
             </div>
           </div>
         ) : (
-          // Student: join class
           <div>
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/10 border border-blue-100 dark:border-blue-800 rounded-2xl p-6 mb-6 text-center">
               <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -438,7 +472,7 @@ function MyClassTab({
               </div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Join a Class</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 max-w-sm mx-auto">
-                Enter the 6-character invite code your teacher shared with you to join their class.
+                Enter the 6-character invite code your teacher shared with you.
               </p>
               <div className="max-w-xs mx-auto">
                 <input
@@ -460,7 +494,6 @@ function MyClassTab({
                 </button>
               </div>
             </div>
-
             <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 rounded-xl p-4">
               <p className="text-sm text-gray-600 dark:text-gray-300">
                 <strong>Don't have a code?</strong> Ask your teacher to share the invite code for their Topper 2.0 class.
@@ -472,12 +505,10 @@ function MyClassTab({
     );
   }
 
-  // ── Class found ───────────────────────────────────────────────────────────
   const isShared = (chapterId: string) => sharedChapters.some(sc => sc.chapterId === chapterId);
 
   return (
     <div className="space-y-6">
-      {/* Class header card */}
       <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/10 border border-green-100 dark:border-green-800 rounded-2xl p-5">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div>
@@ -504,7 +535,6 @@ function MyClassTab({
             </button>
           )}
         </div>
-        {/* Invite code (teachers + students can copy to share) */}
         <div className="flex items-center gap-2">
           <div className="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 flex items-center justify-between">
             <div>
@@ -513,7 +543,7 @@ function MyClassTab({
             </div>
             <button
               onClick={copyInviteCode}
-              className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 hover:text-green-700 transition-colors font-medium">
+              className="flex items-center gap-1.5 text-xs font-semibold text-green-600 dark:text-green-400 hover:text-green-700 transition-colors">
               {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
               {copied ? "Copied!" : "Copy"}
             </button>
@@ -521,95 +551,45 @@ function MyClassTab({
         </div>
       </div>
 
-      {/* Class Library */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-green-600" /> Class Library
-            {sharedChapters.length > 0 && (
-              <span className="text-xs font-normal text-gray-400">({sharedChapters.length})</span>
-            )}
+      {chapters.length > 0 && (
+        <div>
+          <h4 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
+            <Share2 className="w-4 h-4 text-green-600" /> Share Chapters
           </h4>
-        </div>
-
-        {sharedChapters.length === 0 ? (
-          <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-5 text-center">
-            <BookOpen className="w-8 h-8 text-gray-300 dark:text-gray-700 mx-auto mb-2" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">No chapters shared yet.</p>
-            {chapters.length > 0 && (
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Share your chapters below to add them here.</p>
-            )}
-          </div>
-        ) : (
           <div className="space-y-2">
-            {sharedChapters.map(sc => (
-              <div key={sc.id}
-                className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-3 flex items-center gap-3">
-                <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <BookOpen className="w-4 h-4 text-green-600 dark:text-green-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{sc.chapterName}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">{sc.subject} · Class {sc.classNum} · by {sc.sharedByName}</p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => navigate(`/chapter/${sc.chapterId}`)}
-                    className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 hover:text-green-700 font-medium">
-                    Open <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                  {(sc.sharedBy === uid || isTeacher) && (
+            {chapters.map(chapter => {
+              const shared = isShared(chapter.id);
+              return (
+                <div key={chapter.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-3 flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{chapter.chapterName}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">{chapter.subject} · Class {chapter.classNum}</p>
+                  </div>
+                  {shared ? (
                     <button
-                      onClick={() => handleUnshare(sc.chapterId)}
-                      className="text-gray-300 dark:text-gray-700 hover:text-red-500 transition-colors">
-                      <Trash2 className="w-3.5 h-3.5" />
+                      onClick={() => handleUnshare(chapter.id)}
+                      className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-600 transition-colors border border-red-200 dark:border-red-800 px-3 py-1.5 rounded-xl flex-shrink-0">
+                      <Trash2 className="w-3 h-3" /> Unshare
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleShareChapter(chapter.id)}
+                      disabled={sharingChapterId === chapter.id}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-green-600 dark:text-green-400 hover:text-green-700 transition-colors border border-green-200 dark:border-green-800 px-3 py-1.5 rounded-xl flex-shrink-0 disabled:opacity-50">
+                      {sharingChapterId === chapter.id
+                        ? <Loader2 className="w-3 h-3 animate-spin" />
+                        : <Share2 className="w-3 h-3" />
+                      }
+                      Share
                     </button>
                   )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Share my chapters */}
-        {chapters.length > 0 && (
-          <div className="mt-4">
-            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Share Your Chapters</p>
-            <div className="space-y-2">
-              {chapters.map(ch => {
-                const alreadyShared = isShared(ch.id);
-                return (
-                  <div key={ch.id}
-                    className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-3 flex items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{ch.chapterName}</p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500">{ch.subject} · Class {ch.classNum}</p>
-                    </div>
-                    {alreadyShared ? (
-                      <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-medium">
-                        <Check className="w-3.5 h-3.5" /> Shared
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => handleShareChapter(ch.id)}
-                        disabled={sharingChapterId === ch.id}
-                        className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400 hover:text-green-600 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
-                        {sharingChapterId === ch.id
-                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          : <Share2 className="w-3.5 h-3.5" />
-                        }
-                        Share
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Members list */}
       <div>
         <h4 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
           <Users className="w-4 h-4 text-green-600" /> Members
@@ -623,13 +603,11 @@ function MyClassTab({
           </div>
         ) : (
           <div className="space-y-2">
-            {members.map((member, i) => (
+            {members.map(member => (
               <div
                 key={member.uid}
                 className={`bg-white dark:bg-gray-900 border rounded-xl p-3 flex items-center gap-3 ${
-                  member.uid === uid
-                    ? "border-green-200 dark:border-green-800"
-                    : "border-gray-100 dark:border-gray-800"
+                  member.uid === uid ? "border-green-200 dark:border-green-800" : "border-gray-100 dark:border-gray-800"
                 }`}>
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
                   {getInitials(member.displayName)}
@@ -683,13 +661,7 @@ function timeAgo(ts: any): string {
   return `${d}d pehle`;
 }
 
-function NotificationsPanel({
-  uid,
-  onClose,
-}: {
-  uid: string;
-  onClose: () => void;
-}) {
+function NotificationsPanel({ uid, onClose }: { uid: string; onClose: () => void }) {
   const navigate = useNavigate();
   const [notifs, setNotifs] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -708,33 +680,17 @@ function NotificationsPanel({
 
   return (
     <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-30 bg-black/20 dark:bg-black/40"
-        onClick={onClose}
-      />
-
-      {/* Drawer */}
-      <div
-        className="fixed right-0 top-14 bottom-0 w-80 bg-white dark:bg-gray-900 border-l border-gray-100 dark:border-gray-800 z-40 flex flex-col shadow-2xl"
-      >
-        {/* Header */}
+      <div className="fixed inset-0 z-30 bg-black/20 dark:bg-black/40" onClick={onClose} />
+      <div className="fixed right-0 top-14 bottom-0 w-80 bg-white dark:bg-gray-900 border-l border-gray-100 dark:border-gray-800 z-40 flex flex-col shadow-2xl">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-2">
             <Bell className="w-4 h-4 text-purple-500" />
-            <span className="font-semibold text-gray-900 dark:text-white text-sm">
-              Notifications
-            </span>
+            <span className="font-semibold text-gray-900 dark:text-white text-sm">Notifications</span>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-          >
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
-
-        {/* List */}
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center h-32">
@@ -745,22 +701,14 @@ function NotificationsPanel({
               <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                 <Bell className="w-6 h-6 text-gray-400" />
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Koi notification nahi hai abhi.
-              </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">
-                Jab koi aapke post pe reply karega, yahan dikhega.
-              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Koi notification nahi hai abhi.</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">Jab koi aapke post pe reply karega, yahan dikhega.</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-50 dark:divide-gray-800">
               {notifs.map(n => (
-                <button
-                  key={n.id}
-                  onClick={() => handleClick(n)}
-                  className="w-full text-left px-4 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors flex gap-3 items-start"
-                >
-                  {/* Unread dot + Avatar */}
+                <button key={n.id} onClick={() => handleClick(n)}
+                  className="w-full text-left px-4 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors flex gap-3 items-start">
                   <div className="relative flex-shrink-0 mt-0.5">
                     {!n.read && (
                       <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-purple-500 border-2 border-white dark:border-gray-900 z-10" />
@@ -769,26 +717,16 @@ function NotificationsPanel({
                       {getInitials(n.fromUserName)}
                     </div>
                   </div>
-
-                  {/* Content */}
                   <div className="flex-1 min-w-0">
                     <p className={`text-xs leading-snug mb-0.5 ${!n.read ? "font-semibold text-gray-900 dark:text-white" : "text-gray-700 dark:text-gray-300"}`}>
                       <span className="text-purple-600 dark:text-purple-400">{n.fromUserName}</span>
                       {" "}ne aapke post pe reply kiya{" "}
-                      <span className="italic text-gray-500 dark:text-gray-400">
-                        "{n.chapterName}"
-                      </span>
+                      <span className="italic text-gray-500 dark:text-gray-400">"{n.chapterName}"</span>
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-snug mb-1">
-                      {n.preview}
-                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-snug mb-1">{n.preview}</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                        {timeAgo(n.createdAt)}
-                      </span>
-                      <span className="text-[10px] text-purple-500 flex items-center gap-0.5">
-                        Discussion dekho <ArrowRight className="w-3 h-3" />
-                      </span>
+                      <span className="text-[10px] text-gray-400 dark:text-gray-500">{timeAgo(n.createdAt)}</span>
+                      <span className="text-[10px] text-purple-500 flex items-center gap-0.5">Discussion dekho <ArrowRight className="w-3 h-3" /></span>
                     </div>
                   </div>
                 </button>
@@ -796,8 +734,6 @@ function NotificationsPanel({
             </div>
           )}
         </div>
-
-        {/* Footer */}
         {notifs.length > 0 && (
           <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800 flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
             <MessageSquare className="w-3.5 h-3.5" />
@@ -814,14 +750,11 @@ function NotificationsPanel({
 export default function CommunityPage() {
   const { user } = useAuth();
   const { userData, chapters, refreshUserData } = useProgress();
-  const [activeTab, setActiveTab] = useState<"leaderboard" | "class">("leaderboard");
+  const [activeTab, setActiveTab] = useState<"leaderboard" | "discussion" | "class">("leaderboard");
   const [showNotifPanel, setShowNotifPanel] = useState(false);
 
-  // Clear unread notification badge when user opens community page
   useEffect(() => {
-    if (user?.uid) {
-      markNotificationsRead(user.uid).catch(console.warn);
-    }
+    if (user?.uid) markNotificationsRead(user.uid).catch(console.warn);
   }, [user?.uid]);
 
   const school = userData?.profile?.school || "";
@@ -829,7 +762,8 @@ export default function CommunityPage() {
 
   const tabs = [
     { key: "leaderboard", label: "Leaderboard", icon: Trophy },
-    { key: "class", label: "My Class", icon: Users },
+    { key: "discussion",  label: "Discussion",  icon: MessageCircle },
+    { key: "class",       label: "My Class",    icon: Users },
   ];
 
   return (
@@ -844,7 +778,7 @@ export default function CommunityPage() {
               <Users className="w-6 h-6 text-green-600" /> Community
             </h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              Compete on the leaderboard, join a class, and study together.
+              Compete on the leaderboard, chat with students, and study together.
             </p>
           </div>
           {user && (
@@ -858,15 +792,9 @@ export default function CommunityPage() {
           )}
         </div>
 
-        {/* Notifications Panel */}
-        
-          {showNotifPanel && user?.uid && (
-            <NotificationsPanel
-              uid={user.uid}
-              onClose={() => setShowNotifPanel(false)}
-            />
-          )}
-        
+        {showNotifPanel && user?.uid && (
+          <NotificationsPanel uid={user.uid} onClose={() => setShowNotifPanel(false)} />
+        )}
 
         {/* Tabs */}
         <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-2xl mb-6">
@@ -880,31 +808,28 @@ export default function CommunityPage() {
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               }`}>
               <tab.icon className="w-4 h-4" />
-              {tab.label}
+              <span className="hidden sm:inline">{tab.label}</span>
             </button>
           ))}
         </div>
 
         {/* Tab content */}
-        
-          <div
-            key={activeTab}>
-            {activeTab === "leaderboard" ? (
-              <LeaderboardTab
-                currentUid={user?.uid || ""}
-                school={school}
-                district={district}
-              />
-            ) : (
-              <MyClassTab
-                uid={user?.uid || ""}
-                userData={userData}
-                chapters={chapters}
-                refreshUserData={refreshUserData}
-              />
-            )}
-          </div>
-        
+        <div key={activeTab}>
+          {activeTab === "leaderboard" && (
+            <LeaderboardTab currentUid={user?.uid || ""} school={school} district={district} />
+          )}
+          {activeTab === "discussion" && (
+            <DiscussionTab />
+          )}
+          {activeTab === "class" && (
+            <MyClassTab
+              uid={user?.uid || ""}
+              userData={userData}
+              chapters={chapters}
+              refreshUserData={refreshUserData}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

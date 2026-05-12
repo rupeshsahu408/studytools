@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
-import { BookOpen, Zap, Brain, BarChart2, ArrowRight, Sparkles } from "lucide-react";
+import { BookOpen, Zap, Brain, BarChart2, ArrowRight, Sparkles, Users, MessageCircle, Trophy } from "lucide-react";
 
 const features = [
   { icon: BookOpen, title: "Smart Notes", desc: "AI generates complete, structured notes from any NCERT chapter instantly." },
   { icon: Zap, title: "Question Bank", desc: "MCQ, 1-mark, 2-mark, 5-mark, Assertion-Reason — all question types auto-generated." },
   { icon: Brain, title: "Practice Modes", desc: "Practice at your pace or take timed tests just like real board exams." },
   { icon: BarChart2, title: "All Subjects", desc: "Physics, Chemistry, Mathematics, Biology — Class 11 & 12 NCERT covered." },
+  { icon: MessageCircle, title: "Doubt Chat", desc: "Ask any question about your chapter and get instant AI-powered answers." },
+  { icon: Users, title: "Community", desc: "Discuss with thousands of Bihar Board students. Share tips, ask doubts, climb the leaderboard." },
 ];
 
 const steps = [
@@ -19,6 +21,27 @@ const stats = [
   { value: "4", label: "Subjects" },
   { value: "Class 11 & 12", label: "Bihar Board" },
   { value: "AI", label: "Powered" },
+];
+
+const communityFeatures = [
+  {
+    icon: Trophy,
+    color: "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400",
+    title: "Weekly Leaderboard",
+    desc: "Compete with students across all of Bihar. Top rankers every Monday.",
+  },
+  {
+    icon: MessageCircle,
+    color: "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400",
+    title: "Live Discussion Rooms",
+    desc: "Subject-wise chat rooms — Physics, Chemistry, Math, Biology, General.",
+  },
+  {
+    icon: Users,
+    color: "bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400",
+    title: "Study Groups",
+    desc: "Teachers create classes, students join with an invite code and study together.",
+  },
 ];
 
 export default function LandingPage() {
@@ -35,6 +58,9 @@ export default function LandingPage() {
             <span className="font-bold text-lg text-gray-900 dark:text-white">Topper 2.0</span>
           </div>
           <div className="flex items-center gap-3">
+            <Link to="/community" className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">
+              <Users className="w-4 h-4" /> Community
+            </Link>
             <Link to="/login" className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">
               Login
             </Link>
@@ -88,7 +114,7 @@ export default function LandingPage() {
             <p className="text-xs font-semibold text-green-600 dark:text-green-400 tracking-widest uppercase mb-2">Everything you need</p>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">A Topper's Complete Toolkit</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((f, i) => (
               <div key={i} className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-700 transition-colors">
                 <div className="w-10 h-10 bg-green-100 dark:bg-green-900/50 rounded-xl flex items-center justify-center mb-4">
@@ -102,8 +128,65 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Community Section ── */}
+      <section className="py-20 px-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-1.5 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-semibold px-3.5 py-1.5 rounded-full mb-5 border border-green-200 dark:border-green-800/50">
+              <Users className="w-3 h-3" /> Bihar Board Community
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Study Together, Score Together
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto leading-relaxed">
+              Join thousands of Bihar Board students. Ask doubts, share tips, compete on the leaderboard — and never study alone again.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            {communityFeatures.map((f, i) => (
+              <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 hover:border-green-300 dark:hover:border-green-700 transition-colors text-center">
+                <div className={`w-12 h-12 ${f.color} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
+                  <f.icon className="w-6 h-6" />
+                </div>
+                <h3 className="font-bold text-gray-900 dark:text-white mb-2">{f.title}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Community CTA */}
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/10 border border-green-200 dark:border-green-800/50 rounded-3xl p-8 text-center">
+            <div className="flex -space-x-2 justify-center mb-4">
+              {["R", "P", "A", "S", "K"].map((l, i) => (
+                <div key={i} className={`w-9 h-9 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center text-white text-xs font-bold ${
+                  ["bg-violet-500", "bg-blue-500", "bg-rose-500", "bg-amber-500", "bg-teal-500"][i]
+                }`}>
+                  {l}
+                </div>
+              ))}
+              <div className="w-9 h-9 rounded-full bg-green-600 border-2 border-white dark:border-gray-900 flex items-center justify-center text-white text-xs font-bold">
+                +
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              Join the Bihar Board Community
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
+              Free discussion rooms, live leaderboard, and a community of students just like you — all inside Topper 2.0.
+            </p>
+            <Link
+              to="/signup"
+              className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3 rounded-xl transition-colors shadow-sm text-sm"
+            >
+              Join Now — It's Free <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── How It Works ── */}
-      <section className="py-24 px-4">
+      <section className="py-24 px-4 bg-white dark:bg-gray-900 border-y border-gray-200 dark:border-gray-800">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-semibold text-green-600 dark:text-green-400 tracking-widest uppercase mb-2">Simple process</p>
@@ -134,9 +217,14 @@ export default function LandingPage() {
               </span>
             ))}
           </div>
-          <Link to="/signup" className="inline-flex items-center gap-2 bg-white text-green-700 font-bold px-8 py-4 rounded-xl hover:bg-green-50 transition-colors shadow-md text-base">
-            Start for Free <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link to="/signup" className="inline-flex items-center justify-center gap-2 bg-white text-green-700 font-bold px-8 py-4 rounded-xl hover:bg-green-50 transition-colors shadow-md text-base">
+              Start for Free <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link to="/community" className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/30 font-semibold px-8 py-4 rounded-xl transition-colors text-base">
+              <Users className="w-4 h-4" /> Join Community
+            </Link>
+          </div>
         </div>
       </section>
 
