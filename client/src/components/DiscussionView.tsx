@@ -387,7 +387,10 @@ function ReplyList({
             </div>
           )}
 
-          {!loading && replies.map(reply => (
+          {!loading && replies.map(reply => {
+            // Always show the current user's resolved name (respects anonymous mode + fixes old email entries)
+            const replyDisplayName = (!reply.isAI && reply.uid === currentUid) ? userName : reply.userName;
+            return (
             <div
               key={reply.id}
               className={`flex items-start gap-2.5 animate-post-in ${
@@ -396,10 +399,10 @@ function ReplyList({
                   : ""
               }`}
             >
-              <Avatar name={reply.userName} isAI={reply.isAI} />
+              <Avatar name={replyDisplayName} isAI={reply.isAI} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                  <span className="text-xs font-semibold text-gray-900 dark:text-white">{reply.userName}</span>
+                  <span className="text-xs font-semibold text-gray-900 dark:text-white">{replyDisplayName}</span>
                   {reply.isAI && (
                     <span className="text-[10px] bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded-full font-semibold uppercase tracking-wide">
                       AI Tutor
@@ -418,7 +421,8 @@ function ReplyList({
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
 
           {!loading && replies.length === 0 && (
             <p className="text-xs text-gray-400 dark:text-gray-500 py-1">No replies yet — be the first!</p>
@@ -468,13 +472,17 @@ function PostCard({
   onDelete: (id: string) => void;
   onLike: (post: DiscussionPost) => void;
 }) {
+  // For the current user's own posts, always use the resolved display name
+  // (respects anonymous mode and removes stale stored email/name)
+  const displayedName = post.uid === currentUid ? userName : post.userName;
+
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-4 md:p-5 hover:border-gray-200 dark:hover:border-gray-700 transition-colors animate-post-in">
       <div className="flex items-start gap-3 mb-3">
-        <Avatar name={post.userName} size="md" />
+        <Avatar name={displayedName} size="md" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-0.5">
-            <span className="text-sm font-semibold text-gray-900 dark:text-white">{post.userName}</span>
+            <span className="text-sm font-semibold text-gray-900 dark:text-white">{displayedName}</span>
             {post.uid === currentUid && (
               <span className="text-[10px] bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded-full font-semibold">You</span>
             )}
