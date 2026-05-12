@@ -5,5 +5,16 @@ export const modules: ModuleMap = {
   "./components/mockups/topper-mobile/CommunityHub.tsx": () => import("../components/mockups/topper-mobile/CommunityHub.tsx"),
   "./components/mockups/topper-mobile/Dashboard.tsx": () => import("../components/mockups/topper-mobile/Dashboard.tsx"),
   "./components/mockups/topper-mobile/ProfileSettings.tsx": () => import("../components/mockups/topper-mobile/ProfileSettings.tsx"),
-  "./components/mockups/topper-mobile/ProgressStats.tsx": () => import("../components/mockups/topper-mobile/ProgressStats.tsx")
+  "./components/mockups/topper-mobile/ProgressStats.tsx": () => import("../components/mockups/topper-mobile/ProgressStats.tsx"),
+  "./components/mockups/topper-redesign/AuthPage.tsx": () => import("../components/mockups/topper-redesign/AuthPage.tsx"),
+  "./components/mockups/topper-redesign/ChapterPage.tsx": () => import("../components/mockups/topper-redesign/ChapterPage.tsx"),
+  "./components/mockups/topper-redesign/CommunityPage.tsx": () => import("../components/mockups/topper-redesign/CommunityPage.tsx"),
+  "./components/mockups/topper-redesign/DashboardPage.tsx": () => import("../components/mockups/topper-redesign/DashboardPage.tsx"),
+  "./components/mockups/topper-redesign/DiscoverPage.tsx": () => import("../components/mockups/topper-redesign/DiscoverPage.tsx"),
+  "./components/mockups/topper-redesign/LandingPage.tsx": () => import("../components/mockups/topper-redesign/LandingPage.tsx"),
+  "./components/mockups/topper-redesign/ProfilePage.tsx": () => import("../components/mockups/topper-redesign/ProfilePage.tsx"),
+  "./components/mockups/topper-redesign/ProgressPage.tsx": () => import("../components/mockups/topper-redesign/ProgressPage.tsx"),
+  "./components/mockups/topper-redesign/PublicNotesPage.tsx": () => import("../components/mockups/topper-redesign/PublicNotesPage.tsx"),
+  "./components/mockups/topper-redesign/SettingsPage.tsx": () => import("../components/mockups/topper-redesign/SettingsPage.tsx"),
+  "./components/mockups/topper-redesign/UploadPage.tsx": () => import("../components/mockups/topper-redesign/UploadPage.tsx")
 };

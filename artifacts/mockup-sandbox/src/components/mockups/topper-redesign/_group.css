@@ -1,0 +1,72 @@
+/* Topper 2.0 — Shared Mobile Design Tokens */
+
+:root {
+  --t2-bg:        #121a12;
+  --t2-card:      #1a2619;
+  --t2-border:    #253D2C;
+  --t2-border2:   #2a3629;
+  --t2-green:     #2E6F40;
+  --t2-green-lt:  #4CBB17;
+  --t2-green-dim: rgba(46,111,64,0.15);
+  --t2-text:      #ffffff;
+  --t2-muted:     #9ca3af;
+  --t2-muted2:    #6b7280;
+  --t2-orange:    #f97316;
+  --t2-blue:      #3b82f6;
+  --t2-purple:    #a855f7;
+}
+
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Phone frame */
+.phone-frame {
+  width: 390px;
+  height: 844px;
+  position: relative;
+  margin: 0 auto;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--t2-bg);
+  color: var(--t2-text);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Bottom Nav */
+.bottom-nav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 64px;
+  background: var(--t2-card);
+  border-top: 1px solid var(--t2-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+  z-index: 50;
+}
+
+/* Top Header */
+.top-header {
+  height: 56px;
+  background: var(--t2-bg);
+  border-bottom: 1px solid var(--t2-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  flex-shrink: 0;
+  z-index: 40;
+}
+
+/* Scrollable content area with pb for bottom nav */
+.content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 80px;
+}
+.content-scroll.no-nav {
+  padding-bottom: 16px;
+}
