@@ -14,6 +14,7 @@ import GaussLawExplorer from "./simulations/engines/GaussLawExplorer";
 import ChargeDistributions from "./simulations/engines/ChargeDistributions";
 import ElectricDipole from "./simulations/engines/ElectricDipole";
 import ImmersiveElectrostatics from "./simulations/engines/ImmersiveElectrostatics";
+import RayOpticsEngine from "./simulations/engines/RayOpticsEngine";
 
 type EngineComponent = React.ComponentType<Record<string, any>>;
 
@@ -24,6 +25,7 @@ const ENGINE_REGISTRY: Record<string, EngineComponent> = {
   "charge-distributions": ChargeDistributions,
   "electric-dipole": ElectricDipole,
   "immersive-electrostatics": ImmersiveElectrostatics,
+  "ray-optics": RayOpticsEngine,
 };
 
 const ENGINE_META: Record<string, { color: string; gradient: string; icon: string }> = {
@@ -33,6 +35,7 @@ const ENGINE_META: Record<string, { color: string; gradient: string; icon: strin
   "charge-distributions": { color: "from-emerald-600 to-teal-700", gradient: "rgba(0,200,150,0.15)", icon: "📡" },
   "electric-dipole": { color: "from-pink-600 to-rose-700", gradient: "rgba(255,80,150,0.15)", icon: "🧲" },
   "immersive-electrostatics": { color: "from-yellow-600 to-amber-700", gradient: "rgba(255,200,0,0.15)", icon: "🏭" },
+  "ray-optics": { color: "from-sky-500 to-indigo-600", gradient: "rgba(56,189,248,0.15)", icon: "🔭" },
 };
 
 const DIFFICULTY_COLOR: Record<string, string> = {
