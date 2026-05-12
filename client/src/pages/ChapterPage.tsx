@@ -11,7 +11,7 @@ import type { Chapter } from "../lib/firestore";
 import {
   generateFormulas, generateMindmap, generateMistakes,
   generateFlashcards, generateSimulationCatalog, regenerateQuestionBatch,
-  regenerateNotes, generateSummary, generateExamPaper,
+  regenerateNotes, generateSummary, generateExamPaper, generateQuestions,
 } from "../lib/api";
 import { useProgress } from "../contexts/ProgressContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -201,6 +201,9 @@ export default function ChapterPage() {
       } else if (sectionKey === "simulations") {
         const data = await generateSimulationCatalog(text, subject, classNum, chapterName);
         result = data.simulations || [];
+      } else if (sectionKey === "questions") {
+        const data = await generateQuestions(text, subject, classNum, chapterName, language || "english");
+        result = data.questions || null;
       }
       if (result !== undefined && chapter.id) {
         await updateChapterSection(chapter.id, sectionKey, result);
@@ -394,18 +397,29 @@ export default function ChapterPage() {
           : <div className="text-gray-400 py-10 text-center text-sm">Notes not available.</div>;
 
       case "questions":
-        return chapter?.questions
-          ? <QuestionsView
-              questions={chapter.questions}
-              onQuestionAnswered={handleQuestionAnswered}
-              onRetryBatch={handleRetryBatch}
-              retryingBatch={retryingBatch}
-              userId={user?.uid}
-              chapterId={chapter.id}
-              chapterName={chapter.chapterName}
-              subject={chapter.subject}
+        if (isGenerating("questions")) return <SectionGenerating label="Question Bank" />;
+        if (!chapter.questions) {
+          return (
+            <SectionEmpty
+              label="Question Bank"
+              description="AI will generate a complete question bank — MCQs, 1-mark, 2-mark, 5-mark, Assertion-Reason, Case-Based, True/False, Fill in the Blanks, and Exam Important questions — all tailored to Bihar Board pattern."
+              onGenerate={() => generateSection("questions")}
+              generating={generatingSection === "questions"}
             />
-          : <div className="text-gray-400 py-10 text-center text-sm">Questions not available.</div>;
+          );
+        }
+        return (
+          <QuestionsView
+            questions={chapter.questions}
+            onQuestionAnswered={handleQuestionAnswered}
+            onRetryBatch={handleRetryBatch}
+            retryingBatch={retryingBatch}
+            userId={user?.uid}
+            chapterId={chapter.id}
+            chapterName={chapter.chapterName}
+            subject={chapter.subject}
+          />
+        );
 
       case "summary":
         if (isGenerating("summary")) return <SectionGenerating label="Quick Revision" />;
