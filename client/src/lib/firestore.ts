@@ -1265,3 +1265,61 @@ export async function getBlockedUsers(uid: string): Promise<SocialUser[]> {
   const results = await Promise.all(blockedUids.map(buid => getUserById(buid)));
   return results.filter(Boolean) as SocialUser[];
 }
+
+// ─── Public Notes ────────────────────────────────────────────────────────────
+// Each published note lives in publicNotes/{chapterId} — one entry per chapter.
+
+export interface PublicNote {
+  id: string;            // = chapterId (document ID)
+  userId: string;
+  chapterId: string;
+  chapterName: string;
+  publisherName: string;
+  board: string;         // e.g. "Bihar Board", "CBSE"
+  classNum: string;      // "9" | "10" | "11" | "12"
+  medium: string;        // "hindi" | "english"
+  subject: string;       // "Physics", "Chemistry", etc.
+  notes: any;            // same shape as Chapter.notes
+  publishedAt: any;
+  viewCount: number;
+}
+
+export async function publishNote(
+  chapterId: string,
+  data: Omit<PublicNote, "id" | "publishedAt" | "viewCount">
+): Promise<void> {
+  await setDoc(doc(db, "publicNotes", chapterId), {
+    ...data,
+    chapterId,
+    publishedAt: serverTimestamp(),
+    viewCount: 0,
+  });
+}
+
+export async function unpublishNote(chapterId: string): Promise<void> {
+  await deleteDoc(doc(db, "publicNotes", chapterId));
+}
+
+export async function getPublishedNote(chapterId: string): Promise<PublicNote | null> {
+  const snap = await getDoc(doc(db, "publicNotes", chapterId));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() } as PublicNote;
+}
+
+// Fetch all notes published by a specific user (for dashboard indicators)
+export async function getMyPublishedNotes(userId: string): Promise<PublicNote[]> {
+  const q = query(collection(db, "publicNotes"), where("userId", "==", userId));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as PublicNote));
+}
+
+// Fetch all public notes ordered by newest first; filters applied client-side
+export async function getAllPublicNotes(pageSize = 200): Promise<PublicNote[]> {
+  const q = query(
+    collection(db, "publicNotes"),
+    orderBy("publishedAt", "desc"),
+    limit(pageSize)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as PublicNote));
+}
