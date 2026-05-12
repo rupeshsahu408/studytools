@@ -130,3 +130,20 @@ export async function generateSummary(
   const res = await api.post("/api/generate/summary", { text, subject, classNum, chapterName, language }, { timeout: 90000 });
   return res.data;
 }
+
+// ─── Simulation Library ────────────────────────────────────────────────────
+
+export async function fetchSimulationLibrary(subject: string) {
+  const res = await api.get(`/api/simulations/library/${subject}`);
+  return res.data;
+}
+
+export async function fetchSimulationChapter(subject: string, chapterId: string) {
+  const res = await api.get(`/api/simulations/library/${subject}/${chapterId}`);
+  return res.data;
+}
+
+export async function fetchSimulationLibrarySummary() {
+  const res = await api.get("/api/simulations/library");
+  return res.data;
+}
