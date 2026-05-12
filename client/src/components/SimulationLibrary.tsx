@@ -17,6 +17,7 @@ import ImmersiveElectrostatics from "./simulations/engines/ImmersiveElectrostati
 import RayOpticsEngine from "./simulations/engines/RayOpticsEngine";
 import WaveOpticsEngine from "./simulations/engines/WaveOpticsEngine";
 import SolidStateEngine from "./simulations/engines/SolidStateEngine";
+import ReproductiveHealthEngine from "./simulations/engines/ReproductiveHealthEngine";
 
 type EngineComponent = React.ComponentType<Record<string, any>>;
 
@@ -30,6 +31,7 @@ const ENGINE_REGISTRY: Record<string, EngineComponent> = {
   "ray-optics": RayOpticsEngine,
   "wave-optics": WaveOpticsEngine,
   "solid-state": SolidStateEngine,
+  "reproductive-health": ReproductiveHealthEngine,
 };
 
 const ENGINE_META: Record<string, { color: string; gradient: string; icon: string }> = {
@@ -42,6 +44,7 @@ const ENGINE_META: Record<string, { color: string; gradient: string; icon: strin
   "ray-optics": { color: "from-sky-500 to-indigo-600", gradient: "rgba(56,189,248,0.15)", icon: "🔭" },
   "wave-optics": { color: "from-violet-500 to-fuchsia-600", gradient: "rgba(167,139,250,0.15)", icon: "〰️" },
   "solid-state": { color: "from-emerald-500 to-teal-600", gradient: "rgba(16,185,129,0.15)", icon: "🔷" },
+  "reproductive-health": { color: "from-pink-500 to-rose-600", gradient: "rgba(244,114,182,0.15)", icon: "🧬" },
 };
 
 const DIFFICULTY_COLOR: Record<string, string> = {
