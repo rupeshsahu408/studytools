@@ -55,9 +55,32 @@ AI-powered study platform for Bihar Board Class 11 & 12 Hindi-medium Science stu
 - **Weak Area AI** (`POST /api/generate/weakareas`): analyzes wrong questions per chapter, identifies specific weak topics, gives actionable Hindi/English advice
 - **Revision Planner**: rule-based algorithm — sorts incomplete chapters by completion %, divides into weekly study plan based on days to exam
 
+## Design System (Phase 5 — Premium Color Overhaul)
+
+Color tokens live entirely in `client/src/index.css` via Tailwind v4 `@theme` block — no TSX changes needed for cascade.
+
+| Token | Light value | Dark value | Usage |
+|---|---|---|---|
+| `gray-50` | `rgb(250,246,241)` warm cream | — | All page backgrounds |
+| `gray-100` | `#edf2ee` | — | Sidebar hover, borders |
+| `gray-900` | `#1a2619` deep forest | — | Dark cards |
+| `gray-950` | `#121a12` | — | Dark page bg |
+| `green-100` | `#CFFFDC` mint | — | Badge fills, light highlights |
+| `green-200` | `#b3f0c7` | — | Spinner rings, soft borders |
+| `green-400` | `#68BA7F` | — | Dark-mode accent |
+| `green-500` | `#4CBB17` | — | Hover states |
+| `green-600` | `#2E6F40` deep emerald | — | **Primary CTA, links, brand** |
+| `green-700` | `#48872B` | — | Hover on CTAs |
+| `green-800` | `#39542C` | — | Dark pressed states |
+| `green-900` | `#293325` | — | Dark deep accents |
+| `green-950` | `#253D2C` | — | Darkest green surface |
+
+Pattern: **cream page → white card → content** = premium layered depth. Dark mode: `#121a12` page → `#1a2619` card.
+
 ## User Preferences
 
 - Language: Hindi UI phrases preferred (e.g. "Sahi tha / Galat tha", "Aaj Ka Target", "Namaste")
 - Bihar Board focus: all content specifically for Bihar Board exam pattern
 - Chapter limit: 5 per user (enforced in DashboardPage)
 - Question types: MCQ, 1M, 2M, 5M, Assertion-Reason, Case-Based, True/False, Fill Blanks, Exam Important
+- Subject accent colors (blue/purple/orange for Physics/Chemistry/Math) intentionally kept as visual differentiators — do NOT apply brand green to subject colors

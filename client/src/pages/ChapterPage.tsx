@@ -571,7 +571,7 @@ export default function ChapterPage() {
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-0.5 ${
                     activeSection === item.key
                       ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                   }`}>
                   <item.icon className="w-4 h-4 flex-shrink-0" />
                   <span className="flex-1 text-left">{item.label}</span>
@@ -600,7 +600,7 @@ export default function ChapterPage() {
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-0.5 ${
                       activeSection === item.key
                         ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                     }`}>
                     {isCurrentlyGenerating
                       ? <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin text-green-500" />
@@ -631,7 +631,7 @@ export default function ChapterPage() {
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-0.5 ${
                       activeSection === item.key
                         ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                     }`}>
                     {isCurrentlyGenerating
                       ? <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin text-blue-500" />
@@ -664,7 +664,7 @@ export default function ChapterPage() {
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-0.5 ${
                     activeSection === item.key
                       ? "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                   }`}>
                   <item.icon className="w-4 h-4 flex-shrink-0" />
                   <span className="flex-1 text-left">{item.label}</span>
@@ -687,7 +687,7 @@ export default function ChapterPage() {
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-0.5 ${
                       activeSection === item.key
                         ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                     }`}>
                     {generatingExamPaper
                       ? <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin text-amber-500" />

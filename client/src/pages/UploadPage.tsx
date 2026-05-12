@@ -111,7 +111,7 @@ function UploadingScreen({ fileName, fileSize }: { fileName: string; fileSize: n
   const StepIcon = steps[stepIdx].icon;
 
   return (
-    <div className="fixed inset-0 bg-white dark:bg-gray-950 z-50 flex flex-col items-center justify-center px-4">
+    <div className="fixed inset-0 bg-gray-50 dark:bg-gray-950 z-50 flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-sm text-center">
 
         {/* Animated icon */}
@@ -196,7 +196,7 @@ function GeneratingScreen({
   const formatElapsed = (s: number) => s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`;
 
   return (
-    <div className="fixed inset-0 bg-white dark:bg-gray-950 z-50 flex flex-col items-center justify-center px-4">
+    <div className="fixed inset-0 bg-gray-50 dark:bg-gray-950 z-50 flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-md">
 
         {/* Header */}

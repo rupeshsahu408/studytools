@@ -2,6 +2,43 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOPPER 2.0 — BRAND COLOR SYSTEM
+   Primary bg  : rgb(250, 246, 241)  warm cream
+   Brand greens: #CFFFDC → #68BA7F → #4CBB17 → #48872B → #2E6F40
+               → #39542C → #293325 → #253D2C
+   Dark surfaces: deep forest green #121a12 → #1a2619 → #253028
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@theme {
+  /* ── Gray scale: warm cream light → deep forest dark ── */
+  --color-gray-50:  rgb(250, 246, 241);
+  --color-gray-100: #edf2ee;
+  --color-gray-200: #dde6de;
+  --color-gray-300: #c4d3c6;
+  --color-gray-400: #8fa48f;
+  --color-gray-500: #6b836b;
+  --color-gray-600: #506050;
+  --color-gray-700: #3a4d3a;
+  --color-gray-800: #283828;
+  --color-gray-900: #1a2619;
+  --color-gray-950: #121a12;
+
+  /* ── Brand green scale ── */
+  --color-green-50:  #f0faf3;
+  --color-green-100: #CFFFDC;
+  --color-green-200: #a8efbc;
+  --color-green-300: #78d890;
+  --color-green-400: #68BA7F;
+  --color-green-500: #48872B;
+  --color-green-600: #2E6F40;
+  --color-green-700: #265836;
+  --color-green-800: #293325;
+  --color-green-900: #253D2C;
+  --color-green-950: #182414;
+}
+
+/* ── Global base ── */
 * {
   box-sizing: border-box;
 }
@@ -11,6 +48,11 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: rgb(250, 246, 241);
+}
+
+.dark body {
+  background-color: #121a12;
 }
 
 #root {
@@ -24,22 +66,19 @@ body {
   overflow: hidden;
 }
 
-/* ── Summary PDF Print Styles ──────────────────────────────────────────────── */
+/* ── Summary PDF Print Styles ───────────────────────────────────────────── */
 @media print {
-  /* Force color rendering */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Hide all page chrome */
   nav,
   aside,
   .summary-print-hide {
     display: none !important;
   }
 
-  /* Remove body/root offset from navbar */
   body,
   #root {
     padding: 0 !important;
@@ -47,18 +86,15 @@ body {
     background: white !important;
   }
 
-  /* Remove the pt-14 flex wrapper offsets */
   .pt-14 {
     padding-top: 0 !important;
   }
 
-  /* Make main content panel full-width, no sidebar offset */
   .md\:pl-64,
   .pl-64 {
     padding-left: 0 !important;
   }
 
-  /* Summary print area — full page, clean margins */
   #summary-print-area {
     max-width: 100% !important;
     margin: 0 !important;
@@ -66,7 +102,6 @@ body {
     padding-bottom: 32px !important;
   }
 
-  /* Force all concept card bodies open — override framer-motion height:0 */
   .concept-card-body {
     display: block !important;
     height: auto !important;
@@ -75,7 +110,6 @@ body {
     opacity: 1 !important;
   }
 
-  /* Formula dark panel → clean light panel for print */
   .formula-print-panel {
     background: #f4fdf6 !important;
     border: 1px solid #d1fae5 !important;
@@ -90,14 +124,12 @@ body {
     color: #374151 !important;
   }
 
-  /* Exam spotlight grid — full 3 cols on print */
   .exam-spotlight-grid {
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 12px !important;
   }
 
-  /* Avoid page breaks inside sections */
   section,
   .concept-card-body,
   .formula-print-panel,
@@ -106,7 +138,6 @@ body {
     break-inside: avoid;
   }
 
-  /* Print footer on each page */
   @page {
     margin: 1.5cm 1.8cm;
     size: A4;

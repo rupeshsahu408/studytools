@@ -44,7 +44,7 @@ export default function LoadingScreen({ stage = 0, message }: LoadingScreenProps
   const currentStage = STAGES[Math.min(stage, STAGES.length - 1)];
 
   return (
-    <div className="fixed inset-0 bg-white dark:bg-gray-950 z-50 flex flex-col items-center justify-center px-4">
+    <div className="fixed inset-0 bg-gray-50 dark:bg-gray-950 z-50 flex flex-col items-center justify-center px-4">
       <div className="text-center max-w-lg w-full">
         <div className="mb-8">
           <div className="relative w-24 h-24 mx-auto mb-6">
