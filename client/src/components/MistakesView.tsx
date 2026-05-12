@@ -79,7 +79,7 @@ function MistakeCard({ mistake, index }: { mistake: Mistake; index: number }) {
             <div className="flex items-start gap-2">
               <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-xs font-bold text-green-700 dark:text-green-400 mb-1 uppercase tracking-wide">Correct Approach</p>
+                <p className="text-xs font-bold text-green-700 dark:text-green-400 mb-1 uppercase tracking-wide">✓ Sahi Approach</p>
                 <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{mistake.correct}</p>
               </div>
             </div>
@@ -101,11 +101,11 @@ export default function MistakesView({ mistakes }: MistakesViewProps) {
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <AlertTriangle className="w-5 h-5 text-red-500" /> Ye Galti Mat Karo
-          <span className="text-sm font-normal text-gray-400 ml-1">{mistakes.length} mistakes to avoid</span>
+          <span className="text-sm font-normal text-gray-400 ml-1">{mistakes.length} galtiyan</span>
         </h2>
       </div>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
-        These are the most common mistakes Bihar Board students make in this chapter. Avoid them to protect your marks.
+        Bihar Board के छात्र इस chapter में सबसे ज़्यादा यही गलतियाँ करते हैं — इन्हें जानो और marks बचाओ।
       </p>
 
       {/* Category filter */}
@@ -134,7 +134,7 @@ export default function MistakesView({ mistakes }: MistakesViewProps) {
         ))}
         {filtered.length === 0 && (
           <div className="text-center py-10 text-gray-400 dark:text-gray-600 text-sm">
-            No mistakes found for this category.
+            Is category mein koi galti nahi mili.
           </div>
         )}
       </div>

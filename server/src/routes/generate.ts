@@ -746,11 +746,12 @@ router.post("/mindmap", async (req, res) => {
 });
 
 router.post("/mistakes", async (req, res) => {
-  const { text, subject, classNum, chapterName, language } = req.body;
+  const { text, subject, classNum, chapterName } = req.body;
   if (!text || !subject || !chapterName) {
     return res.status(400).json({ error: "Missing required fields" });
   }
-  const lang = language || "english";
+  // Always Hindi-medium: explanations in Hindi, formulas/technical terms in English
+  const lang = "hindi";
   const parsed = await callNvidiaWithRetry(
     mistakesSystemPrompt(lang),
     mistakesUserPrompt(text, subject, classNum || "11", chapterName, lang),

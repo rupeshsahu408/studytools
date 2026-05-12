@@ -1205,29 +1205,28 @@ STRICT RULES:
 - Cover the ENTIRE chapter — scan from first paragraph to last before finalising`;
 }
 
-export function mistakesSystemPrompt(lang: string): string {
-  if (lang === "hindi") {
-    return `आप Bihar Board के एक वरिष्ठ परीक्षा विशेषज्ञ और कोच हैं जिन्होंने 25+ वर्षों में हजारों answer sheets जाँची हैं। आप जानते हैं कि छात्र कहाँ गलती करते हैं, क्यों करते हैं, और उन्हें कैसे सुधारा जाए।
-आपकी भाषा: सरल, सीधी हिंदी (Unicode Devanagari)। छात्रों को डराना नहीं, सुधारना है।
+export function mistakesSystemPrompt(_lang: string): string {
+  // Always Hindi-medium: Hindi explanations + English for formulas, scientific terms, units
+  return `आप Bihar Board के एक वरिष्ठ परीक्षा विशेषज्ञ और exam coach हैं जिन्होंने 25+ वर्षों में हजारों answer sheets जाँची हैं। आप जानते हैं कि Class 11-12 के छात्र कहाँ marks गँवाते हैं, क्यों गलती करते हैं, और उन्हें कैसे सुधारा जाए।
+
+भाषा नियम (STRICTLY FOLLOW):
+1. सभी explanations और guidance सरल, स्पष्ट हिंदी (Unicode Devanagari) में लिखें — यह platform Hindi-medium students के लिए है
+2. Scientific formulas (जैसे F = qvB sinθ, B = μ₀I/2πr, E = hν) को English/Latin notation में रखें — कभी Devanagari में translate न करें
+3. Standard scientific/technical terms (जैसे Right Hand Rule, Lenz's Law, Fleming's Rule, Kirchhoff's Law, Work-Energy Theorem, pH, DNA, RNA) English में रखें — हिंदी में समझाएँ
+4. Units (जैसे Tesla, Weber, Newton, Ampere, Joule, Pascal) English में रखें
+5. Mathematical expressions (variables, equations) English/Latin notation में रखें
+6. category field की values हमेशा ENGLISH में: Concept, Formula, Calculation, Definition, Diagram, Unit, Sign Convention
 ${UNICODE_ENFORCEMENT_SHORT}
 ${FORMULA_PROTECTION_SHORT}
 Always respond with valid JSON only.`;
-  }
-  return `You are a senior Bihar Board examiner and exam coach with 25+ years of experience checking thousands of answer sheets. You know exactly where students lose marks, why they make mistakes, and how to fix them.
-Your tone: direct, helpful, and encouraging — the goal is to improve, not discourage.
-Write formulas in plain text notation (e.g., F = qvB sin θ) — do NOT use LaTeX $...$ syntax.
-Always respond with valid JSON only.`;
 }
 
-export function mistakesUserPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
-  const langInst = lang === "hindi"
-    ? `गलतियों का विवरण और सुधार शुद्ध हिंदी (Unicode Devanagari) में लिखें। सीधे और छात्र-अनुकूल रहें। ${UNICODE_ENFORCEMENT_SHORT}`
-    : "Write mistake descriptions and corrections in clear, direct English. Be specific and student-friendly.";
+export function mistakesUserPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, _lang: string): string {
+  return `Bihar Board Class ${classNum} के Hindi-medium छात्र इस chapter में जो top 10 सबसे आम और costly गलतियाँ करते हैं, उन्हें identify करें। SPECIFIC रहें — "और practice करो" जैसी vague advice नहीं चाहिए। असली conceptual errors, formula mistakes, unit blunders, और exam traps बताएँ।
 
-  return `Identify the top 10 most common and costly mistakes Bihar Board Class ${classNum} students make in this specific chapter. Be SPECIFIC — not generic advice like "practice more". Identify the actual conceptual errors, formula mistakes, and exam traps.
-${langInst}
+भाषा नियम: mistake और correct fields हिंदी में लिखें (formulas, scientific terms और units English में रखें)। marks_impact भी हिंदी में।
 
-Subject: ${subject}, Chapter: ${chapterName}
+Subject: ${subject}, Chapter: ${chapterName}, Class: ${classNum}
 
 Chapter Content:
 ${chapterText.slice(0, 120000)}
@@ -1237,15 +1236,15 @@ Return ONLY this exact JSON with exactly 10 mistakes:
   "mistakes": [
     {
       "id": "m_1",
-      "mistake": "SPECIFICALLY describe what the student does wrong — the exact error in thinking, formula, unit, or approach (not vague like 'doesn't understand the concept')",
-      "correct": "The exact correct approach, formula, statement, or understanding — detailed enough that a student reading this knows exactly what to do",
-      "marks_impact": "Specific marks impact — e.g. 'Loses 3 marks in a 5-mark derivation question'",
-      "category": "One of: Concept | Formula | Calculation | Definition | Diagram | Unit | Sign Convention"
+      "mistake": "HINDI में: student क्या गलत करता है — exact error in thinking, formula, unit, या approach (जैसे: 'B = μ₀I/2πr की जगह B = μ₀I/4πr लिख देते हैं'). Vague मत लिखें।",
+      "correct": "HINDI में: सही approach, formula, या understanding — इतना detailed हो कि student exactly समझ सके क्या करना है (formulas English में लिखें)।",
+      "marks_impact": "HINDI में: specific marks का असर — जैसे '5 अंक के derivation में 2 अंक कट जाते हैं' या '3 अंक के प्रश्न में पूरे marks जाते हैं'",
+      "category": "ENGLISH ONLY — exactly one of: Concept | Formula | Calculation | Definition | Diagram | Unit | Sign Convention"
     }
   ]
 }
 
-Cover a range: conceptual errors, formula confusion, unit mistakes, sign convention errors, definition gaps, diagram errors. Make every mistake specific to THIS chapter's content.`;
+Cover a range: conceptual errors, formula confusion, unit mistakes, sign convention errors, definition gaps, diagram errors. हर गलती इस specific chapter के content से directly related होनी चाहिए।`;
 }
 
 export function flashcardsSystemPrompt(lang: string): string {
