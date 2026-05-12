@@ -16,6 +16,7 @@ import ElectricDipole from "./simulations/engines/ElectricDipole";
 import ImmersiveElectrostatics from "./simulations/engines/ImmersiveElectrostatics";
 import RayOpticsEngine from "./simulations/engines/RayOpticsEngine";
 import WaveOpticsEngine from "./simulations/engines/WaveOpticsEngine";
+import SolidStateEngine from "./simulations/engines/SolidStateEngine";
 
 type EngineComponent = React.ComponentType<Record<string, any>>;
 
@@ -28,6 +29,7 @@ const ENGINE_REGISTRY: Record<string, EngineComponent> = {
   "immersive-electrostatics": ImmersiveElectrostatics,
   "ray-optics": RayOpticsEngine,
   "wave-optics": WaveOpticsEngine,
+  "solid-state": SolidStateEngine,
 };
 
 const ENGINE_META: Record<string, { color: string; gradient: string; icon: string }> = {
@@ -39,6 +41,7 @@ const ENGINE_META: Record<string, { color: string; gradient: string; icon: strin
   "immersive-electrostatics": { color: "from-yellow-600 to-amber-700", gradient: "rgba(255,200,0,0.15)", icon: "🏭" },
   "ray-optics": { color: "from-sky-500 to-indigo-600", gradient: "rgba(56,189,248,0.15)", icon: "🔭" },
   "wave-optics": { color: "from-violet-500 to-fuchsia-600", gradient: "rgba(167,139,250,0.15)", icon: "〰️" },
+  "solid-state": { color: "from-emerald-500 to-teal-600", gradient: "rgba(16,185,129,0.15)", icon: "🔷" },
 };
 
 const DIFFICULTY_COLOR: Record<string, string> = {

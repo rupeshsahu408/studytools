@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/data/simulationLibrary.ts","./src/routes/chat.ts","./src/routes/generate.ts","./src/routes/ncert.ts","./src/routes/simulations.ts","./src/routes/upload.ts","./src/services/nvidia.ts","./src/services/pdf.ts","./src/services/prompts.ts","./src/services/simulations.ts"],"version":"6.0.3"}
