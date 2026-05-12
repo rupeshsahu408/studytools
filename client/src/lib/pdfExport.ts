@@ -1,6 +1,9 @@
 // ─── PDF Export Utility ───────────────────────────────────────────────────────
-// Uses browser print-to-PDF via a dedicated popup window.
-// This guarantees perfect Devanagari/Hindi text rendering with zero extra deps.
+// Uses a Blob URL opened in a new tab + browser print-to-PDF.
+// Blob URL approach avoids popup blockers on mobile and desktop alike.
+// Perfect Devanagari/Hindi text rendering — zero extra dependencies.
+// The user manually taps "Save as PDF" inside the new tab, which is a direct
+// user gesture — this is the only approach that works reliably on iOS Safari.
 
 function esc(s: string | undefined | null): string {
   if (!s) return "";
@@ -16,15 +19,25 @@ function escMl(s: string | undefined | null): string {
 }
 
 function openPrintWindow(html: string): void {
-  const win = window.open("", "_blank", "width=960,height=760");
-  if (!win) {
-    alert("Please allow popups for this site to export PDF.");
-    return;
+  try {
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    // Revoke after a generous delay so the tab has time to load the resource
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  } catch {
+    // Final fallback — should rarely be needed
+    const win = window.open("", "_blank");
+    if (!win) { alert("Please allow popups or new tabs for this site to export PDF."); return; }
+    win.document.write(html);
+    win.document.close();
   }
-  win.document.write(html);
-  win.document.close();
-  win.focus();
-  setTimeout(() => win.print(), 700);
 }
 
 const BASE_STYLES = `
