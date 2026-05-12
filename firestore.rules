@@ -72,6 +72,15 @@ service cloud.firestore {
       }
     }
 
+    // ── chatSessions ──────────────────────────────────────────────────────────
+    // Users can only read/write their own chat sessions (userId field == uid).
+    match /chatSessions/{sessionId} {
+      allow read, update, delete: if request.auth != null
+                                  && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.userId;
+    }
+
     // ── feedback ──────────────────────────────────────────────────────────────
     // Authenticated users can submit feedback (create only).
     // Users can read their own feedback reports.
