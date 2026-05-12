@@ -765,7 +765,8 @@ router.post("/flashcards", async (req, res) => {
   if (!text || !subject || !chapterName) {
     return res.status(400).json({ error: "Missing required fields" });
   }
-  const lang = language || "english";
+  // Always Hindi-medium: explanations in Hindi, formulas/technical terms in English
+  const lang = "hindi";
   const parsed = await callNvidiaWithRetry(
     flashcardsSystemPrompt(lang),
     flashcardsUserPrompt(text, subject, classNum || "11", chapterName, lang),

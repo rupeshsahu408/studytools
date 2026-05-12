@@ -1247,33 +1247,27 @@ Return ONLY this exact JSON with exactly 10 mistakes:
 Cover a range: conceptual errors, formula confusion, unit mistakes, sign convention errors, definition gaps, diagram errors. हर गलती इस specific chapter के content से directly related होनी चाहिए।`;
 }
 
-export function flashcardsSystemPrompt(lang: string): string {
-  if (lang === "hindi") {
-    return `आप Bihar Board Class 11 और 12 के लिए एक expert flash card creator हैं जिन्हें 25+ वर्षों का teaching अनुभव है।
-आपके flash cards:
-- Front: एक स्पष्ट, focused question, term, या concept (बहुत छोटा — 1-2 lines)
-- Back: एक complete, exam-ready answer जो student को पूरे marks दिलाए
-- भाषा: सरल, प्राकृतिक हिंदी (Unicode Devanagari) — कोई Krutidev encoding नहीं
+export function flashcardsSystemPrompt(_lang: string): string {
+  // Always Hindi-medium: Hindi explanations + English for formulas, scientific terms, units
+  return `आप Bihar Board Class 11 और 12 के लिए एक expert flash card creator हैं जिन्हें 25+ वर्षों का teaching अनुभव है।
 
-${UNICODE_ENFORCEMENT}
-Always respond with valid JSON only.`;
-  }
-  return `You are an expert flash card creator for Bihar Board Class 11 and 12 students with 25+ years of teaching experience.
-Your flash cards:
-- Front: A clear, focused question, term, or concept (short — 1-2 lines max)
-- Back: A complete, exam-ready answer that earns full marks
-- Language: Clear, precise English
+आपके flash cards की भाषा नियम (STRICTLY FOLLOW):
+1. Front और Back का explanatory content सरल, स्पष्ट हिंदी (Unicode Devanagari) में लिखें
+2. Scientific formulas (जैसे F = qvB sinθ, B = μ₀I/2πr, E = mc²) को English/Latin notation में रखें — कभी Devanagari में translate न करें
+3. Scientific/technical terms (जैसे Right Hand Rule, Lenz's Law, Ohm's Law, Newton's Law, Kirchhoff's Law, pH, DNA) English में रखें — हिंदी में explain करें
+4. Variables और symbols (F, B, E, I, q, v, m, a, t, μ₀, ε₀, λ, θ, ω) हमेशा English/Latin में
+5. SI units (Tesla, Weber, Newton, Ampere, Joule, Volt, Pascal, mol) English में
+6. category values हमेशा ENGLISH: Formula, Concept, Definition, Law, Application, Experiment
 
+${UNICODE_ENFORCEMENT_SHORT}
+${FORMULA_PROTECTION}
 Always respond with valid JSON only.`;
 }
 
-export function flashcardsUserPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, lang: string): string {
-  const langInst = lang === "hindi"
-    ? `Card का content शुद्ध हिंदी (Unicode Devanagari) में लिखें। Technical terms और formulas English में रह सकते हैं। ${UNICODE_ENFORCEMENT_SHORT}`
-    : "Write card content in clear, precise English.";
+export function flashcardsUserPrompt(chapterText: string, subject: string, classNum: string, chapterName: string, _lang: string): string {
+  return `Bihar Board Class ${classNum} के Hindi-medium छात्रों के लिए इस NCERT chapter के 25 high-quality flash cards बनाएँ। हर card exam-focused होना चाहिए — जो student सभी 25 cards master कर ले, वह Bihar Board exam में इस chapter का हर प्रश्न answer कर सके।
 
-  return `Generate 25 high-quality flash cards for this NCERT chapter. Each card must be exam-focused — a student who masters all 25 cards should be able to answer any question on this chapter in the Bihar Board exam.
-${langInst}
+भाषा नियम: Front और Back हिंदी में लिखें। Formulas, variables, scientific terms और units English में रखें।
 
 Subject: ${subject}, Class: ${classNum}, Chapter: ${chapterName}
 
@@ -1285,14 +1279,15 @@ Return ONLY this exact JSON with exactly 25 cards:
   "cards": [
     {
       "id": "card_1",
-      "front": "A single, clear question, term, or concept label — KEEP IT SHORT (1-2 lines max). Examples: 'What is Oersted's experiment?', 'Formula for magnetic force on a wire', 'Define electric flux'",
-      "back": "The complete, accurate answer written in proper Unicode Hindi/English. Must be clear, precise, and exam-ready — 2-4 lines. Include the formula, unit, or key condition if relevant.",
-      "category": "One of: Formula | Concept | Definition | Law | Application | Experiment"
+      "front": "HINDI में: एक clear, focused question या concept label — छोटा रखें (1-2 lines max)। जैसे: 'Lorentz बल का सूत्र क्या है?', 'Lenz's Law क्या कहता है?', 'Electric flux की definition'",
+      "back": "HINDI में: complete, exam-ready answer — 2-4 lines। Formula हो तो English में लिखें (जैसे F = q(E + v × B)), फिर हिंदी में explain करें। Unit और condition भी बताएँ।",
+      "category": "ENGLISH ONLY — exactly one of: Formula | Concept | Definition | Law | Application | Experiment"
     }
   ]
 }
 
-Spread cards across ALL major topics of the chapter. Cover: all key definitions, every important formula and law, fundamental experiments, real-world applications, common exam questions. Every card's back must be written in perfect Unicode script — NEVER in Krutidev encoding.`;
+Cards को chapter के सभी major topics में spread करें। Cover करें: सभी key definitions, हर important formula और law, fundamental experiments, real-world applications, common exam questions।
+${UNICODE_ENFORCEMENT_SHORT}`;
 }
 
 // ─── Phase 3 Prompts ───────────────────────────────────────────────────────
