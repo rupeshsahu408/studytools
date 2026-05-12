@@ -13,8 +13,8 @@ export default function BlueTick({ size = 16, className = "" }: BlueTickProps) {
       xmlns="http://www.w3.org/2000/svg"
       className={`flex-shrink-0 ${className}`}
       aria-label="Verified"
-      title="Verified student"
     >
+      <title>Verified student</title>
       <circle cx="12" cy="12" r="12" fill="#1d9bf0" />
       <path
         d="M6.5 12.5L10 16L17.5 8.5"
