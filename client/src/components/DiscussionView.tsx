@@ -19,7 +19,7 @@ import {
 import { sendChatMessage } from "../lib/api";
 import {
   isPushSupported, getPermissionState,
-  subscribeToPush, getExistingSubscription,
+  subscribeToPush, unsubscribeFromPush, getExistingSubscription,
   sendPushNotification,
 } from "../lib/push";
 
@@ -113,68 +113,168 @@ function Avatar({ name, isAI = false, size = "sm" }: { name: string; isAI?: bool
 }
 
 // ─── Notification Permission Banner ──────────────────────────────────────────
+// State machine:
+//  "idle"     → show Enable prompt (permission === "default" and not dismissed)
+//  "enabled"  → show green "enabled" strip with Disable button
+//  "denied"   → show yellow warning with browser-settings hint
+//  "hidden"   → render nothing
+
+type BannerState = "idle" | "enabled" | "denied" | "hidden";
 
 function NotificationBanner({ uid }: { uid: string }) {
-  const [visible, setVisible] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
+  const [bannerState, setBannerState] = useState<BannerState>("hidden");
+  const [actionLoading, setActionLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
+  // On mount: figure out which state we're in
   useEffect(() => {
     if (!isPushSupported()) return;
+
+    const perm = getPermissionState();
     const dismissed = localStorage.getItem("push_dismissed");
-    if (!dismissed && getPermissionState() === "default") {
-      setVisible(true);
-    }
-    if (getPermissionState() === "granted" && uid) {
-      getExistingSubscription()
-        .then(sub => { if (sub) savePushSubscription(uid, sub.toJSON()).catch(console.warn); })
-        .catch(console.warn);
+
+    if (perm === "granted") {
+      // Check if there's already an active subscription
+      getExistingSubscription().then(sub => {
+        if (sub) {
+          // Re-save to Firestore in case it expired or wasn't saved
+          if (uid) savePushSubscription(uid, sub.toJSON()).catch(console.warn);
+          setBannerState("enabled");
+        } else {
+          // Permission granted but no subscription — let user re-enable
+          if (!dismissed) setBannerState("idle");
+        }
+      }).catch(() => {
+        if (!dismissed) setBannerState("idle");
+      });
+    } else if (perm === "denied") {
+      // Don't nag indefinitely — only show once per session
+      const shownDenied = sessionStorage.getItem("push_denied_shown");
+      if (!shownDenied) {
+        setBannerState("denied");
+        sessionStorage.setItem("push_denied_shown", "1");
+      }
+    } else {
+      // "default" — user hasn't been asked yet
+      if (!dismissed) setBannerState("idle");
     }
   }, [uid]);
 
-  if (!visible || done) return null;
-
   const handleEnable = async () => {
-    setLoading(true);
+    setActionLoading(true);
+    setErrorMsg("");
     try {
       const sub = await subscribeToPush();
       if (sub && uid) {
         await savePushSubscription(uid, sub.toJSON());
-        setDone(true);
-        setVisible(false);
+        setBannerState("enabled");
+      } else if (sub === null) {
+        // User closed the permission dialog without choosing
+        setErrorMsg("Please allow notifications when the browser asks.");
       }
-    } catch (e) { console.warn("[push] enable failed:", e); }
-    setLoading(false);
+    } catch (e: any) {
+      if (e?.message === "denied") {
+        setBannerState("denied");
+      } else if (e?.message === "unsupported") {
+        setBannerState("hidden");
+      } else {
+        setErrorMsg("Could not enable notifications. Please try again.");
+      }
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDisable = async () => {
+    setActionLoading(true);
+    try {
+      await unsubscribeFromPush();
+      // Clear from Firestore so no notifications are sent
+      if (uid) {
+        await savePushSubscription(uid, {}).catch(console.warn);
+      }
+      localStorage.setItem("push_dismissed", "1");
+      setBannerState("hidden");
+    } catch {
+      // Ignore — worst case they still get notifs
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleDismiss = () => {
     localStorage.setItem("push_dismissed", "1");
-    setVisible(false);
+    setBannerState("hidden");
   };
 
+  if (bannerState === "hidden") return null;
+
+  // ── Enabled state ──────────────────────────────────────────────────────────
+  if (bannerState === "enabled") {
+    return (
+      <div className="flex items-center gap-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/40 rounded-2xl px-4 py-3 mb-4">
+        <div className="w-8 h-8 rounded-xl bg-green-100 dark:bg-green-900/50 flex items-center justify-center flex-shrink-0">
+          <Bell className="w-4 h-4 text-green-600 dark:text-green-400" />
+        </div>
+        <p className="text-sm text-green-700 dark:text-green-300 flex-1 leading-snug">
+          <span className="font-semibold">Notifications enabled</span> — you'll be alerted when someone replies.
+        </p>
+        <button
+          onClick={handleDisable}
+          disabled={actionLoading}
+          className="flex items-center gap-1.5 text-xs font-semibold text-green-600 dark:text-green-400 hover:text-red-500 dark:hover:text-red-400 border border-green-200 dark:border-green-800 hover:border-red-300 dark:hover:border-red-700 px-3 py-1.5 rounded-xl transition-colors disabled:opacity-50 flex-shrink-0"
+        >
+          {actionLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <BellOff className="w-3 h-3" />}
+          {actionLoading ? "Disabling…" : "Disable"}
+        </button>
+      </div>
+    );
+  }
+
+  // ── Denied state ───────────────────────────────────────────────────────────
+  if (bannerState === "denied") {
+    return (
+      <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700/50 rounded-2xl px-4 py-3 mb-4">
+        <BellOff className="w-4 h-4 text-gray-400 flex-shrink-0" />
+        <p className="text-sm text-gray-500 dark:text-gray-400 flex-1 leading-snug">
+          Notifications are blocked. To enable, click the lock icon in your browser's address bar and allow notifications.
+        </p>
+        <button onClick={handleDismiss} className="text-gray-400 hover:text-gray-600 transition-colors p-1 flex-shrink-0">
+          <span className="text-xs">✕</span>
+        </button>
+      </div>
+    );
+  }
+
+  // ── Idle state — main Enable prompt ────────────────────────────────────────
   return (
     <div className="flex items-center gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-2xl px-4 py-3 mb-4">
       <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
         <Bell className="w-4 h-4 text-amber-600 dark:text-amber-400" />
       </div>
-      <p className="text-sm text-amber-700 dark:text-amber-300 flex-1 leading-snug">
-        <span className="font-semibold">Get reply notifications</span> — even when the app is closed.
-      </p>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm text-amber-700 dark:text-amber-300 leading-snug">
+          <span className="font-semibold">Get reply notifications</span> — even when the app is closed.
+        </p>
+        {errorMsg && (
+          <p className="text-xs text-red-500 dark:text-red-400 mt-0.5">{errorMsg}</p>
+        )}
+      </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         <button
           onClick={handleDismiss}
-          className="text-xs text-amber-500 dark:text-amber-400 hover:text-amber-700 transition-colors p-1"
+          className="text-xs text-amber-400 dark:text-amber-500 hover:text-amber-600 transition-colors p-1"
           title="Dismiss"
         >
           <BellOff className="w-4 h-4" />
         </button>
         <button
           onClick={handleEnable}
-          disabled={loading}
-          className="flex items-center gap-1.5 text-xs font-bold bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white px-3 py-1.5 rounded-xl transition-colors"
+          disabled={actionLoading}
+          className="flex items-center gap-1.5 text-xs font-bold bg-amber-500 hover:bg-amber-600 active:bg-amber-700 disabled:opacity-60 text-white px-3 py-1.5 rounded-xl transition-colors"
         >
-          {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className="w-3 h-3" />}
-          {loading ? "Enabling…" : "Enable"}
+          {actionLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className="w-3 h-3" />}
+          {actionLoading ? "Enabling…" : "Enable"}
         </button>
       </div>
     </div>

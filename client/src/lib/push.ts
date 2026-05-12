@@ -1,8 +1,11 @@
 /* Topper 2.0 — Web Push Notification utilities */
 
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string;
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
-function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
+// VAPID public key — read from env at build time (Vite), or fetched from server at runtime
+let _vapidPublicKey: string | null = (import.meta.env.VITE_VAPID_PUBLIC_KEY as string) || null;
+
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
   const rawData = atob(base64);
@@ -27,6 +30,20 @@ export function getPermissionState(): NotificationPermission | "unsupported" {
   return Notification.permission;
 }
 
+/** Fetch VAPID public key from server if not available from env */
+async function getVapidPublicKey(): Promise<string | null> {
+  if (_vapidPublicKey) return _vapidPublicKey;
+  try {
+    const res = await fetch(`${API_BASE}/api/push/vapid-key`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    _vapidPublicKey = data.publicKey || null;
+    return _vapidPublicKey;
+  } catch {
+    return null;
+  }
+}
+
 /** Register the service worker (idempotent — safe to call on every mount) */
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!("serviceWorker" in navigator)) return null;
@@ -42,13 +59,19 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
 /**
  * Request notification permission, register SW, and create a push subscription.
  * Returns null if the user denies or push isn't supported.
+ * Throws with a typed reason so the caller can show useful UI.
  */
 export async function subscribeToPush(): Promise<PushSubscription | null> {
-  if (!isPushSupported() || !VAPID_PUBLIC_KEY) return null;
-  try {
-    const permission = await Notification.requestPermission();
-    if (permission !== "granted") return null;
+  if (!isPushSupported()) throw new Error("unsupported");
 
+  const vapidKey = await getVapidPublicKey();
+  if (!vapidKey) throw new Error("no_vapid_key");
+
+  const permission = await Notification.requestPermission();
+  if (permission === "denied") throw new Error("denied");
+  if (permission !== "granted") return null; // dismissed without a choice
+
+  try {
     const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
     await navigator.serviceWorker.ready;
 
@@ -57,11 +80,29 @@ export async function subscribeToPush(): Promise<PushSubscription | null> {
 
     return await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      applicationServerKey: urlBase64ToUint8Array(vapidKey),
     });
-  } catch (e) {
+  } catch (e: any) {
     console.warn("[push] Subscribe failed:", e);
-    return null;
+    throw new Error("subscribe_failed");
+  }
+}
+
+/**
+ * Unsubscribe from push notifications.
+ * Returns true if successfully unsubscribed.
+ */
+export async function unsubscribeFromPush(): Promise<boolean> {
+  if (!("serviceWorker" in navigator)) return false;
+  try {
+    const reg = await navigator.serviceWorker.getRegistration("/sw.js");
+    if (!reg) return false;
+    const sub = await reg.pushManager.getSubscription();
+    if (!sub) return true;
+    return await sub.unsubscribe();
+  } catch (e) {
+    console.warn("[push] Unsubscribe failed:", e);
+    return false;
   }
 }
 
@@ -88,7 +129,7 @@ export async function sendPushNotification(params: {
   url: string;
 }): Promise<void> {
   try {
-    await fetch("/api/push/send", {
+    await fetch(`${API_BASE}/api/push/send`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(params),
