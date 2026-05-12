@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen, Target, AlignLeft, PenLine, FileText, Sparkles,
   CheckCircle2, Loader2, Wifi,
@@ -126,14 +125,12 @@ export default function ExamPaperGenerating() {
 
       {/* ── Header ── */}
       <div className="text-center mb-8">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
+        <div
           className="inline-flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-400 text-xs font-semibold px-4 py-1.5 rounded-full mb-4"
         >
           <Wifi className="w-3.5 h-3.5 animate-pulse" />
           AI Exam Paper Ban Raha Hai…
-        </motion.div>
+        </div>
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
           Aapka Practice Paper Tayar Ho Raha Hai
         </h2>
@@ -148,37 +145,27 @@ export default function ExamPaperGenerating() {
         {/* Orbital icon */}
         <div className="flex-shrink-0 relative w-36 h-36">
           {/* Outer ring — slow clockwise */}
-          <motion.div
+          <div
             className={`absolute inset-0 rounded-full border-4 border-dashed ${accent.ring} opacity-30`}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 16, repeat: Infinity, ease: "linear" }}
           />
           {/* Middle ring — counter-clockwise */}
-          <motion.div
+          <div
             className={`absolute inset-3 rounded-full border-4 border-transparent border-t-amber-400 border-r-amber-300`}
-            animate={{ rotate: -360 }}
-            transition={{ duration: 9, repeat: Infinity, ease: "linear" }}
           />
           {/* Inner ring — clockwise fast */}
-          <motion.div
+          <div
             className={`absolute inset-6 rounded-full border-2 border-transparent border-b-amber-500`}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
           />
           {/* Centre icon — changes with step */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <AnimatePresence mode="wait">
-              <motion.div
+            
+              <div
                 key={activeStep.id}
-                initial={{ scale: 0, opacity: 0, rotate: -30 }}
-                animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                exit={{ scale: 0, opacity: 0, rotate: 30 }}
-                transition={{ duration: 0.4, ease: "backOut" }}
                 className={`w-14 h-14 rounded-2xl ${accent.bg} flex items-center justify-center`}
               >
                 <StepIcon className={`w-7 h-7 ${accent.text}`} />
-              </motion.div>
-            </AnimatePresence>
+              </div>
+            
           </div>
         </div>
 
@@ -190,11 +177,8 @@ export default function ExamPaperGenerating() {
             const Icon    = step.icon;
             const ac      = ACCENT[step.accent];
             return (
-              <motion.div
+              <div
                 key={step.id}
-                initial={{ x: 20, opacity: 0 }}
-                animate={{ x: 0, opacity: done || current ? 1 : 0.45 }}
-                transition={{ delay: i * 0.08, duration: 0.35 }}
                 className={`flex items-start gap-3 px-3 py-2.5 rounded-xl transition-all ${
                   current
                     ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700"
@@ -216,22 +200,17 @@ export default function ExamPaperGenerating() {
 
                 {/* Text */}
                 <div className="flex-1 min-w-0">
-                  <AnimatePresence mode="wait">
+                  
                     {current ? (
-                      <motion.p
+                      <p
                         key="hi"
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
                         className={`text-sm font-semibold ${ac.text} leading-snug`}
                       >
                         {step.hi}
-                      </motion.p>
+                      </p>
                     ) : (
-                      <motion.p
+                      <p
                         key="en"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
                         className={`text-sm font-medium leading-snug ${
                           done
                             ? "text-green-700 dark:text-green-400 line-through decoration-green-400/60"
@@ -239,20 +218,18 @@ export default function ExamPaperGenerating() {
                         }`}
                       >
                         {done ? step.hi : step.en}
-                      </motion.p>
+                      </p>
                     )}
-                  </AnimatePresence>
+                  
                   {current && (
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
+                    <p
                       className="text-xs text-gray-500 dark:text-gray-400 mt-0.5"
                     >
                       {step.en}
-                    </motion.p>
+                    </p>
                   )}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>
@@ -267,10 +244,9 @@ export default function ExamPaperGenerating() {
           </span>
         </div>
         <div className="h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-          <motion.div
-            className={`h-full rounded-full bg-gradient-to-r ${accent.bar}`}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+          <div
+            className={`h-full rounded-full bg-gradient-to-r ${accent.bar} transition-all`}
+            style={{ width: `${progress}%` }}
           />
         </div>
       </div>
@@ -283,14 +259,12 @@ export default function ExamPaperGenerating() {
           { label: "Long Answer (5M)", value: five, total: 6,  color: "text-purple-600 dark:text-purple-400",bg: "bg-purple-50 dark:bg-purple-900/20" },
         ].map(card => (
           <div key={card.label} className={`${card.bg} rounded-xl p-3 text-center`}>
-            <motion.p
+            <p
               className={`text-2xl font-black ${card.color} tabular-nums`}
-              animate={{ scale: [1, 1.08, 1] }}
-              transition={{ duration: 0.3 }}
               key={card.value}
             >
               {card.value}
-            </motion.p>
+            </p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-medium">
               / {card.total}
             </p>
@@ -303,19 +277,15 @@ export default function ExamPaperGenerating() {
 
       {/* ── Rotating tips ── */}
       <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl px-4 py-3 min-h-[56px] flex items-center gap-3">
-        <AnimatePresence mode="wait">
-          <motion.div
+        
+          <div
             key={tipIdx}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.4 }}
             className="flex items-start gap-2 w-full"
           >
             <span className="text-lg leading-none mt-0.5 flex-shrink-0">{tip.emoji}</span>
             <p className="text-sm text-gray-600 dark:text-gray-300">{tip.text}</p>
-          </motion.div>
-        </AnimatePresence>
+          </div>
+        
       </div>
 
       {/* ── Bottom reassurance ── */}

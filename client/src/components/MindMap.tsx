@@ -1,5 +1,4 @@
 import { useState, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronRight, ChevronDown, Network, X, Lightbulb,
   ChevronsDownUp, ChevronsUpDown, Search, BookOpen,
@@ -109,10 +108,7 @@ function TreeNode({
 
   return (
     <div className="relative">
-      <motion.div
-        initial={{ opacity: 0, x: -8 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.2, delay: depth * 0.03 }}
+      <div
         className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-all group select-none ${
           isSelected
             ? "bg-green-50 dark:bg-green-900/20 ring-1 ring-green-300 dark:ring-green-700"
@@ -152,19 +148,13 @@ function TreeNode({
               : <ChevronRight className="w-3.5 h-3.5" />}
           </span>
         )}
-      </motion.div>
+      </div>
 
       {/* Children */}
-      <AnimatePresence initial={false}>
-        {isOpen && hasChildren && (
-          <motion.div
-            key="children"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            className={`ml-4 mt-0.5 pl-4 border-l-2 space-y-0.5 overflow-hidden ${cfg.line}`}
-          >
+      {isOpen && hasChildren && (
+        <div
+          className={`ml-4 mt-0.5 pl-4 border-l-2 space-y-0.5 ${cfg.line}`}
+        >
             {node.children.map(child => (
               <TreeNode
                 key={child.id}
@@ -177,9 +167,8 @@ function TreeNode({
                 searchQuery={searchQuery}
               />
             ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }
@@ -351,16 +340,10 @@ export default function MindMap({ mindmap, chapterName = "Chapter", subject = "S
 
         {/* Explanation panel */}
         <div className="sticky top-20 space-y-3">
-          <AnimatePresence mode="wait">
+  
             {selectedNode ? (
-              <motion.div
-                key={selectedNode.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.15 }}
-                className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-5"
-              >
+              <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-5">
+
                 {/* Header */}
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div className="flex items-start gap-2">
@@ -404,20 +387,15 @@ export default function MindMap({ mindmap, chapterName = "Chapter", subject = "S
                     </div>
                   </div>
                 )}
-              </motion.div>
+              </div>
             ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 rounded-2xl p-5 text-center"
-              >
+              <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 rounded-2xl p-5 text-center">
                 <Network className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
                 <p className="text-sm text-gray-400 dark:text-gray-500">
                   Click any concept to see its explanation
                 </p>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
 
           {/* Depth legend */}
           <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl px-4 py-3">

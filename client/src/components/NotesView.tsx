@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, ChevronUp, Star, Lightbulb, BookOpen,
   FlaskConical, GitBranch, Image, Hash, ChevronRight,
@@ -146,50 +145,23 @@ export default function NotesView({ notes, subject, chapterName, classNum, onRea
   return (
     <div className="max-w-3xl">
       {/* Regenerating overlay banner */}
-      <AnimatePresence>
-        {regenerating && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="mb-5 flex items-center gap-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl px-5 py-4"
-          >
-            <div className="relative w-8 h-8 flex-shrink-0">
-              <motion.div
-                className="absolute inset-0 rounded-full border-2 border-green-200 dark:border-green-800"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              />
-              <motion.div
-                className="absolute inset-0 rounded-full border-2 border-transparent border-t-green-600"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Loader2 className="w-3.5 h-3.5 text-green-600 animate-spin" />
-              </div>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-green-800 dark:text-green-300">
-                AI is regenerating your notes…
-              </p>
-              <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">
-                This takes 60–90 seconds. Your current notes are still visible below.
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {regenerating && (
+        <div className="mb-5 flex items-center gap-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl px-5 py-4">
+          <Loader2 className="w-5 h-5 text-green-600 animate-spin flex-shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-green-800 dark:text-green-300">
+              AI is regenerating your notes…
+            </p>
+            <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">
+              This takes 60–90 seconds. Your current notes are still visible below.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Confirm dialog */}
-      <AnimatePresence>
-        {showConfirm && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.97 }}
-            className="mb-5 bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-800/50 rounded-2xl px-5 py-4"
-          >
+      {showConfirm && (
+        <div className="mb-5 bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-800/50 rounded-2xl px-5 py-4">
             <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-1">
               Regenerate notes?
             </p>
@@ -210,9 +182,8 @@ export default function NotesView({ notes, subject, chapterName, classNum, onRea
                 Cancel
               </button>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
@@ -238,41 +209,31 @@ export default function NotesView({ notes, subject, chapterName, classNum, onRea
               <span className="font-normal opacity-70">· {totalWords.toLocaleString()} words</span>
             </button>
 
-            <AnimatePresence>
-              {showDepthTooltip && (
-                <motion.div
-                  initial={{ opacity: 0, y: 4, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 4, scale: 0.97 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute left-0 top-full mt-2 z-20 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl p-3"
-                >
-                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-2">
-                    Notes Depth
-                  </p>
-                  {/* Mini progress bar */}
-                  <div className="h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-800 mb-2 overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: depthInfo.barWidth }}
-                      transition={{ duration: 0.5, ease: "easeOut" }}
-                      className={`h-full rounded-full ${
-                        depthInfo.label === "Basic" ? "bg-gray-400" :
-                        depthInfo.label === "Good" ? "bg-blue-500" :
-                        depthInfo.label === "Detailed" ? "bg-green-500" :
-                        "bg-violet-500"
-                      }`}
-                    />
-                  </div>
-                  <div className="flex justify-between text-[10px] text-gray-400 mb-2.5">
-                    <span>Basic</span><span>Good</span><span>Detailed</span><span>In-depth</span>
-                  </div>
-                  <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-snug">
-                    {depthInfo.sublabel}. Total content: <span className="font-semibold text-gray-700 dark:text-gray-300">{totalWords.toLocaleString()} words</span> across {notes.topics?.length ?? 0} sections.
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {showDepthTooltip && (
+              <div className="absolute left-0 top-full mt-2 z-20 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl p-3">
+                <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                  Notes Depth
+                </p>
+                {/* Mini progress bar */}
+                <div className="h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-800 mb-2 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      depthInfo.label === "Basic" ? "bg-gray-400" :
+                      depthInfo.label === "Good" ? "bg-blue-500" :
+                      depthInfo.label === "Detailed" ? "bg-green-500" :
+                      "bg-violet-500"
+                    }`}
+                    style={{ width: depthInfo.barWidth }}
+                  />
+                </div>
+                <div className="flex justify-between text-[10px] text-gray-400 mb-2.5">
+                  <span>Basic</span><span>Good</span><span>Detailed</span><span>In-depth</span>
+                </div>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-snug">
+                  {depthInfo.sublabel}. Total content: <span className="font-semibold text-gray-700 dark:text-gray-300">{totalWords.toLocaleString()} words</span> across {notes.topics?.length ?? 0} sections.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -331,11 +292,8 @@ export default function NotesView({ notes, subject, chapterName, classNum, onRea
           const hasSubTopics = topic.subTopics && topic.subTopics.length > 0;
 
           return (
-            <motion.div
+            <div
               key={topic.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.04 }}
               className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden"
             >
               {/* Topic Header */}
@@ -361,15 +319,9 @@ export default function NotesView({ notes, subject, chapterName, classNum, onRea
               </button>
 
               {/* Topic Body */}
-              <AnimatePresence>
-                {isOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="border-t border-gray-50 dark:border-gray-800"
-                  >
+              {isOpen && (
+                <div className="border-t border-gray-50 dark:border-gray-800">
+
                     <div className="px-5 pb-6 space-y-5">
 
                       {/* Main Content */}
@@ -506,10 +458,9 @@ export default function NotesView({ notes, subject, chapterName, classNum, onRea
                       )}
 
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+                </div>
+              )}
+            </div>
           );
         })}
       </div>

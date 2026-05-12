@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen, HelpCircle, ArrowLeft, Atom, FlaskConical,
   Calculator, Leaf, Calendar, Sigma, Network, AlertTriangle,
@@ -56,23 +55,10 @@ function formatDate(ts: any): string {
 }
 
 function SectionGenerating({ label }: { label: string }) {
-  const [dots, setDots] = useState(".");
-  useEffect(() => {
-    const t = setInterval(() => setDots(d => d.length >= 3 ? "." : d + "."), 500);
-    return () => clearInterval(t);
-  }, []);
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="relative w-16 h-16 mb-5">
-        <motion.div className="absolute inset-0 rounded-full border-4 border-green-200 dark:border-green-900"
-          animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} />
-        <motion.div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-600"
-          animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }} />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Loader2 className="w-6 h-6 text-green-600 animate-spin" />
-        </div>
-      </div>
-      <p className="text-base font-semibold text-gray-800 dark:text-white mb-1">Generating {label}{dots}</p>
+      <Loader2 className="w-8 h-8 text-green-600 animate-spin mb-4" />
+      <p className="text-base font-semibold text-gray-800 dark:text-white mb-1">Generating {label}…</p>
       <p className="text-sm text-gray-400 dark:text-gray-500 max-w-xs">AI is analyzing your chapter. This takes 20–40 seconds.</p>
     </div>
   );
@@ -768,16 +754,12 @@ export default function ChapterPage() {
             </div>
           )}
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeSection}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18 }}>
+          
+            <div
+              key={activeSection}>
               {renderSection()}
-            </motion.div>
-          </AnimatePresence>
+            </div>
+          
         </main>
       </div>
     </div>

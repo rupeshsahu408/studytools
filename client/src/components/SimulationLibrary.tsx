@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Atom, Beaker, FlaskConical, BookOpen, ChevronDown, ChevronRight,
   Play, X, Sparkles, Search, Filter, AlertCircle, Zap, ArrowLeft,
@@ -262,10 +261,9 @@ export default function SimulationLibrary({
         </div>
 
         {/* AI Explanation */}
-        <AnimatePresence>
+        
           {(explain.text || explain.error || explain.loading) && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+            <div
               className="bg-gray-900 border border-cyan-900/40 rounded-2xl p-5">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 bg-cyan-900/40 rounded-full flex items-center justify-center flex-shrink-0">
@@ -276,9 +274,7 @@ export default function SimulationLibrary({
                   {explain.loading && (
                     <div className="flex gap-1.5 items-center">
                       {[0, 1, 2].map(i => (
-                        <motion.div key={i} className="w-2 h-2 bg-cyan-400 rounded-full"
-                          animate={{ y: [0, -5, 0] }}
-                          transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }} />
+                        <div key={i} className="w-2 h-2 bg-cyan-400 rounded-full" />
                       ))}
                     </div>
                   )}
@@ -292,9 +288,9 @@ export default function SimulationLibrary({
                   )}
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
+        
       </div>
     );
   }
@@ -428,9 +424,8 @@ export default function SimulationLibrary({
             const simCount = chapter.simulations.length;
 
             return (
-              <motion.div
+              <div
                 key={chapter.id}
-                layout
                 className="bg-gray-900/60 border border-gray-800 rounded-2xl overflow-hidden">
 
                 {/* Chapter header */}
@@ -454,34 +449,25 @@ export default function SimulationLibrary({
                       <div className="text-xs text-gray-600">sims</div>
                     </div>
                     {simCount > 0 && (
-                      <motion.div
-                        animate={{ rotate: isExpanded ? 180 : 0 }}
-                        transition={{ duration: 0.2 }}
+                      <div
                         className="text-gray-400 group-hover:text-white transition-colors">
                         <ChevronDown className="w-5 h-5" />
-                      </motion.div>
+                      </div>
                     )}
                   </div>
                 </button>
 
                 {/* Simulation grid */}
-                <AnimatePresence>
+                
                   {isExpanded && simCount > 0 && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25 }}
+                    <div
                       className="overflow-hidden">
                       <div className="px-4 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {chapter.simulations.map((sim, i) => {
                           const meta = ENGINE_META[sim.engine] || ENGINE_META["electric-field-explorer"];
                           return (
-                            <motion.div
+                            <div
                               key={sim.id}
-                              initial={{ opacity: 0, y: 8 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: i * 0.03 }}
                               onClick={() => handleLaunch(sim)}
                               className="group bg-gray-950/80 border border-gray-800 hover:border-cyan-800/60 rounded-xl p-4 cursor-pointer transition-all hover:shadow-lg hover:shadow-cyan-900/20"
                               style={{ background: `linear-gradient(135deg, #0a0f1a, ${meta.gradient})` }}>
@@ -507,13 +493,13 @@ export default function SimulationLibrary({
                                   <ChevronRight className="w-3 h-3" />
                                 </span>
                               </div>
-                            </motion.div>
+                            </div>
                           );
                         })}
                       </div>
-                    </motion.div>
+                    </div>
                   )}
-                </AnimatePresence>
+                
 
                 {/* Coming soon state for empty chapters */}
                 {isExpanded && simCount === 0 && (
@@ -523,7 +509,7 @@ export default function SimulationLibrary({
                     </div>
                   </div>
                 )}
-              </motion.div>
+              </div>
             );
           })}
         </div>

@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, Clock, CheckCircle, Trophy, FileText, ThumbsUp, ThumbsDown, RefreshCw, AlertTriangle, Download, ChevronDown } from "lucide-react";
 import FeedbackButton from "./FeedbackButton";
 import { exportQuestionsPDF } from "../lib/pdfExport";
@@ -234,13 +233,9 @@ export default function QuestionsView({ questions, onQuestionAnswered, onRetryBa
               Export PDF
               <ChevronDown className={`w-3 h-3 transition-transform ${showExportMenu ? "rotate-180" : ""}`} />
             </button>
-            <AnimatePresence>
+            
               {showExportMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                  transition={{ duration: 0.13 }}
+                <div
                   className="absolute right-0 top-full mt-1.5 z-30 w-52 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden"
                 >
                   <div className="px-3 pt-3 pb-1">
@@ -281,9 +276,9 @@ export default function QuestionsView({ questions, onQuestionAnswered, onRetryBa
                     </div>
                   </button>
                   <div className="pb-1.5" />
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
+            
           </div>
 
           <button
@@ -377,7 +372,7 @@ export default function QuestionsView({ questions, onQuestionAnswered, onRetryBa
       {isCaseBased ? (
         <div className="space-y-6">
           {(currentQuestions as any[]).map((set: any, setIdx: number) => (
-            <motion.div key={set.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: setIdx * 0.06 }}
+            <div key={set.id}
               className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden">
               <div className="flex items-center gap-3 px-5 py-3 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-800/30">
                 <FileText className="w-4 h-4 text-indigo-500 dark:text-indigo-400 flex-shrink-0" />
@@ -414,9 +409,9 @@ export default function QuestionsView({ questions, onQuestionAnswered, onRetryBa
                             </span>
                           </div>
 
-                          <AnimatePresence>
+                          
                             {isRevealed && (
-                              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-2">
+                              <div className="mt-2">
                                 <div className="bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-800/30 rounded-xl p-3">
                                   <p className="text-xs font-semibold text-green-600 dark:text-green-400 mb-1">Answer</p>
                                   <p className="text-sm text-gray-700 dark:text-gray-300">{q.answer}</p>
@@ -445,9 +440,9 @@ export default function QuestionsView({ questions, onQuestionAnswered, onRetryBa
                                     </button>
                                   </div>
                                 )}
-                              </motion.div>
+                              </div>
                             )}
-                          </AnimatePresence>
+                          
 
                           <div className="flex items-center justify-between mt-2">
                             {canReveal && (
@@ -475,7 +470,7 @@ export default function QuestionsView({ questions, onQuestionAnswered, onRetryBa
                   );
                 })}
               </div>
-            </motion.div>
+            </div>
           ))}
           {currentQuestions.length === 0 && (
             <div className="text-center py-10 text-gray-400 dark:text-gray-600 text-sm">No case-based questions available.</div>
@@ -490,7 +485,7 @@ export default function QuestionsView({ questions, onQuestionAnswered, onRetryBa
             const answered = answeredMap.get(q.id);
 
             return (
-              <motion.div key={q.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
+              <div key={q.id}
                 className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden">
                 <div className="p-4">
                   <div className="flex items-start gap-3 mb-3">
@@ -549,9 +544,9 @@ export default function QuestionsView({ questions, onQuestionAnswered, onRetryBa
                     </div>
                   </div>
 
-                  <AnimatePresence>
+                  
                     {isRevealed && (
-                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                      <div
                         className="border-t border-gray-50 dark:border-gray-800 pt-3 mt-2">
                         <div className="bg-green-50 dark:bg-green-900/10 rounded-xl p-3">
                           <p className="text-xs font-semibold text-green-600 dark:text-green-400 mb-1">Answer</p>
@@ -601,9 +596,9 @@ export default function QuestionsView({ questions, onQuestionAnswered, onRetryBa
                             </button>
                           </div>
                         )}
-                      </motion.div>
+                      </div>
                     )}
-                  </AnimatePresence>
+                  
 
                   <div className="flex items-center justify-between mt-2">
                     {canReveal && (
@@ -626,7 +621,7 @@ export default function QuestionsView({ questions, onQuestionAnswered, onRetryBa
                     )}
                   </div>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
 

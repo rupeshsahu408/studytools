@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, Users, BookOpen, Copy, Check, LogIn, LogOut,
   Plus, Loader2, ChevronRight, Crown, Medal, Award,
@@ -144,10 +143,8 @@ function LeaderboardTab({ currentUid, school, district }: { currentUid: string; 
                 const rank = idx === 0 ? 2 : idx === 1 ? 1 : 3;
                 const isMe = entry.uid === currentUid;
                 return (
-                  <motion.div
+                  <div
                     key={entry.uid}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: rank === 1 ? 0 : 16 }}
                     className={`bg-white dark:bg-gray-900 border rounded-2xl p-3 text-center flex flex-col items-center gap-1 ${
                       isMe ? "border-green-300 dark:border-green-700 shadow-md" : "border-gray-100 dark:border-gray-800"
                     }`}>
@@ -160,7 +157,7 @@ function LeaderboardTab({ currentUid, school, district }: { currentUid: string; 
                     <div className="bg-green-50 dark:bg-green-900/20 rounded-lg px-2 py-1 w-full mt-1">
                       <p className="text-xs font-bold text-green-600 dark:text-green-400">{entry.questionsThisWeek} Qs</p>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
@@ -172,11 +169,8 @@ function LeaderboardTab({ currentUid, school, district }: { currentUid: string; 
               const rank = i + 1;
               const isMe = entry.uid === currentUid;
               return (
-                <motion.div
+                <div
                   key={entry.uid}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: Math.min(i * 0.03, 0.3) }}
                   className={`flex items-center gap-3 p-3 rounded-2xl border transition-all ${
                     isMe
                       ? "bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800"
@@ -212,7 +206,7 @@ function LeaderboardTab({ currentUid, school, district }: { currentUid: string; 
                       <p className="text-xs text-gray-400 dark:text-gray-500">accuracy</p>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>
@@ -630,11 +624,8 @@ function MyClassTab({
         ) : (
           <div className="space-y-2">
             {members.map((member, i) => (
-              <motion.div
+              <div
                 key={member.uid}
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.04 }}
                 className={`bg-white dark:bg-gray-900 border rounded-xl p-3 flex items-center gap-3 ${
                   member.uid === uid
                     ? "border-green-200 dark:border-green-800"
@@ -669,7 +660,7 @@ function MyClassTab({
                     <p className="text-xs text-gray-400 dark:text-gray-500">acc.</p>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         )}
@@ -724,11 +715,7 @@ function NotificationsPanel({
       />
 
       {/* Drawer */}
-      <motion.div
-        initial={{ x: "100%", opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: "100%", opacity: 0 }}
-        transition={{ type: "spring", damping: 28, stiffness: 220 }}
+      <div
         className="fixed right-0 top-14 bottom-0 w-80 bg-white dark:bg-gray-900 border-l border-gray-100 dark:border-gray-800 z-40 flex flex-col shadow-2xl"
       >
         {/* Header */}
@@ -817,7 +804,7 @@ function NotificationsPanel({
             {notifs.length} notification{notifs.length !== 1 ? "s" : ""}
           </div>
         )}
-      </motion.div>
+      </div>
     </>
   );
 }
@@ -851,7 +838,7 @@ export default function CommunityPage() {
       <div className="pt-14 max-w-3xl mx-auto px-4 py-8">
 
         {/* Page header */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex items-start justify-between gap-4">
+        <div className="mb-6 flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
               <Users className="w-6 h-6 text-green-600" /> Community
@@ -869,17 +856,17 @@ export default function CommunityPage() {
               <Bell className="w-5 h-5" />
             </button>
           )}
-        </motion.div>
+        </div>
 
         {/* Notifications Panel */}
-        <AnimatePresence>
+        
           {showNotifPanel && user?.uid && (
             <NotificationsPanel
               uid={user.uid}
               onClose={() => setShowNotifPanel(false)}
             />
           )}
-        </AnimatePresence>
+        
 
         {/* Tabs */}
         <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-2xl mb-6">
@@ -899,13 +886,9 @@ export default function CommunityPage() {
         </div>
 
         {/* Tab content */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.15 }}>
+        
+          <div
+            key={activeTab}>
             {activeTab === "leaderboard" ? (
               <LeaderboardTab
                 currentUid={user?.uid || ""}
@@ -920,8 +903,8 @@ export default function CommunityPage() {
                 refreshUserData={refreshUserData}
               />
             )}
-          </motion.div>
-        </AnimatePresence>
+          </div>
+        
       </div>
     </div>
   );

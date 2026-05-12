@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion"; // kept for card flip only
 import { ChevronLeft, ChevronRight, CheckCircle, AlertCircle, Layers, RefreshCw } from "lucide-react";
 import FeedbackButton from "./FeedbackButton";
 
@@ -136,21 +136,19 @@ export default function FlashCards({ cards, onAllDone, userId, chapterId, chapte
           <span className="text-xs text-gray-400">{Math.round(progressPct)}% known</span>
         </div>
         <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 overflow-hidden">
-          <motion.div
-            className="h-full bg-green-500 rounded-full"
-            animate={{ width: `${progressPct}%` }}
-            transition={{ duration: 0.5 }}
+          <div
+            className="h-full bg-green-500 rounded-full transition-all duration-300"
+            style={{ width: `${progressPct}%` }}
           />
         </div>
       </div>
 
       {/* All-done celebration */}
       {knownIds.size === cards.length && cards.length > 0 && (
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-          className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-4 mb-4 text-center">
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-4 mb-4 text-center">
           <p className="text-green-700 dark:text-green-300 font-bold text-sm">🎉 Shabash! Saare cards complete ho gaye!</p>
           <p className="text-green-600 dark:text-green-400 text-xs mt-1">All {cards.length} flashcards marked as known.</p>
-        </motion.div>
+        </div>
       )}
 
       {/* Filter tabs */}

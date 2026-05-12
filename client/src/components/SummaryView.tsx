@@ -1,5 +1,4 @@
 import { useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, Clock, ChevronDown, ChevronUp, Star,
   BookOpen, Target, Brain, CheckCircle2, AlertCircle,
@@ -80,10 +79,7 @@ function ConceptCard({ concept, index }: { concept: Concept; index: number }) {
   const w = WEIGHT[concept.examWeight] || WEIGHT.medium;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.08 + index * 0.035, duration: 0.35 }}
+    <div
       className={`rounded-2xl border overflow-hidden ${w.card}`}
     >
       <button
@@ -144,7 +140,7 @@ function ConceptCard({ concept, index }: { concept: Concept; index: number }) {
           </div>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }
 
@@ -195,10 +191,7 @@ export default function SummaryView({ summary, chapterName, subject, classNum = 
       className="max-w-3xl mx-auto px-1 sm:px-4 py-5 space-y-5 pb-20">
 
       {/* ── Hero Header ──────────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+      <div
         className="relative bg-gradient-to-br from-green-600 via-green-600 to-emerald-700 rounded-3xl p-6 text-white overflow-hidden shadow-lg shadow-green-900/20"
       >
         {/* Decorative blobs */}
@@ -249,13 +242,9 @@ export default function SummaryView({ summary, chapterName, subject, classNum = 
           </div>
 
           {/* ── Regenerate confirmation overlay ── */}
-          <AnimatePresence>
+          
             {confirmRegen && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: -6 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -6 }}
-                transition={{ duration: 0.18 }}
+              <div
                 className="summary-print-hide absolute inset-x-4 top-4 z-10 bg-gray-900/95 backdrop-blur-sm border border-white/15 rounded-2xl p-4 shadow-xl"
               >
                 <div className="flex items-start gap-3 mb-4">
@@ -290,9 +279,9 @@ export default function SummaryView({ summary, chapterName, subject, classNum = 
                     Yes, Regenerate
                   </button>
                 </div>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
+          
 
           <h1 className="text-[1.25rem] font-black text-white leading-tight mb-1">{chapterName}</h1>
           <p className="text-sm text-green-200 mb-5">{subject} · Bihar Board</p>
@@ -319,14 +308,11 @@ export default function SummaryView({ summary, chapterName, subject, classNum = 
             )}
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* ── Chapter Essence ──────────────────────────────────────────────── */}
       {summary.chapterEssence && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05, duration: 0.35 }}
+        <div
           className="flex gap-3 bg-blue-50 dark:bg-blue-950/25 border border-blue-200 dark:border-blue-800/60 rounded-2xl p-4"
         >
           <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -338,7 +324,7 @@ export default function SummaryView({ summary, chapterName, subject, classNum = 
               {summary.chapterEssence}
             </p>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* ── Key Concepts ─────────────────────────────────────────────────── */}
@@ -361,10 +347,7 @@ export default function SummaryView({ summary, chapterName, subject, classNum = 
 
       {/* ── Formula Snapshot ─────────────────────────────────────────────── */}
       {summary.formulaSnapshot?.length > 0 && (
-        <motion.section
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.12, duration: 0.35 }}
+        <section
         >
           <div className="flex items-center gap-2 mb-3">
             <Star className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
@@ -373,11 +356,8 @@ export default function SummaryView({ summary, chapterName, subject, classNum = 
 
           <div className="formula-print-panel bg-gray-950 dark:bg-black rounded-2xl p-4 space-y-3 border border-gray-800">
             {summary.formulaSnapshot.map((item, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.14 + i * 0.028, duration: 0.3 }}
                 className="flex items-start gap-3 group"
               >
                 <span className="flex-shrink-0 w-6 h-6 rounded-lg bg-green-500/15 border border-green-500/25 flex items-center justify-center mt-0.5">
@@ -389,18 +369,15 @@ export default function SummaryView({ summary, chapterName, subject, classNum = 
                   </p>
                   <p className="formula-context text-xs text-gray-500 mt-0.5 leading-relaxed">{item.context}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
-        </motion.section>
+        </section>
       )}
 
       {/* ── Exam Spotlight ───────────────────────────────────────────────── */}
       {summary.examSpotlight && (
-        <motion.section
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.18, duration: 0.35 }}
+        <section
         >
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
@@ -460,15 +437,12 @@ export default function SummaryView({ summary, chapterName, subject, classNum = 
             </div>
 
           </div>
-        </motion.section>
+        </section>
       )}
 
       {/* ── Last Night Revision ──────────────────────────────────────────── */}
       {summary.lastNightRevision?.length > 0 && (
-        <motion.section
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.22, duration: 0.35 }}
+        <section
         >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -484,10 +458,9 @@ export default function SummaryView({ summary, chapterName, subject, classNum = 
 
           {/* Progress bar — hidden in print */}
           <div className="summary-print-hide h-1 bg-gray-100 dark:bg-gray-800 rounded-full mb-3 overflow-hidden">
-            <motion.div
-              className="h-full bg-green-500 rounded-full"
-              animate={{ width: `${totalPoints ? (checkedPoints.size / totalPoints) * 100 : 0}%` }}
-              transition={{ duration: 0.3 }}
+            <div
+              className="h-full bg-green-500 rounded-full transition-all"
+              style={{ width: `${totalPoints ? (checkedPoints.size / totalPoints) * 100 : 0}%` }}
             />
           </div>
 
@@ -495,10 +468,9 @@ export default function SummaryView({ summary, chapterName, subject, classNum = 
             {summary.lastNightRevision.map((point, i) => {
               const checked = checkedPoints.has(i);
               return (
-                <motion.button
+                <button
                   key={i}
                   onClick={() => togglePoint(i)}
-                  whileTap={{ scale: 0.995 }}
                   className={`w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors duration-150 ${
                     checked
                       ? "bg-green-50/70 dark:bg-green-900/10"
@@ -512,13 +484,10 @@ export default function SummaryView({ summary, chapterName, subject, classNum = 
                       : "border-gray-300 dark:border-gray-600"
                   }`}>
                     {checked && (
-                      <motion.span
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                      <span
                       >
                         <CheckCircle2 className="w-3 h-3 text-white" />
-                      </motion.span>
+                      </span>
                     )}
                   </span>
 
@@ -534,19 +503,15 @@ export default function SummaryView({ summary, chapterName, subject, classNum = 
                       {point}
                     </p>
                   </div>
-                </motion.button>
+                </button>
               );
             })}
           </div>
 
           {/* Completion state — hidden in print */}
-          <AnimatePresence>
+          
             {allChecked && !revisionComplete && (
-              <motion.div
-                initial={{ opacity: 0, y: 8, scale: 0.97 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.97 }}
-                transition={{ type: "spring", stiffness: 300, damping: 24 }}
+              <div
                 className="summary-print-hide mt-3 flex items-center gap-4 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl px-5 py-4 shadow-lg shadow-green-900/20"
               >
                 <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -564,19 +529,17 @@ export default function SummaryView({ summary, chapterName, subject, classNum = 
                 >
                   Done
                 </button>
-              </motion.div>
+              </div>
             )}
             {revisionComplete && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+              <p
                 className="summary-print-hide mt-3 text-center text-sm font-bold text-green-600 dark:text-green-400 py-2"
               >
                 All the best for your exam!
-              </motion.p>
+              </p>
             )}
-          </AnimatePresence>
-        </motion.section>
+          
+        </section>
       )}
 
       {/* ── Print Footer (only visible in PDF) ───────────────────────────── */}

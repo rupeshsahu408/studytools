@@ -1,5 +1,4 @@
 import { useState, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Beaker, Zap, Waves, Eye, Lightbulb, Magnet, FlaskConical,
   Atom, BarChart2, Battery, X, Sparkles, ChevronRight,
@@ -210,10 +209,9 @@ export default function SimulationsView({
           <SimComponent onContextChange={handleContextChange} />
         </div>
 
-        <AnimatePresence>
+        
           {(explain.text || explain.error || explain.loading) && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+            <div
               className="bg-white dark:bg-gray-900 border border-green-100 dark:border-green-900 rounded-2xl p-5">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center flex-shrink-0">
@@ -224,9 +222,7 @@ export default function SimulationsView({
                   {explain.loading && (
                     <div className="flex gap-1.5 items-center">
                       {[0, 1, 2].map(i => (
-                        <motion.div key={i} className="w-2 h-2 bg-green-400 rounded-full"
-                          animate={{ y: [0, -5, 0] }}
-                          transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }} />
+                        <div key={i} className="w-2 h-2 bg-green-400 rounded-full" />
                       ))}
                     </div>
                   )}
@@ -240,9 +236,9 @@ export default function SimulationsView({
                   )}
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
+        
       </div>
     );
   }
@@ -285,8 +281,7 @@ export default function SimulationsView({
               if (!reg) return null;
               const Icon = reg.icon;
               return (
-                <motion.div key={sim.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.06 }}
+                <div key={sim.id}
                   className="group bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-green-200 dark:hover:border-green-800 rounded-2xl p-5 cursor-pointer transition-all hover:shadow-md"
                   onClick={() => handleLaunch(sim)}>
                   <div className="flex items-start gap-3 mb-3">
@@ -307,7 +302,7 @@ export default function SimulationsView({
                       <Play className="w-3.5 h-3.5" /> Launch <ChevronRight className="w-3.5 h-3.5" />
                     </span>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
 import { Eye, EyeOff, Mail, Lock, LogIn, RefreshCw, CheckCircle } from "lucide-react";
 
@@ -100,7 +99,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
   if (verifyMsg) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+        <div
           className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-lg max-w-md w-full text-center">
           <div className="w-16 h-16 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
             <Mail className="w-8 h-8 text-green-600" />
@@ -117,7 +116,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
             className="block w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition-colors text-center">
             Go to Login
           </Link>
-        </motion.div>
+        </div>
       </div>
     );
   }
@@ -125,7 +124,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
   // ── Main auth form ──
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+      <div
         className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-lg max-w-md w-full">
 
         {/* Logo + heading */}
@@ -242,7 +241,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
             </>
           )}
         </p>
-      </motion.div>
+      </div>
     </div>
   );
 }

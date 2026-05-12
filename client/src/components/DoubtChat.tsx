@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Bot, User, MessageCircle, Plus, Pin, PinOff,
   Trash2, Pencil, Check, X, ChevronLeft, MessageSquare,
@@ -430,7 +429,7 @@ export default function DoubtChat({
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 min-h-0">
         {/* Welcome / empty state */}
         {messages.length === 0 && !loading && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-8">
+          <div className="text-center py-8">
             <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Bot className="w-7 h-7 text-green-600 dark:text-green-400" />
             </div>
@@ -450,16 +449,13 @@ export default function DoubtChat({
                 </button>
               ))}
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Messages */}
-        <AnimatePresence initial={false}>
+        
           {messages.map((msg, i) => (
-            <motion.div key={i}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.18 }}
+            <div key={i}
               className={`flex items-start gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
             >
               <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -476,26 +472,24 @@ export default function DoubtChat({
               }`} style={{ whiteSpace: "pre-wrap" }}>
                 {msg.content}
               </div>
-            </motion.div>
+            </div>
           ))}
-        </AnimatePresence>
+        
 
         {/* Typing indicator */}
         {loading && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-start gap-2.5">
+          <div className="flex items-start gap-2.5">
             <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
               <Bot className="w-3.5 h-3.5 text-gray-500" />
             </div>
             <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl rounded-tl-sm px-4 py-3">
               <div className="flex gap-1.5 items-center">
                 {[0, 1, 2].map(i => (
-                  <motion.div key={i} className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full"
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }} />
+                  <div key={i} className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full" />
                 ))}
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Error */}
@@ -548,13 +542,9 @@ export default function DoubtChat({
       </aside>
 
       {/* ── Mobile sidebar (overlay) ── */}
-      <AnimatePresence>
+      
         {showSidebar && (
-          <motion.aside
-            initial={{ x: "-100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ duration: 0.22, ease: "easeInOut" }}
+          <aside
             className="md:hidden absolute inset-y-0 left-0 z-30 w-72 flex flex-col border-r border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-xl"
           >
             <div className="flex items-center justify-between px-3 pt-3 pb-1">
@@ -567,9 +557,9 @@ export default function DoubtChat({
               </button>
             </div>
             {sidebarContent}
-          </motion.aside>
+          </aside>
         )}
-      </AnimatePresence>
+      
 
       {/* ── Mobile overlay backdrop ── */}
       {showSidebar && (

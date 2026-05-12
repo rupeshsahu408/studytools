@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageSquare, ThumbsUp, Reply, Bot, Trash2,
   Send, ChevronDown, ChevronUp, Sparkles, Loader2,
@@ -180,12 +179,9 @@ function ReplyList({
         </button>
       </div>
 
-      <AnimatePresence>
+      
         {expanded && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
+          <div
             className="mt-3 ml-4 pl-4 border-l-2 border-gray-100 dark:border-gray-800 space-y-3">
 
             {loading && (
@@ -195,10 +191,8 @@ function ReplyList({
             )}
 
             {!loading && replies.map(reply => (
-              <motion.div
+              <div
                 key={reply.id}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
                 className={`flex items-start gap-2.5 ${reply.isAI ? "bg-green-50 dark:bg-green-900/10 rounded-xl p-3" : ""}`}>
                 <Avatar name={reply.userName} isAI={reply.isAI} />
                 <div className="flex-1 min-w-0">
@@ -223,7 +217,7 @@ function ReplyList({
                     {reply.upvotes.length > 0 && reply.upvotes.length}
                   </button>
                 </div>
-              </motion.div>
+              </div>
             ))}
 
             {!loading && replies.length === 0 && (
@@ -253,9 +247,9 @@ function ReplyList({
                 </button>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      
     </div>
   );
 }
@@ -387,7 +381,7 @@ export default function DiscussionView({
           ))}
         </div>
       ) : posts.length === 0 ? (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+        <div
           className="text-center py-16">
           <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
             <MessageSquare className="w-8 h-8 text-green-600 dark:text-green-400" />
@@ -396,17 +390,13 @@ export default function DiscussionView({
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Be the first to start a discussion about this chapter!
           </p>
-        </motion.div>
+        </div>
       ) : (
         <div className="space-y-4">
-          <AnimatePresence>
+          
             {posts.map((post, i) => (
-              <motion.div
+              <div
                 key={post.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ delay: i * 0.04 }}
                 className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-5">
 
                 {/* Post header */}
@@ -457,9 +447,9 @@ export default function DiscussionView({
                   userName={userName}
                   replyCount={post.replyCount}
                 />
-              </motion.div>
+              </div>
             ))}
-          </AnimatePresence>
+          
         </div>
       )}
     </div>

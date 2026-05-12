@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Flame, Target, Calendar, Trophy, Brain,
   Edit2, Check, X, ChevronRight, AlertTriangle, Loader2,
@@ -235,12 +234,12 @@ export default function ProfilePage() {
       <div className="pt-14 max-w-5xl mx-auto px-4 py-8">
 
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Profile</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
             Manage your account, track your streak, and set your exam goal.
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -248,7 +247,7 @@ export default function ProfilePage() {
           <div className="space-y-5">
 
             {/* Profile Card */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+            <div
               className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
 
               <div className="flex items-start justify-between mb-5">
@@ -274,9 +273,9 @@ export default function ProfilePage() {
                 </button>
               </div>
 
-              <AnimatePresence>
+              
                 {editing ? (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                  <div
                     className="space-y-3">
                     <div>
                       <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 block">Name</label>
@@ -322,9 +321,9 @@ export default function ProfilePage() {
                         <X className="w-4 h-4" />
                       </button>
                     </div>
-                  </motion.div>
+                  </div>
                 ) : (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2.5">
+                  <div className="space-y-2.5">
                     {[
                       { label: "Class", value: profile?.class ? `Class ${profile.class}` : "Not set" },
                       { label: "School", value: profile?.school || "Not set" },
@@ -341,13 +340,13 @@ export default function ProfilePage() {
                       className="w-full mt-2 text-xs text-green-600 dark:text-green-400 hover:underline text-left">
                       Edit profile →
                     </button>
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
-            </motion.div>
+              
+            </div>
 
             {/* Role + Class Card */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
+            <div
               className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Users className="w-5 h-5 text-green-600" />
@@ -412,10 +411,10 @@ export default function ProfilePage() {
                   </button>
                 </div>
               )}
-            </motion.div>
+            </div>
 
             {/* Streak Card */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+            <div
               className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Flame className="w-5 h-5 text-orange-500" />
@@ -454,10 +453,10 @@ export default function ProfilePage() {
                   </button>
                 </div>
               )}
-            </motion.div>
+            </div>
 
             {/* Daily Goal Card */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+            <div
               className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -501,11 +500,9 @@ export default function ProfilePage() {
                     </span>
                   </div>
                   <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 overflow-hidden">
-                    <motion.div
-                      className="h-full bg-green-500 rounded-full"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${dailyPct}%` }}
-                      transition={{ duration: 0.8, ease: "easeOut" }}
+                    <div
+                      className="h-full bg-green-500 rounded-full transition-all"
+                      style={{ width: `${dailyPct}%` }}
                     />
                   </div>
                   {dailyPct >= 100 && (
@@ -515,14 +512,14 @@ export default function ProfilePage() {
                   )}
                 </>
               )}
-            </motion.div>
+            </div>
           </div>
 
           {/* ── RIGHT COLUMN ── */}
           <div className="space-y-5">
 
             {/* Exam Countdown Card */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            <div
               className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Calendar className="w-5 h-5 text-blue-500" />
@@ -578,12 +575,12 @@ export default function ProfilePage() {
                   Set your exam date to see the countdown and revision plan.
                 </p>
               )}
-            </motion.div>
+            </div>
 
             {/* Revision Planner */}
-            <AnimatePresence>
+            
               {revisionPlan.length > 0 && daysRemaining && daysRemaining > 0 && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                <div
                   className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <BookOpen className="w-5 h-5 text-purple-500" />
@@ -610,12 +607,12 @@ export default function ProfilePage() {
                       </div>
                     ))}
                   </div>
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
+            
 
             {/* Badges */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+            <div
               className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Trophy className="w-5 h-5 text-yellow-500" />
@@ -645,10 +642,10 @@ export default function ProfilePage() {
                   );
                 })}
               </div>
-            </motion.div>
+            </div>
 
             {/* Weak Area Detection */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+            <div
               className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Brain className="w-5 h-5 text-red-500" />
@@ -745,7 +742,7 @@ export default function ProfilePage() {
                   </button>
                 </>
               )}
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>

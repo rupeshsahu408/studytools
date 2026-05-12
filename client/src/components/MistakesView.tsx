@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { AlertTriangle, CheckCircle, ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
 
 interface Mistake {
@@ -28,12 +27,7 @@ function MistakeCard({ mistake, index }: { mistake: Mistake; index: number }) {
   const catStyle = CATEGORY_STYLES[mistake.category] || "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden">
-
+    <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden">
       <button
         className="w-full text-left px-5 py-4 flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
         onClick={() => setExpanded(e => !e)}>
@@ -70,11 +64,7 @@ function MistakeCard({ mistake, index }: { mistake: Mistake; index: number }) {
 
       {/* Correct approach (expanded) */}
       {expanded && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          className="px-5 pb-4 border-t border-gray-50 dark:border-gray-800 pt-3">
+        <div className="px-5 pb-4 border-t border-gray-50 dark:border-gray-800 pt-3">
           <div className="bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-800/30 rounded-xl p-4">
             <div className="flex items-start gap-2">
               <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
@@ -84,9 +74,9 @@ function MistakeCard({ mistake, index }: { mistake: Mistake; index: number }) {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       )}
-    </motion.div>
+    </div>
   );
 }
 

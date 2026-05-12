@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   Plus, BookOpen, Trash2, ChevronRight, FlaskConical,
   Calculator, Leaf, Atom, Flame, Target, BarChart2,
@@ -78,7 +77,7 @@ export default function DashboardPage() {
       <div className="pt-14 max-w-4xl mx-auto px-4 py-8">
 
         {/* Welcome + Stats strip */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+        <div className="mb-6">
           <div className="flex items-start justify-between mb-5">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -154,7 +153,7 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Chapter Library */}
         <div className="mb-4">
@@ -171,12 +170,12 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-            {chapters.map((ch, i) => {
+            {chapters.map((ch) => {
               const Icon = SUBJECT_ICONS[ch.subject] || BookOpen;
               const colorClass = SUBJECT_COLORS[ch.subject] || "bg-gray-100 text-gray-600";
               const completion = getChapterCompletion(ch);
               return (
-                <motion.div key={ch.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                <div key={ch.id}
                   onClick={() => navigate(`/chapter/${ch.id}`)}
                   className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 cursor-pointer hover:border-green-300 dark:hover:border-green-700 hover:shadow-md transition-all group">
                   <div className="flex items-start justify-between mb-3">
@@ -210,12 +209,12 @@ export default function DashboardPage() {
                     />
                   </div>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">{completion}% complete</p>
-                </motion.div>
+                </div>
               );
             })}
 
             {canAddMore && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              <div
                 onClick={() => navigate("/upload")}
                 className="bg-white dark:bg-gray-900 rounded-2xl p-5 border-2 border-dashed border-gray-200 dark:border-gray-700 cursor-pointer hover:border-green-400 dark:hover:border-green-600 hover:bg-green-50/30 dark:hover:bg-green-900/10 transition-all flex flex-col items-center justify-center gap-2 min-h-[140px]">
                 <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
@@ -223,13 +222,13 @@ export default function DashboardPage() {
                 </div>
                 <p className="text-sm font-medium text-green-600 dark:text-green-400">Add New Chapter</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500">Upload PDF or browse NCERT</p>
-              </motion.div>
+              </div>
             )}
           </div>
         )}
 
         {!loading && chapters.length === 0 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
+          <div className="text-center py-16">
             <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <BookOpen className="w-10 h-10 text-green-600 dark:text-green-400" />
             </div>
@@ -239,7 +238,7 @@ export default function DashboardPage() {
               className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors">
               Add Your First Chapter
             </button>
-          </motion.div>
+          </div>
         )}
       </div>
     </div>

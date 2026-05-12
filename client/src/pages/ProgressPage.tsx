@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   BarChart2, BookOpen, HelpCircle, Layers, Beaker,
   CheckCircle, XCircle, Flame, TrendingUp, Clock,
@@ -83,12 +82,12 @@ export default function ProgressPage() {
       <div className="pt-14 max-w-4xl mx-auto px-4 py-8">
 
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Progress</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
             Chapter-wise performance, accuracy, and study activity.
           </p>
-        </motion.div>
+        </div>
 
         {/* Overview Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
@@ -113,22 +112,21 @@ export default function ProgressPage() {
               bg: "bg-orange-50 dark:bg-orange-900/20",
               label: "Streak", value: streak.toString(), sub: "day streak",
             },
-          ].map((stat, i) => (
-            <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+          ].map((stat) => (
+            <div key={stat.label}
               className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4">
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${stat.bg}`}>
                 <stat.icon className={`w-5 h-5 ${stat.color}`} />
               </div>
               <div className="text-2xl font-black text-gray-900 dark:text-white">{stat.value}</div>
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{stat.sub}</div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {/* Overall Progress Bar */}
         {chapters.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 mb-6">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 mb-6">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <BarChart2 className="w-4 h-4 text-green-600" />
@@ -137,23 +135,20 @@ export default function ProgressPage() {
               <span className="text-lg font-black text-green-600 dark:text-green-400">{overallCompletion}%</span>
             </div>
             <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3 overflow-hidden">
-              <motion.div
-                className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${overallCompletion}%` }}
-                transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+              <div
+                className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all"
+                style={{ width: `${overallCompletion}%` }}
               />
             </div>
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
               Based on notes read, questions practiced, flashcards, and simulations across all chapters.
             </p>
-          </motion.div>
+          </div>
         )}
 
         {/* Subject Breakdown */}
         {Object.keys(subjectStats).length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-            className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 mb-6">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 mb-6">
             <h3 className="font-bold text-gray-900 dark:text-white text-sm mb-4">Subject Breakdown</h3>
             <div className="space-y-4">
               {Object.entries(subjectStats).map(([subject, stats]) => {
@@ -184,23 +179,21 @@ export default function ProgressPage() {
                       </div>
                     </div>
                     <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 overflow-hidden">
-                      <motion.div
-                        className={`h-full rounded-full ${
+                      <div
+                        className={`h-full rounded-full transition-all ${
                           subject === "Physics" ? "bg-blue-500"
                           : subject === "Chemistry" ? "bg-purple-500"
                           : subject === "Mathematics" ? "bg-orange-500"
                           : "bg-green-500"
                         }`}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${stats.completion}%` }}
-                        transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+                        style={{ width: `${stats.completion}%` }}
                       />
                     </div>
                   </div>
                 );
               })}
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Chapter Cards */}
@@ -228,8 +221,7 @@ export default function ProgressPage() {
                 const lastStudied = formatDate(chapter.lastStudied);
 
                 return (
-                  <motion.div key={chapter.id}
-                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
+                  <div key={chapter.id}
                     onClick={() => navigate(`/chapter/${chapter.id}`)}
                     className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 cursor-pointer hover:border-green-200 dark:hover:border-green-800 hover:shadow-md transition-all group">
 
@@ -268,15 +260,13 @@ export default function ProgressPage() {
 
                     {/* Progress bar */}
                     <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 overflow-hidden mb-4">
-                      <motion.div
-                        className={`h-full rounded-full ${
+                      <div
+                        className={`h-full rounded-full transition-all ${
                           completion === 100 ? "bg-green-500"
                           : completion >= 50 ? "bg-orange-400"
                           : "bg-gray-400 dark:bg-gray-600"
                         }`}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${completion}%` }}
-                        transition={{ duration: 0.8, ease: "easeOut", delay: i * 0.04 }}
+                        style={{ width: `${completion}%` }}
                       />
                     </div>
 
@@ -312,7 +302,7 @@ export default function ProgressPage() {
                         </div>
                       ))}
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>

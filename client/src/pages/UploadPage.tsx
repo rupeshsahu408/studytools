@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload, FileText, X, BookOpen, CheckCircle, FileDigit,
   ChevronRight, RotateCcw, Loader2, Cpu, Sparkles, Database,
@@ -43,7 +42,7 @@ function CoverageBar({ label, pct }: { label: string; pct: number }) {
     <div className="flex items-center gap-3">
       <span className="text-xs text-gray-500 dark:text-gray-400 w-24 shrink-0">{label}</span>
       <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-        <motion.div className={`h-full rounded-full ${color}`} initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, ease: "easeOut" }} />
+        <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
       </div>
       <span className={`text-xs font-semibold w-10 text-right ${textColor}`}>{pct === 100 ? "100%" : `${pct}%`}</span>
     </div>
@@ -113,22 +112,19 @@ function UploadingScreen({ fileName, fileSize }: { fileName: string; fileSize: n
 
   return (
     <div className="fixed inset-0 bg-white dark:bg-gray-950 z-50 flex flex-col items-center justify-center px-4">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm text-center">
+      <div className="w-full max-w-sm text-center">
 
         {/* Animated icon */}
         <div className="relative w-24 h-24 mx-auto mb-6">
-          <motion.div className="absolute inset-0 rounded-full border-4 border-green-100 dark:border-green-900/40"
-            animate={{ rotate: 360 }} transition={{ duration: 6, repeat: Infinity, ease: "linear" }} />
-          <motion.div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-500"
-            animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} />
-          <motion.div className="absolute inset-2 rounded-full border-2 border-transparent border-b-green-300 dark:border-b-green-700"
-            animate={{ rotate: -360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} />
+          <div className="absolute inset-0 rounded-full border-4 border-green-100 dark:border-green-900/40" />
+          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-500" />
+          <div className="absolute inset-2 rounded-full border-2 border-transparent border-b-green-300 dark:border-b-green-700" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <AnimatePresence mode="wait">
-              <motion.div key={stepIdx} initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.25 }}>
+            
+              <div key={stepIdx}>
                 <StepIcon className={`w-8 h-8 ${steps[stepIdx].color}`} />
-              </motion.div>
-            </AnimatePresence>
+              </div>
+            
           </div>
         </div>
 
@@ -142,31 +138,31 @@ function UploadingScreen({ fileName, fileSize }: { fileName: string; fileSize: n
         </div>
 
         {/* Current step message */}
-        <AnimatePresence mode="wait">
-          <motion.p key={stepIdx} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+        
+          <p key={stepIdx}
             className="text-base font-semibold text-gray-800 dark:text-white mb-4">
             {steps[stepIdx].msg}
-          </motion.p>
-        </AnimatePresence>
+          </p>
+        
 
         {/* Progress bar */}
         <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 mb-1.5 overflow-hidden">
-          <motion.div className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full"
-            animate={{ width: `${progress}%` }} transition={{ duration: 0.3, ease: "easeOut" }} />
+          <div className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full transition-all"
+            style={{ width: `${progress}%` }} />
         </div>
         <p className="text-xs text-gray-400 dark:text-gray-500 mb-6">{Math.round(progress)}% complete</p>
 
         {/* Tip box */}
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/40 rounded-2xl p-4">
           <p className="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide mb-1.5">Topper Tip</p>
-          <AnimatePresence mode="wait">
-            <motion.p key={tipIdx} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+          
+            <p key={tipIdx}
               className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
               {TOPPER_TIPS[tipIdx]}
-            </motion.p>
-          </AnimatePresence>
+            </p>
+          
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -201,15 +197,13 @@ function GeneratingScreen({
 
   return (
     <div className="fixed inset-0 bg-white dark:bg-gray-950 z-50 flex flex-col items-center justify-center px-4">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
+      <div className="w-full max-w-md">
 
         {/* Header */}
         <div className="text-center mb-6">
           <div className="relative w-20 h-20 mx-auto mb-4">
-            <motion.div className="absolute inset-0 rounded-full border-4 border-green-100 dark:border-green-900/40"
-              animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: "linear" }} />
-            <motion.div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-500"
-              animate={{ rotate: 360 }} transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }} />
+            <div className="absolute inset-0 rounded-full border-4 border-green-100 dark:border-green-900/40" />
+            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-500" />
             <div className="absolute inset-0 flex items-center justify-center">
               <Sparkles className="w-8 h-8 text-green-600" />
             </div>
@@ -242,9 +236,9 @@ function GeneratingScreen({
                 {/* Status icon */}
                 <div className="mt-0.5 flex-shrink-0">
                   {step.status === "done" ? (
-                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
                       <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                    </motion.div>
+                    </div>
                   ) : step.status === "running" ? (
                     <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
                       <Loader2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 animate-spin" />
@@ -268,14 +262,14 @@ function GeneratingScreen({
                 </div>
                 {/* Duration badge */}
                 {step.status === "running" && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-shrink-0">
+                  <div className="flex-shrink-0">
                     <span className="text-xs text-blue-500 dark:text-blue-400 font-medium">Working...</span>
-                  </motion.div>
+                  </div>
                 )}
                 {step.status === "done" && (
-                  <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex-shrink-0">
+                  <div className="flex-shrink-0">
                     <span className="text-xs text-green-600 dark:text-green-400 font-semibold">✓ Done</span>
-                  </motion.div>
+                  </div>
                 )}
               </div>
             );
@@ -289,24 +283,24 @@ function GeneratingScreen({
             <span className="text-xs text-gray-400 dark:text-gray-500">{formatElapsed(elapsed)}</span>
           </div>
           <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 overflow-hidden">
-            <motion.div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full"
-              animate={{ width: `${overallProgress}%` }} transition={{ duration: 0.8, ease: "easeInOut" }} />
+            <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all"
+              style={{ width: `${overallProgress}%` }} />
           </div>
         </div>
 
         {/* Tip box */}
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/40 rounded-xl px-4 py-3">
           <p className="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide mb-1">Topper Tip</p>
-          <AnimatePresence mode="wait">
-            <motion.p key={tipIdx} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+          
+            <p key={tipIdx}
               className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
               {TOPPER_TIPS[tipIdx]}
-            </motion.p>
-          </AnimatePresence>
+            </p>
+          
         </div>
 
         <p className="text-xs text-gray-400 dark:text-gray-600 mt-4 text-center">Please don't close this tab — AI is working on your chapter.</p>
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -493,7 +487,7 @@ export default function UploadPage() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <Navbar />
         <div className="pt-14 max-w-2xl mx-auto px-4 py-10">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <div>
             <button onClick={() => setStage("form")} className="text-sm text-gray-500 dark:text-gray-400 hover:text-green-600 mb-6 flex items-center gap-1">
               ← Back
             </button>
@@ -576,7 +570,7 @@ export default function UploadPage() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     );
@@ -587,7 +581,7 @@ export default function UploadPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navbar />
       <div className="pt-14 max-w-2xl mx-auto px-4 py-10">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div>
           <button onClick={() => navigate("/dashboard")} className="text-sm text-gray-500 dark:text-gray-400 hover:text-green-600 mb-6 flex items-center gap-1">
             ← Back to Library
           </button>
@@ -622,9 +616,9 @@ export default function UploadPage() {
                 </div>
               </div>
 
-              <AnimatePresence mode="wait">
+              
                 {tab === "upload" ? (
-                  <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+                  <div key="upload" className="space-y-4">
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Chapter Name</label>
                       <input value={chapterName} onChange={e => setChapterName(e.target.value)} placeholder="e.g. Laws of Motion"
@@ -652,9 +646,9 @@ export default function UploadPage() {
                         </div>
                       )}
                     </div>
-                  </motion.div>
+                  </div>
                 ) : (
-                  <motion.div key="browse" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
+                  <div key="browse" className="space-y-3">
                     <button onClick={loadNcertChapters} disabled={loadingChapters}
                       className="w-full flex items-center justify-center gap-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium py-2.5 rounded-xl text-sm transition-colors disabled:opacity-50">
                       <BookOpen className="w-4 h-4" />
@@ -671,9 +665,9 @@ export default function UploadPage() {
                         ))}
                       </div>
                     )}
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
+              
 
               {error && (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl px-4 py-3 text-sm">
@@ -688,7 +682,7 @@ export default function UploadPage() {
               </button>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
