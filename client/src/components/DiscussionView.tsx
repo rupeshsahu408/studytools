@@ -13,7 +13,7 @@ import {
   addUpvoteReply, removeUpvoteReply,
   createReplyNotification,
   savePushSubscription, getPushSubscription,
-  subscribeToSocialUser,
+  subscribeToSocialUser, subscribeToUsersWhoBlockedMe,
   type DiscussionPost, type DiscussionReply, type SocialUser,
 } from "../lib/firestore";
 import { sendChatMessage } from "../lib/api";
@@ -245,14 +245,13 @@ interface ReplyListProps {
   chapterText?: string;
   userName: string;
   replyCount: number;
-  blockedUsers: string[];
-  blockedBy: string[];
+  blockedUids: Set<string>;
 }
 
 function ReplyList({
   chapterId, postId, postAuthorUid, postText, currentUid,
   chapterName, subject, language, chapterText, userName, replyCount,
-  blockedUsers, blockedBy,
+  blockedUids,
 }: ReplyListProps) {
   const [replies, setReplies] = useState<DiscussionReply[]>([]);
   const [expanded, setExpanded] = useState(false);
@@ -262,18 +261,15 @@ function ReplyList({
   const [aiAnswering, setAiAnswering] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Bidirectional block filter — hide replies from users you blocked or who blocked you
-  const isBlocked = (replyUid: string) =>
-    blockedUsers.includes(replyUid) || blockedBy.includes(replyUid);
-
   const loadReplies = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getDiscussionReplies(chapterId, postId);
-      setReplies(data.filter(r => !r.uid || r.uid === "ai" || !isBlocked(r.uid)));
+      // Hide replies from anyone in the unified blocked set (bidirectional)
+      setReplies(data.filter(r => !r.uid || r.uid === "ai" || !blockedUids.has(r.uid)));
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  }, [chapterId, postId, blockedUsers, blockedBy]);
+  }, [chapterId, postId, blockedUids]);
 
   const handleExpand = () => {
     const next = !expanded;
@@ -485,7 +481,7 @@ function ReplyList({
 
 function PostCard({
   post, currentUid, chapterId, chapterName, subject, language, chapterText,
-  userName, onDelete, onLike, blockedUsers, blockedBy,
+  userName, onDelete, onLike, blockedUids,
 }: {
   post: DiscussionPost;
   currentUid: string;
@@ -497,8 +493,7 @@ function PostCard({
   userName: string;
   onDelete: (id: string) => void;
   onLike: (post: DiscussionPost) => void;
-  blockedUsers: string[];
-  blockedBy: string[];
+  blockedUids: Set<string>;
 }) {
   // For the current user's own posts, always use the resolved display name
   // (respects anonymous mode and removes stale stored email/name)
@@ -549,8 +544,7 @@ function PostCard({
           chapterText={chapterText}
           userName={userName}
           replyCount={post.replyCount}
-          blockedUsers={blockedUsers}
-          blockedBy={blockedBy}
+          blockedUids={blockedUids}
         />
       </div>
     </div>
@@ -573,6 +567,9 @@ export default function DiscussionView({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const uid = user?.uid || "";
+  // UIDs of users who have blocked ME — populated by a live Firestore query,
+  // so it works for all historic blocks without any data migration.
+  const [blockedByMeUids, setBlockedByMeUids] = useState<string[]>([]);
 
   // Subscribe to the current user's social profile for username + anonymous status
   useEffect(() => {
@@ -582,6 +579,19 @@ export default function DiscussionView({
     });
     return unsub;
   }, [uid]);
+
+  // Subscribe to everyone who has ever blocked the current user
+  useEffect(() => {
+    if (!uid) return;
+    const unsub = subscribeToUsersWhoBlockedMe(uid, setBlockedByMeUids);
+    return unsub;
+  }, [uid]);
+
+  // Unified bidirectional block set — used for both post and reply filtering
+  const allBlockedUids = new Set<string>([
+    ...(socialUser?.blockedUsers || []),
+    ...blockedByMeUids,
+  ]);
 
   // Resolve display name — username preferred, never email, anonymous masked
   const displayName = uid
@@ -767,12 +777,7 @@ export default function DiscussionView({
       ) : (
         <div className="space-y-3">
           {posts
-            .filter(post => {
-              if (!post.uid || post.uid === "ai") return true;
-              const blockedUsers = socialUser?.blockedUsers || [];
-              const blockedBy = socialUser?.blockedBy || [];
-              return !blockedUsers.includes(post.uid) && !blockedBy.includes(post.uid);
-            })
+            .filter(post => !post.uid || post.uid === "ai" || !allBlockedUids.has(post.uid))
             .map(post => (
               <PostCard
                 key={post.id}
@@ -786,8 +791,7 @@ export default function DiscussionView({
                 userName={displayName}
                 onDelete={handleDelete}
                 onLike={handleLike}
-                blockedUsers={socialUser?.blockedUsers || []}
-                blockedBy={socialUser?.blockedBy || []}
+                blockedUids={allBlockedUids}
               />
             ))}
         </div>

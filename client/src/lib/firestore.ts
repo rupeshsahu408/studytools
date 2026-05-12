@@ -1062,6 +1062,21 @@ export function subscribeToSocialUser(
   });
 }
 
+/**
+ * Real-time subscription: returns UIDs of every user who has the current user
+ * in their `blockedUsers` array.  Works for ALL historic blocks — no migration needed.
+ * Uses Firestore `array-contains` query which is automatically indexed.
+ */
+export function subscribeToUsersWhoBlockedMe(
+  uid: string,
+  callback: (blockerUids: string[]) => void
+): () => void {
+  const q = query(collection(db, "users"), where("blockedUsers", "array-contains", uid));
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map(d => d.id));
+  }, () => callback([]));
+}
+
 export async function sendFriendRequest(fromUid: string, toUid: string): Promise<void> {
   // Guard: if the target has blocked the sender, silently refuse — sender should never know
   const targetSnap = await getDoc(doc(db, "users", toUid));
