@@ -3,6 +3,7 @@ import {
   collection, doc, setDoc, getDoc, getDocs,
   deleteDoc, query, where, serverTimestamp, updateDoc, arrayUnion, arrayRemove,
   onSnapshot, writeBatch, runTransaction,
+  orderBy, startAfter, limit, type DocumentSnapshot,
 } from "firebase/firestore";
 
 // ─── Existing Types ──────────────────────────────────────────────────────────
@@ -1105,11 +1106,68 @@ export async function getSentRequests(uid: string): Promise<SocialUser[]> {
   return results.filter(Boolean) as SocialUser[];
 }
 
-export async function searchUsersByUsername(query: string): Promise<SocialUser[]> {
-  if (!query || query.length < 2) return [];
-  const snap = await getDoc(doc(db, "usernames", query.toLowerCase()));
+export async function searchUsersByUsername(queryStr: string): Promise<SocialUser[]> {
+  if (!queryStr || queryStr.length < 2) return [];
+  const snap = await getDoc(doc(db, "usernames", queryStr.toLowerCase()));
   if (!snap.exists()) return [];
   const user = await getUserById(snap.data().uid);
   if (!user || user.isAnonymous) return [];
   return [user];
+}
+
+// ─── Discover Feed ────────────────────────────────────────────────────────────
+
+function docToSocialUser(d: DocumentSnapshot): SocialUser | null {
+  if (!d.exists()) return null;
+  const data = d.data()!;
+  if (!data.username || data.isAnonymous) return null;
+  return {
+    uid: d.id,
+    username: data.username || "",
+    displayName: data.profile?.name || data.username || "Student",
+    bio: data.bio || "",
+    photoURL: data.photoURL || null,
+    friends: data.friends || [],
+    friendRequestsSent: data.friendRequestsSent || [],
+    friendRequestsReceived: data.friendRequestsReceived || [],
+    streak: data.streak?.current || 0,
+    badges: data.badges || [],
+    role: data.role || "student",
+    class: data.profile?.class || "",
+    school: data.profile?.school || "",
+    district: data.profile?.district || "",
+    socialLinks: data.socialLinks || {},
+    isAnonymous: false,
+  };
+}
+
+export async function getDiscoverUsers(
+  pageSize: number = 20,
+  lastDoc?: DocumentSnapshot | null
+): Promise<{ users: SocialUser[]; lastDoc: DocumentSnapshot | null }> {
+  const constraints: any[] = [
+    where("username", ">", ""),
+    orderBy("username"),
+    limit(pageSize),
+  ];
+  if (lastDoc) constraints.push(startAfter(lastDoc));
+  const q = query(collection(db, "users"), ...constraints);
+  const snap = await getDocs(q);
+  const users = snap.docs.map(docToSocialUser).filter(Boolean) as SocialUser[];
+  const last = snap.docs.length > 0 ? snap.docs[snap.docs.length - 1] : null;
+  return { users, lastDoc: last };
+}
+
+export async function searchUsersByPrefix(prefix: string): Promise<SocialUser[]> {
+  if (!prefix || prefix.length < 1) return [];
+  const lower = prefix.toLowerCase().trim();
+  const q = query(
+    collection(db, "users"),
+    where("username", ">=", lower),
+    where("username", "<=", lower + "\uf8ff"),
+    orderBy("username"),
+    limit(25)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(docToSocialUser).filter(Boolean) as SocialUser[];
 }

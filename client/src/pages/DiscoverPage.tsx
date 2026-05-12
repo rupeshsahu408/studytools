@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   Compass, Search, Loader2, UserPlus, UserCheck, UserMinus,
-  Users, AtSign, Clock, Bell, UserX,
+  Users, Clock, Bell, UserX, ChevronDown, X,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import Navbar from "../components/Navbar";
 import {
   subscribeToSocialUser,
-  searchUsersByUsername,
+  searchUsersByPrefix,
+  getDiscoverUsers,
   sendFriendRequest,
   cancelFriendRequest,
   acceptFriendRequest,
@@ -19,6 +20,8 @@ import {
   getSentRequests,
   type SocialUser,
 } from "../lib/firestore";
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const GRADIENTS = [
   "from-violet-500 to-purple-600",
@@ -41,40 +44,567 @@ function getInitials(name: string) {
 }
 
 function Avatar({ user, size = "md" }: { user: SocialUser; size?: "sm" | "md" | "lg" }) {
-  const sz = size === "lg" ? "w-14 h-14" : size === "sm" ? "w-8 h-8 text-xs" : "w-10 h-10 text-sm";
+  const sz = size === "lg" ? "w-12 h-12" : size === "sm" ? "w-8 h-8 text-xs" : "w-10 h-10 text-sm";
   if (user.photoURL) {
-    return <img src={user.photoURL} alt={user.displayName} className={`${sz} rounded-full object-cover flex-shrink-0`} />;
+    return <img src={user.photoURL} alt={user.displayName} className={`${sz} rounded-full object-cover flex-shrink-0 ring-2 ring-white dark:ring-gray-900`} />;
   }
   return (
-    <div className={`${sz} rounded-full bg-gradient-to-br ${getGradient(user.uid)} flex items-center justify-center flex-shrink-0`}>
+    <div className={`${sz} rounded-full bg-gradient-to-br ${getGradient(user.uid)} flex items-center justify-center flex-shrink-0 ring-2 ring-white dark:ring-gray-900`}>
       <span className="text-white font-bold text-xs">{getInitials(user.displayName)}</span>
     </div>
   );
 }
 
-type Tab = "search" | "requests" | "friends";
+// ─── Friend Action Button ─────────────────────────────────────────────────────
+
+function FriendButton({
+  relation, uid, loading,
+  onSend, onCancel, onAccept, onDecline,
+}: {
+  relation: "self" | "friends" | "sent" | "received" | "none";
+  uid: string;
+  loading: boolean;
+  onSend: () => void;
+  onCancel: () => void;
+  onAccept: () => void;
+  onDecline: () => void;
+}) {
+  if (relation === "self") return null;
+  if (relation === "friends") {
+    return (
+      <span className="flex items-center gap-1 text-xs font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2.5 py-1.5 rounded-xl border border-green-100 dark:border-green-900/30">
+        <UserCheck className="w-3 h-3" /> Friends
+      </span>
+    );
+  }
+  if (relation === "sent") {
+    return (
+      <button
+        onClick={onCancel}
+        disabled={loading}
+        className="flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400 px-2.5 py-1.5 rounded-xl transition-colors border border-gray-200 dark:border-gray-700"
+      >
+        {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Clock className="w-3 h-3" />}
+        Pending
+      </button>
+    );
+  }
+  if (relation === "received") {
+    return (
+      <div className="flex gap-1.5">
+        <button onClick={onAccept} disabled={loading}
+          className="text-xs font-bold bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-2.5 py-1.5 rounded-xl transition-colors flex items-center gap-1">
+          {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserCheck className="w-3 h-3" />} Accept
+        </button>
+        <button onClick={onDecline} disabled={loading}
+          className="text-xs font-medium bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400 px-2.5 py-1.5 rounded-xl transition-colors">
+          ✕
+        </button>
+      </div>
+    );
+  }
+  return (
+    <button
+      onClick={onSend}
+      disabled={loading}
+      className="flex items-center gap-1 text-xs font-bold bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-2.5 py-1.5 rounded-xl transition-colors"
+    >
+      {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />}
+      Add
+    </button>
+  );
+}
+
+// ─── User Card ────────────────────────────────────────────────────────────────
+
+function UserCard({
+  user, currentUid, myProfile, actionUid,
+  onSend, onCancel, onAccept, onDecline,
+}: {
+  user: SocialUser;
+  currentUid: string;
+  myProfile: SocialUser | null;
+  actionUid: string | null;
+  onSend: (uid: string) => void;
+  onCancel: (uid: string) => void;
+  onAccept: (uid: string) => void;
+  onDecline: (uid: string) => void;
+}) {
+  const getRelation = (): "self" | "friends" | "sent" | "received" | "none" => {
+    if (user.uid === currentUid) return "self";
+    if (myProfile?.friends.includes(user.uid)) return "friends";
+    if (myProfile?.friendRequestsSent.includes(user.uid)) return "sent";
+    if (myProfile?.friendRequestsReceived.includes(user.uid)) return "received";
+    return "none";
+  };
+
+  const relation = getRelation();
+  const loading = actionUid === user.uid;
+
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors group">
+      <Link to={`/u/${user.username}`} className="flex-shrink-0">
+        <Avatar user={user} />
+      </Link>
+      <div className="flex-1 min-w-0">
+        <Link to={`/u/${user.username}`} className="block">
+          <p className="text-sm font-semibold text-gray-900 dark:text-white leading-snug truncate group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">
+            {user.displayName}
+          </p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
+            @{user.username}
+            {(user.streak || 0) > 0 && <span className="ml-1.5">· 🔥 {user.streak}</span>}
+            {(user.badges?.length || 0) > 0 && <span className="ml-1.5">· 🏅 {user.badges!.length}</span>}
+          </p>
+          {user.bio && (
+            <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5 max-w-[200px]">{user.bio}</p>
+          )}
+        </Link>
+      </div>
+      <div className="flex-shrink-0">
+        <FriendButton
+          relation={relation}
+          uid={user.uid}
+          loading={loading}
+          onSend={() => onSend(user.uid)}
+          onCancel={() => onCancel(user.uid)}
+          onAccept={() => onAccept(user.uid)}
+          onDecline={() => onDecline(user.uid)}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ─── Discover Tab ─────────────────────────────────────────────────────────────
+
+function DiscoverTab({
+  currentUid, myProfile, actionUid,
+  onSend, onCancel, onAccept, onDecline,
+}: {
+  currentUid: string;
+  myProfile: SocialUser | null;
+  actionUid: string | null;
+  onSend: (uid: string) => void;
+  onCancel: (uid: string) => void;
+  onAccept: (uid: string) => void;
+  onDecline: (uid: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [feedUsers, setFeedUsers] = useState<SocialUser[]>([]);
+  const [searchResults, setSearchResults] = useState<SocialUser[] | null>(null);
+  const [loadingFeed, setLoadingFeed] = useState(true);
+  const [loadingSearch, setLoadingSearch] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [lastDoc, setLastDoc] = useState<any>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const PAGE_SIZE = 20;
+
+  // Initial feed load
+  const loadFeed = useCallback(async (reset = false) => {
+    if (reset) {
+      setLoadingFeed(true);
+      setFeedUsers([]);
+      setLastDoc(null);
+      setHasMore(true);
+    }
+    try {
+      const { users, lastDoc: newLast } = await getDiscoverUsers(PAGE_SIZE, reset ? null : lastDoc);
+      const filtered = users.filter(u => u.uid !== currentUid);
+      if (reset) {
+        setFeedUsers(filtered);
+      } else {
+        setFeedUsers(prev => {
+          const existing = new Set(prev.map(u => u.uid));
+          return [...prev, ...filtered.filter(u => !existing.has(u.uid))];
+        });
+      }
+      setLastDoc(newLast);
+      setHasMore(users.length === PAGE_SIZE);
+    } catch (e) {
+      console.error("Discover feed error:", e);
+    } finally {
+      setLoadingFeed(false);
+    }
+  }, [currentUid, lastDoc]);
+
+  useEffect(() => {
+    loadFeed(true);
+  }, [currentUid]);
+
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const { users, lastDoc: newLast } = await getDiscoverUsers(PAGE_SIZE, lastDoc);
+      const filtered = users.filter(u => u.uid !== currentUid);
+      setFeedUsers(prev => {
+        const existing = new Set(prev.map(u => u.uid));
+        return [...prev, ...filtered.filter(u => !existing.has(u.uid))];
+      });
+      setLastDoc(newLast);
+      setHasMore(users.length === PAGE_SIZE);
+    } catch (e) {
+      console.error("Load more error:", e);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  // Debounced prefix search
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const q = query.trim();
+    if (!q) {
+      setSearchResults(null);
+      setLoadingSearch(false);
+      return;
+    }
+    setLoadingSearch(true);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const results = await searchUsersByPrefix(q);
+        setSearchResults(results.filter(u => u.uid !== currentUid));
+      } catch (e) {
+        console.error("Search error:", e);
+        setSearchResults([]);
+      } finally {
+        setLoadingSearch(false);
+      }
+    }, 280);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [query, currentUid]);
+
+  const isSearching = query.trim().length > 0;
+  const displayUsers = isSearching ? (searchResults ?? []) : feedUsers;
+
+  return (
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+
+      {/* Search bar */}
+      <div className="px-4 pt-4 pb-3 border-b border-gray-50 dark:border-gray-800">
+        <div className="flex items-center gap-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 focus-within:border-green-400 dark:focus-within:border-green-600 transition-colors">
+          {loadingSearch
+            ? <Loader2 className="w-4 h-4 text-gray-400 flex-shrink-0 animate-spin" />
+            : <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          }
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search by @username…"
+            className="flex-1 text-sm bg-transparent outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+          />
+          {query && (
+            <button
+              onClick={() => { setQuery(""); inputRef.current?.focus(); }}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex-shrink-0"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Section label */}
+      <div className="px-4 py-2 bg-gray-50/70 dark:bg-gray-800/30 border-b border-gray-50 dark:border-gray-800">
+        <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">
+          {isSearching
+            ? loadingSearch ? "Searching…" : `Results for "${query}"`
+            : "All Students"
+          }
+        </p>
+      </div>
+
+      {/* User list */}
+      <div className="divide-y divide-gray-50 dark:divide-gray-800">
+
+        {/* Feed / search loading skeleton */}
+        {(loadingFeed && !isSearching) && (
+          <div className="divide-y divide-gray-50 dark:divide-gray-800">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="flex items-center gap-3 px-4 py-3">
+                <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse flex-shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3.5 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse w-32" />
+                  <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse w-24" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Empty search result */}
+        {isSearching && !loadingSearch && searchResults !== null && searchResults.length === 0 && (
+          <div className="text-center py-12 px-4">
+            <UserX className="w-10 h-10 text-gray-200 dark:text-gray-700 mx-auto mb-2" />
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              No users found for "<span className="text-gray-700 dark:text-gray-300">{query}</span>"
+            </p>
+            <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">Try a different spelling or shorter prefix.</p>
+          </div>
+        )}
+
+        {/* Empty feed (shouldn't normally happen) */}
+        {!isSearching && !loadingFeed && feedUsers.length === 0 && (
+          <div className="text-center py-12 px-4">
+            <Compass className="w-10 h-10 text-gray-200 dark:text-gray-700 mx-auto mb-2" />
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No students found yet.</p>
+            <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">Be the first to explore!</p>
+          </div>
+        )}
+
+        {/* User cards */}
+        {!loadingFeed && displayUsers.map(u => (
+          <UserCard
+            key={u.uid}
+            user={u}
+            currentUid={currentUid}
+            myProfile={myProfile}
+            actionUid={actionUid}
+            onSend={onSend}
+            onCancel={onCancel}
+            onAccept={onAccept}
+            onDecline={onDecline}
+          />
+        ))}
+
+        {/* Inline search loading */}
+        {isSearching && loadingSearch && (
+          <div className="flex items-center justify-center gap-2 py-10 text-gray-400">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-sm">Searching…</span>
+          </div>
+        )}
+      </div>
+
+      {/* Load more (only in feed mode) */}
+      {!isSearching && !loadingFeed && hasMore && (
+        <div className="px-4 py-3 border-t border-gray-50 dark:border-gray-800">
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/10 rounded-xl transition-colors disabled:opacity-60"
+          >
+            {loadingMore
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Loading more…</>
+              : <><ChevronDown className="w-4 h-4" /> Load more students</>
+            }
+          </button>
+        </div>
+      )}
+
+      {/* End of feed indicator */}
+      {!isSearching && !loadingFeed && feedUsers.length > 0 && !hasMore && (
+        <div className="px-4 py-3 border-t border-gray-50 dark:border-gray-800 text-center">
+          <p className="text-xs text-gray-300 dark:text-gray-700">You've seen all students · {feedUsers.length} total</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Requests Tab ─────────────────────────────────────────────────────────────
+
+function RequestsTab({
+  requests, sentRequests, loadingLists, actionUid,
+  onAccept, onDecline, onCancel,
+}: {
+  requests: SocialUser[];
+  sentRequests: SocialUser[];
+  loadingLists: boolean;
+  actionUid: string | null;
+  onAccept: (uid: string) => void;
+  onDecline: (uid: string) => void;
+  onCancel: (uid: string) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      {/* Incoming */}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-50 dark:border-gray-800 flex items-center gap-2">
+          <Bell className="w-4 h-4 text-amber-500" />
+          <h3 className="text-sm font-bold text-gray-900 dark:text-white">Incoming Requests</h3>
+          {requests.length > 0 && (
+            <span className="ml-auto text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-bold px-2 py-0.5 rounded-full">
+              {requests.length}
+            </span>
+          )}
+        </div>
+        {loadingLists ? (
+          <div className="flex items-center gap-2 text-xs text-gray-400 p-5">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…
+          </div>
+        ) : requests.length === 0 ? (
+          <div className="text-center py-8 px-4">
+            <Bell className="w-8 h-8 text-gray-200 dark:text-gray-700 mx-auto mb-2" />
+            <p className="text-sm text-gray-400 dark:text-gray-600">No incoming requests.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-50 dark:divide-gray-800">
+            {requests.map(req => (
+              <div key={req.uid} className="flex items-center gap-3 px-4 py-3">
+                <Link to={`/u/${req.username}`}>
+                  <Avatar user={req} />
+                </Link>
+                <div className="flex-1 min-w-0">
+                  <Link to={`/u/${req.username}`} className="text-sm font-bold text-gray-900 dark:text-white hover:underline block truncate">
+                    {req.displayName}
+                  </Link>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">@{req.username}</p>
+                </div>
+                <div className="flex gap-1.5 flex-shrink-0">
+                  <button onClick={() => onAccept(req.uid)} disabled={actionUid === req.uid}
+                    className="flex items-center gap-1 text-xs font-bold bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-2.5 py-1.5 rounded-xl transition-colors">
+                    {actionUid === req.uid ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserCheck className="w-3 h-3" />} Accept
+                  </button>
+                  <button onClick={() => onDecline(req.uid)} disabled={actionUid === req.uid}
+                    className="text-xs font-medium bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 rounded-xl transition-colors">
+                    Decline
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Outgoing */}
+      {sentRequests.length > 0 && (
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-50 dark:border-gray-800 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-gray-400" />
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white">Sent Requests</h3>
+            <span className="ml-auto text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-bold px-2 py-0.5 rounded-full">
+              {sentRequests.length}
+            </span>
+          </div>
+          <div className="divide-y divide-gray-50 dark:divide-gray-800">
+            {sentRequests.map(req => (
+              <div key={req.uid} className="flex items-center gap-3 px-4 py-3">
+                <Link to={`/u/${req.username}`}>
+                  <Avatar user={req} />
+                </Link>
+                <div className="flex-1 min-w-0">
+                  <Link to={`/u/${req.username}`} className="text-sm font-bold text-gray-900 dark:text-white hover:underline block truncate">
+                    {req.displayName}
+                  </Link>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">@{req.username}</p>
+                </div>
+                <button onClick={() => onCancel(req.uid)} disabled={actionUid === req.uid}
+                  className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400 border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 rounded-xl transition-colors">
+                  {actionUid === req.uid ? <Loader2 className="w-3 h-3 animate-spin" /> : <Clock className="w-3 h-3" />} Cancel
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Friends Tab ──────────────────────────────────────────────────────────────
+
+function FriendsTab({
+  friends, loadingLists, actionUid, onRemove, onGoDiscover,
+}: {
+  friends: SocialUser[];
+  loadingLists: boolean;
+  actionUid: string | null;
+  onRemove: (uid: string) => void;
+  onGoDiscover: () => void;
+}) {
+  return (
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+      <div className="px-5 py-4 border-b border-gray-50 dark:border-gray-800 flex items-center gap-2">
+        <Users className="w-4 h-4 text-green-600" />
+        <h3 className="text-sm font-bold text-gray-900 dark:text-white">Study Friends</h3>
+        {friends.length > 0 && (
+          <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">
+            {friends.length} friend{friends.length !== 1 ? "s" : ""}
+          </span>
+        )}
+      </div>
+
+      {loadingLists ? (
+        <div className="flex items-center gap-2 text-xs text-gray-400 p-5">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…
+        </div>
+      ) : friends.length === 0 ? (
+        <div className="text-center py-10 px-4">
+          <Users className="w-10 h-10 text-gray-200 dark:text-gray-700 mx-auto mb-2" />
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No study friends yet.</p>
+          <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">Discover students and send them a request!</p>
+          <button
+            onClick={onGoDiscover}
+            className="mt-4 text-xs font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 px-4 py-2 rounded-xl transition-colors"
+          >
+            Discover Students
+          </button>
+        </div>
+      ) : (
+        <div className="divide-y divide-gray-50 dark:divide-gray-800">
+          {friends.map(friend => (
+            <div key={friend.uid} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors group">
+              <Link to={`/u/${friend.username}`}>
+                <Avatar user={friend} />
+              </Link>
+              <div className="flex-1 min-w-0">
+                <Link to={`/u/${friend.username}`} className="text-sm font-bold text-gray-900 dark:text-white hover:underline block truncate">
+                  {friend.displayName}
+                </Link>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  @{friend.username}
+                  {(friend.streak || 0) > 0 && <span className="ml-1.5">· 🔥 {friend.streak}</span>}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Link to={`/u/${friend.username}`}
+                  className="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 rounded-xl transition-colors">
+                  View
+                </Link>
+                <button
+                  onClick={() => onRemove(friend.uid)}
+                  disabled={actionUid === friend.uid}
+                  title="Remove friend"
+                  className="p-1.5 rounded-xl text-gray-300 dark:text-gray-700 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                >
+                  {actionUid === friend.uid
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />
+                    : <UserMinus className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
+type Tab = "discover" | "requests" | "friends";
 
 export default function DiscoverPage() {
   const { user } = useAuth();
-  const [tab, setTab] = useState<Tab>("search");
+  const [tab, setTab] = useState<Tab>("discover");
 
   const [myProfile, setMyProfile] = useState<SocialUser | null>(null);
   const [friends, setFriends] = useState<SocialUser[]>([]);
   const [requests, setRequests] = useState<SocialUser[]>([]);
   const [sentRequests, setSentRequests] = useState<SocialUser[]>([]);
   const [loadingLists, setLoadingLists] = useState(true);
-
-  const [query, setQuery] = useState("");
-  const [searching, setSearching] = useState(false);
-  const [result, setResult] = useState<SocialUser | null | "none">(null);
-
   const [actionUid, setActionUid] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.uid) return;
-    return subscribeToSocialUser(user.uid, (su) => {
-      setMyProfile(su);
-    });
+    return subscribeToSocialUser(user.uid, (su) => setMyProfile(su));
   }, [user?.uid]);
 
   useEffect(() => {
@@ -97,20 +627,6 @@ export default function DiscoverPage() {
     myProfile?.friendRequestsSent?.length,
   ]);
 
-  const handleSearch = async () => {
-    if (!query.trim()) return;
-    setSearching(true);
-    setResult(null);
-    try {
-      const results = await searchUsersByUsername(query.trim().toLowerCase().replace(/^@/, ""));
-      setResult(results.length > 0 ? results[0] : "none");
-    } catch {
-      setResult("none");
-    } finally {
-      setSearching(false);
-    }
-  };
-
   const handleSend = async (toUid: string) => {
     if (!user?.uid) return;
     setActionUid(toUid);
@@ -122,7 +638,7 @@ export default function DiscoverPage() {
   const handleCancel = async (toUid: string) => {
     if (!user?.uid) return;
     setActionUid(toUid);
-    try { await cancelFriendRequest(user.uid, toUid); setResult(null); }
+    try { await cancelFriendRequest(user.uid, toUid); }
     catch (e) { console.error(e); }
     finally { setActionUid(null); }
   };
@@ -152,36 +668,29 @@ export default function DiscoverPage() {
     finally { setActionUid(null); }
   };
 
-  const getRelation = (uid: string) => {
-    if (uid === user?.uid) return "self";
-    if (myProfile?.friends.includes(uid)) return "friends";
-    if (myProfile?.friendRequestsSent.includes(uid)) return "sent";
-    if (myProfile?.friendRequestsReceived.includes(uid)) return "received";
-    return "none";
-  };
-
   const totalRequests = requests.length + sentRequests.length;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navbar />
       <div className="pt-14">
-        <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="max-w-xl mx-auto px-4 py-8">
 
+          {/* Header */}
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
               <Compass className="w-5 h-5 text-green-600 dark:text-green-400" />
             </div>
             <div>
               <h1 className="text-xl font-black text-gray-900 dark:text-white">Discover</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Find and connect with fellow students</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Find and connect with fellow Bihar Board students</p>
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="flex bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-1 mb-6 gap-1">
+          <div className="flex bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-1 mb-5 gap-1">
             {([
-              { key: "search" as Tab, label: "Search", icon: <Search className="w-3.5 h-3.5" /> },
+              { key: "discover" as Tab, label: "Discover", icon: <Compass className="w-3.5 h-3.5" /> },
               { key: "requests" as Tab, label: "Requests", badge: totalRequests > 0 ? totalRequests : null, icon: <Bell className="w-3.5 h-3.5" /> },
               { key: "friends" as Tab, label: "Friends", badge: friends.length > 0 ? friends.length : null, icon: <Users className="w-3.5 h-3.5" /> },
             ]).map(t => (
@@ -207,289 +716,39 @@ export default function DiscoverPage() {
             ))}
           </div>
 
-          {/* ── Search Tab ── */}
-          {tab === "search" && (
-            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Search by @username</p>
-              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 focus-within:border-green-400 dark:focus-within:border-green-600 transition-colors mb-4">
-                <AtSign className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={e => { setQuery(e.target.value); setResult(null); }}
-                  onKeyDown={e => { if (e.key === "Enter") handleSearch(); }}
-                  placeholder="Enter username…"
-                  autoFocus
-                  className="flex-1 text-sm bg-transparent outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                />
-                <button
-                  onClick={handleSearch}
-                  disabled={!query.trim() || searching}
-                  className="flex-shrink-0 bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
-                >
-                  {searching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
-                  Search
-                </button>
-              </div>
-
-              {searching && (
-                <div className="flex items-center justify-center py-8 gap-2 text-gray-400">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span className="text-sm">Searching…</span>
-                </div>
-              )}
-
-              {result === "none" && !searching && (
-                <div className="text-center py-8">
-                  <UserX className="w-10 h-10 text-gray-200 dark:text-gray-700 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No user found for "{query}"</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">Check the spelling and try again.</p>
-                </div>
-              )}
-
-              {result && result !== "none" && !searching && (() => {
-                const relation = getRelation(result.uid);
-                return (
-                  <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
-                    <Link to={`/u/${result.username}`} className="flex-shrink-0">
-                      <Avatar user={result} size="lg" />
-                    </Link>
-                    <div className="flex-1 min-w-0">
-                      <Link to={`/u/${result.username}`} className="text-sm font-bold text-gray-900 dark:text-white hover:underline block truncate">
-                        {result.displayName}
-                      </Link>
-                      <p className="text-xs text-green-600 dark:text-green-400">@{result.username}</p>
-                      {result.bio && <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{result.bio}</p>}
-                      <div className="flex items-center gap-2 mt-1 text-xs text-gray-400 dark:text-gray-500">
-                        {(result.streak || 0) > 0 && <span>🔥 {result.streak}</span>}
-                        {(result.badges?.length || 0) > 0 && <span>🏅 {result.badges!.length}</span>}
-                      </div>
-                    </div>
-                    <div className="flex-shrink-0">
-                      {relation === "self" ? (
-                        <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-2.5 py-1.5 rounded-lg">You</span>
-                      ) : relation === "friends" ? (
-                        <span className="flex items-center gap-1 text-xs font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2.5 py-1.5 rounded-lg">
-                          <UserCheck className="w-3.5 h-3.5" /> Friends
-                        </span>
-                      ) : relation === "sent" ? (
-                        <button
-                          onClick={() => handleCancel(result.uid)}
-                          disabled={actionUid === result.uid}
-                          className="flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400 px-2.5 py-1.5 rounded-lg transition-colors"
-                        >
-                          {actionUid === result.uid ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Clock className="w-3.5 h-3.5" />}
-                          Sent
-                        </button>
-                      ) : relation === "received" ? (
-                        <div className="flex gap-1.5">
-                          <button onClick={() => handleAccept(result.uid)} disabled={actionUid === result.uid}
-                            className="text-xs font-bold bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1">
-                            {actionUid === result.uid ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserCheck className="w-3 h-3" />} Accept
-                          </button>
-                          <button onClick={() => handleDecline(result.uid)} disabled={actionUid === result.uid}
-                            className="text-xs font-medium bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400 px-2.5 py-1.5 rounded-lg transition-colors">
-                            Decline
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => handleSend(result.uid)}
-                          disabled={actionUid === result.uid}
-                          className="flex items-center gap-1 text-xs font-bold bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-3 py-1.5 rounded-lg transition-colors"
-                        >
-                          {actionUid === result.uid ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserPlus className="w-3.5 h-3.5" />}
-                          Add Friend
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {!result && !searching && (
-                <div className="text-center py-8">
-                  <Compass className="w-10 h-10 text-gray-200 dark:text-gray-700 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Search for a classmate by their @username.</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">Anonymous users won't appear in results.</p>
-                </div>
-              )}
-            </div>
+          {/* Tab content */}
+          {tab === "discover" && (
+            <DiscoverTab
+              currentUid={user?.uid || ""}
+              myProfile={myProfile}
+              actionUid={actionUid}
+              onSend={handleSend}
+              onCancel={handleCancel}
+              onAccept={handleAccept}
+              onDecline={handleDecline}
+            />
           )}
 
-          {/* ── Requests Tab ── */}
           {tab === "requests" && (
-            <div className="space-y-5">
-              {/* Incoming */}
-              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Bell className="w-4 h-4 text-amber-500" />
-                  Incoming Requests
-                  {requests.length > 0 && (
-                    <span className="ml-auto text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-bold px-2 py-0.5 rounded-full">
-                      {requests.length}
-                    </span>
-                  )}
-                </h3>
-                {loadingLists ? (
-                  <div className="flex items-center gap-2 text-xs text-gray-400 py-4">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…
-                  </div>
-                ) : requests.length === 0 ? (
-                  <div className="text-center py-6">
-                    <Bell className="w-8 h-8 text-gray-200 dark:text-gray-700 mx-auto mb-2" />
-                    <p className="text-sm text-gray-400 dark:text-gray-600">No incoming requests.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2.5">
-                    {requests.map(req => (
-                      <div key={req.uid} className="flex items-center gap-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 rounded-xl p-3">
-                        <Link to={`/u/${req.username}`} className="flex-shrink-0">
-                          <Avatar user={req} />
-                        </Link>
-                        <div className="flex-1 min-w-0">
-                          <Link to={`/u/${req.username}`} className="text-sm font-bold text-gray-900 dark:text-white hover:underline block truncate">
-                            {req.displayName}
-                          </Link>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">@{req.username}</p>
-                        </div>
-                        <div className="flex gap-1.5 flex-shrink-0">
-                          <button
-                            onClick={() => handleAccept(req.uid)}
-                            disabled={actionUid === req.uid}
-                            className="flex items-center gap-1 text-xs font-bold bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-2.5 py-1.5 rounded-xl transition-colors"
-                          >
-                            {actionUid === req.uid ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserCheck className="w-3 h-3" />}
-                            Accept
-                          </button>
-                          <button
-                            onClick={() => handleDecline(req.uid)}
-                            disabled={actionUid === req.uid}
-                            className="text-xs font-medium bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 rounded-xl transition-colors"
-                          >
-                            Decline
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Outgoing */}
-              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-gray-400" />
-                  Sent Requests
-                  {sentRequests.length > 0 && (
-                    <span className="ml-auto text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-bold px-2 py-0.5 rounded-full">
-                      {sentRequests.length}
-                    </span>
-                  )}
-                </h3>
-                {loadingLists ? (
-                  <div className="flex items-center gap-2 text-xs text-gray-400 py-4">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…
-                  </div>
-                ) : sentRequests.length === 0 ? (
-                  <div className="text-center py-6">
-                    <Clock className="w-8 h-8 text-gray-200 dark:text-gray-700 mx-auto mb-2" />
-                    <p className="text-sm text-gray-400 dark:text-gray-600">No pending sent requests.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2.5">
-                    {sentRequests.map(req => (
-                      <div key={req.uid} className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-xl p-3">
-                        <Link to={`/u/${req.username}`} className="flex-shrink-0">
-                          <Avatar user={req} />
-                        </Link>
-                        <div className="flex-1 min-w-0">
-                          <Link to={`/u/${req.username}`} className="text-sm font-bold text-gray-900 dark:text-white hover:underline block truncate">
-                            {req.displayName}
-                          </Link>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">@{req.username}</p>
-                        </div>
-                        <button
-                          onClick={() => handleCancel(req.uid)}
-                          disabled={actionUid === req.uid}
-                          className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400 border border-gray-200 dark:border-gray-600 px-2.5 py-1.5 rounded-xl transition-colors"
-                        >
-                          {actionUid === req.uid ? <Loader2 className="w-3 h-3 animate-spin" /> : <Clock className="w-3 h-3" />}
-                          Cancel
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+            <RequestsTab
+              requests={requests}
+              sentRequests={sentRequests}
+              loadingLists={loadingLists}
+              actionUid={actionUid}
+              onAccept={handleAccept}
+              onDecline={handleDecline}
+              onCancel={handleCancel}
+            />
           )}
 
-          {/* ── Friends Tab ── */}
           {tab === "friends" && (
-            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <Users className="w-4 h-4 text-green-600" />
-                Study Friends
-                {friends.length > 0 && (
-                  <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">
-                    {friends.length} friend{friends.length !== 1 ? "s" : ""}
-                  </span>
-                )}
-              </h3>
-
-              {loadingLists ? (
-                <div className="flex items-center gap-2 text-xs text-gray-400 py-4">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…
-                </div>
-              ) : friends.length === 0 ? (
-                <div className="text-center py-8">
-                  <Users className="w-10 h-10 text-gray-200 dark:text-gray-700 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No study friends yet.</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">Search by username to add a classmate!</p>
-                  <button
-                    onClick={() => setTab("search")}
-                    className="mt-4 text-xs font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 px-4 py-2 rounded-xl transition-colors"
-                  >
-                    Find People
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  {friends.map(friend => (
-                    <div key={friend.uid} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
-                      <Link to={`/u/${friend.username}`} className="flex-shrink-0">
-                        <Avatar user={friend} />
-                      </Link>
-                      <div className="flex-1 min-w-0">
-                        <Link to={`/u/${friend.username}`} className="text-sm font-bold text-gray-900 dark:text-white hover:underline block truncate">
-                          {friend.displayName}
-                        </Link>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          @{friend.username}{(friend.streak || 0) > 0 && <span className="ml-1.5">· 🔥 {friend.streak}</span>}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Link to={`/u/${friend.username}`}
-                          className="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 rounded-lg transition-colors">
-                          View
-                        </Link>
-                        <button
-                          onClick={() => handleRemove(friend.uid)}
-                          disabled={actionUid === friend.uid}
-                          title="Remove friend"
-                          className="p-1.5 rounded-lg text-gray-300 dark:text-gray-700 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
-                        >
-                          {actionUid === friend.uid
-                            ? <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />
-                            : <UserMinus className="w-3.5 h-3.5" />}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <FriendsTab
+              friends={friends}
+              loadingLists={loadingLists}
+              actionUid={actionUid}
+              onRemove={handleRemove}
+              onGoDiscover={() => setTab("discover")}
+            />
           )}
 
         </div>
