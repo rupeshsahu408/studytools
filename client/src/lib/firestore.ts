@@ -1339,10 +1339,25 @@ export async function getAllPublicNotes(pageSize = 300): Promise<PublicNote[]> {
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as PublicNote));
 }
 
+// Default coin balance every user receives on signup.
+// Also used as the fallback when the field is missing (users created before
+// the coins feature was added have no coins field in their document).
+const DEFAULT_COINS = 600;
+
 export async function getUserCoins(uid: string): Promise<number> {
-  const snap = await getDoc(doc(db, "users", uid));
-  if (!snap.exists()) return 0;
-  return snap.data().coins ?? 0;
+  const ref = doc(db, "users", uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return DEFAULT_COINS;
+
+  const stored = snap.data().coins;
+  // Field is missing → first time this user touches the wallet.
+  // Write the default so all future reads (and the sendCoinTip transaction)
+  // see a proper number instead of undefined.
+  if (stored === undefined || stored === null) {
+    await updateDoc(ref, { coins: DEFAULT_COINS });
+    return DEFAULT_COINS;
+  }
+  return stored as number;
 }
 
 // Returns the list of chapterIds the user has liked — stored in users/{uid}.likedNotes
@@ -1428,12 +1443,13 @@ export async function sendCoinTip(
   await runTransaction(db, async (transaction) => {
     const fromSnap = await transaction.get(fromRef);
     if (!fromSnap.exists()) throw new Error("Sender not found");
-    const fromCoins: number = fromSnap.data().coins ?? 0;
+    // Use DEFAULT_COINS (600) when the field is missing — same default as signup
+    const fromCoins: number = fromSnap.data().coins ?? DEFAULT_COINS;
     if (fromCoins < amount) throw new Error("Aapke paas itne coins nahi hain.");
 
     const toSnap = await transaction.get(toRef);
     if (!toSnap.exists()) throw new Error("Recipient not found");
-    const toCoins: number = toSnap.data().coins ?? 0;
+    const toCoins: number = toSnap.data().coins ?? DEFAULT_COINS;
 
     transaction.update(fromRef, { coins: fromCoins - amount });
     transaction.update(toRef,   { coins: toCoins   + amount });
