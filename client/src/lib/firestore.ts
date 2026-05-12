@@ -2,7 +2,7 @@ import { db } from "./firebase";
 import {
   collection, doc, setDoc, getDoc, getDocs,
   deleteDoc, query, where, serverTimestamp, updateDoc, arrayUnion, arrayRemove,
-  onSnapshot, writeBatch,
+  onSnapshot, writeBatch, runTransaction,
 } from "firebase/firestore";
 
 // ─── Existing Types ──────────────────────────────────────────────────────────
@@ -936,17 +936,24 @@ export async function setupUserProfile(
   data: { username: string; bio?: string; photoURL?: string | null }
 ): Promise<void> {
   const username = data.username.toLowerCase().trim();
-  const batch = writeBatch(db);
-  batch.set(doc(db, "usernames", username), { uid, createdAt: serverTimestamp() });
-  batch.set(doc(db, "users", uid), {
-    username,
-    bio: data.bio?.trim() || "",
-    photoURL: data.photoURL || null,
-    friends: [],
-    friendRequestsSent: [],
-    friendRequestsReceived: [],
-  }, { merge: true });
-  await batch.commit();
+  const usernameRef = doc(db, "usernames", username);
+  const userRef = doc(db, "users", uid);
+
+  await runTransaction(db, async (transaction) => {
+    const usernameSnap = await transaction.get(usernameRef);
+    if (usernameSnap.exists()) {
+      throw new Error("Username is already taken.");
+    }
+    transaction.set(usernameRef, { uid, createdAt: serverTimestamp() });
+    transaction.set(userRef, {
+      username,
+      bio: data.bio?.trim() || "",
+      photoURL: data.photoURL || null,
+      friends: [],
+      friendRequestsSent: [],
+      friendRequestsReceived: [],
+    }, { merge: true });
+  });
 }
 
 export async function getUserById(uid: string): Promise<SocialUser | null> {

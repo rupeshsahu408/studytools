@@ -3,7 +3,7 @@ import {
   Flame, Target, Calendar, Trophy, Brain,
   Edit2, Check, X, ChevronRight, AlertTriangle, Loader2,
   BookOpen, Zap, Star, GraduationCap, Users, ExternalLink,
-  Camera, AtSign, UserPlus, UserCheck, UserMinus, Search,
+  Camera, AtSign, UserPlus, UserCheck, UserMinus, Search, Lock,
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -408,9 +408,14 @@ export default function ProfilePage() {
               <div className="mb-3">
                 <h2 className="text-lg font-black text-gray-900 dark:text-white">{displayName}</h2>
                 {socialUser?.username && (
-                  <p className="text-green-600 dark:text-green-400 font-medium text-sm flex items-center gap-1">
-                    <AtSign className="w-3.5 h-3.5" />{socialUser.username}
-                  </p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-green-600 dark:text-green-400 font-medium text-sm flex items-center gap-1">
+                      <AtSign className="w-3.5 h-3.5" />{socialUser.username}
+                    </p>
+                    <span className="inline-flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
+                      <Lock className="w-2.5 h-2.5" /> Permanent
+                    </span>
+                  </div>
                 )}
                 <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
                   <span>{friends.length} {friends.length === 1 ? "friend" : "friends"}</span>
