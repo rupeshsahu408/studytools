@@ -33,7 +33,6 @@ export interface Chapter {
   simulations?: SimulationEntry[];
   summary?: any;
   examPaper?: { mcq: any[]; twoMarks: any[]; fiveMarks: any[] } | null;
-  // Phase 4 — Progress tracking
   notesRead?: boolean;
   questionsAttempted?: number;
   questionsWrong?: number;
@@ -41,6 +40,7 @@ export interface Chapter {
   flashcardsDone?: boolean;
   simulationsSeen?: boolean;
   lastStudied?: any;
+  shareToken?: string | null;
 }
 
 // ─── Phase 4 — User Data Types ───────────────────────────────────────────────
@@ -770,4 +770,76 @@ export async function toggleChatPin(sessionId: string, isPinned: boolean): Promi
 
 export async function deleteChatSession(sessionId: string): Promise<void> {
   await deleteDoc(doc(db, CHAT_SESSIONS, sessionId));
+}
+
+// ─── Share Links ──────────────────────────────────────────────────────────────
+
+function generateShareToken(): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let token = "";
+  for (let i = 0; i < 20; i++) token += chars[Math.floor(Math.random() * chars.length)];
+  return token;
+}
+
+export interface SharedChapterPublic {
+  token: string;
+  chapterId: string;
+  userId: string;
+  chapterName: string;
+  subject: string;
+  classNum: string;
+  language: string;
+  notes: any;
+  sharedByName: string;
+  sharedAt: any;
+  views: number;
+}
+
+export async function createShareLink(
+  chapterId: string,
+  userId: string,
+  chapter: {
+    chapterName: string;
+    subject: string;
+    classNum: string;
+    language: string;
+    notes: any;
+    sharedByName: string;
+  }
+): Promise<string> {
+  const token = generateShareToken();
+  await setDoc(doc(db, "shares", token), {
+    token,
+    chapterId,
+    userId,
+    chapterName: chapter.chapterName,
+    subject: chapter.subject,
+    classNum: chapter.classNum,
+    language: chapter.language || "english",
+    notes: chapter.notes,
+    sharedByName: chapter.sharedByName || "A student",
+    sharedAt: serverTimestamp(),
+    views: 0,
+  });
+  await setDoc(doc(db, CHAPTERS_COLLECTION, chapterId), { shareToken: token }, { merge: true });
+  return token;
+}
+
+export async function revokeShareLink(chapterId: string, token: string): Promise<void> {
+  await deleteDoc(doc(db, "shares", token));
+  await setDoc(doc(db, CHAPTERS_COLLECTION, chapterId), { shareToken: null }, { merge: true });
+}
+
+export async function getSharedChapter(token: string): Promise<SharedChapterPublic | null> {
+  const snap = await getDoc(doc(db, "shares", token));
+  if (!snap.exists()) return null;
+  return { token, ...snap.data() } as SharedChapterPublic;
+}
+
+export async function incrementShareViews(token: string): Promise<void> {
+  const ref = doc(db, "shares", token);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    await updateDoc(ref, { views: (snap.data().views || 0) + 1 });
+  }
 }

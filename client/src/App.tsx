@@ -10,6 +10,7 @@ import ChapterPage from "./pages/ChapterPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProgressPage from "./pages/ProgressPage";
 import CommunityPage from "./pages/CommunityPage";
+import SharePage from "./pages/SharePage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -45,6 +46,7 @@ function AppRoutes() {
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path="/progress" element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
       <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
+      <Route path="/share/:token" element={<SharePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

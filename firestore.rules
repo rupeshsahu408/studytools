@@ -90,5 +90,18 @@ service cloud.firestore {
       allow read: if request.auth != null
                   && request.auth.uid == resource.data.userId;
     }
+
+    // ── shares ────────────────────────────────────────────────────────────────
+    // Public share links — anyone (including unauthenticated) can read.
+    // Only the authenticated owner can create, update, or delete their share.
+    match /shares/{token} {
+      allow read: if true;
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.userId;
+      allow update: if request.auth != null
+                    && request.auth.uid == resource.data.userId;
+      allow delete: if request.auth != null
+                    && request.auth.uid == resource.data.userId;
+    }
   }
 }

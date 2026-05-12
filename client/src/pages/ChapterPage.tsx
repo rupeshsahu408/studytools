@@ -4,8 +4,9 @@ import {
   BookOpen, HelpCircle, ArrowLeft, Atom, FlaskConical,
   Calculator, Leaf, Calendar, Sigma, Network, AlertTriangle,
   Layers, MessageCircle, HelpingHand, Loader2, Beaker, Users, Zap, FileText,
+  Share2, Copy, CheckCheck, Trash2,
 } from "lucide-react";
-import { getChapter, updateChapterSection } from "../lib/firestore";
+import { getChapter, updateChapterSection, createShareLink, revokeShareLink } from "../lib/firestore";
 import type { Chapter } from "../lib/firestore";
 import {
   generateFormulas, generateMindmap, generateMistakes,
@@ -100,6 +101,11 @@ export default function ChapterPage() {
   const [generatingExamPaper, setGeneratingExamPaper] = useState(false);
   const [examPaperError, setExamPaperError] = useState<string | null>(null);
 
+  const [shareToken, setShareToken] = useState<string | null>(null);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+  const [shareRevoked, setShareRevoked] = useState(false);
+
   const { user } = useAuth();
 
   // Phase 4: progress tracking
@@ -116,12 +122,59 @@ export default function ChapterPage() {
     try {
       const data = await getChapter(id);
       setChapter(data);
+      setShareToken(data?.shareToken ?? null);
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleCreateShare = useCallback(async () => {
+    if (!chapter || !user || shareLoading) return;
+    setShareLoading(true);
+    try {
+      const name = user.displayName || user.email?.split("@")[0] || "Student";
+      const token = await createShareLink(chapter.id, user.uid, {
+        chapterName: chapter.chapterName,
+        subject: chapter.subject,
+        classNum: chapter.classNum,
+        language: chapter.language || "english",
+        notes: chapter.notes,
+        sharedByName: name,
+      });
+      setShareToken(token);
+    } catch (e) {
+      console.error("Share creation failed:", e);
+    } finally {
+      setShareLoading(false);
+    }
+  }, [chapter, user, shareLoading]);
+
+  const handleRevokeShare = useCallback(async () => {
+    if (!chapter || !shareToken || shareLoading) return;
+    if (!window.confirm("Remove this share link? Anyone with the current link will lose access.")) return;
+    setShareLoading(true);
+    try {
+      await revokeShareLink(chapter.id, shareToken);
+      setShareToken(null);
+      setShareRevoked(true);
+      setTimeout(() => setShareRevoked(false), 2000);
+    } catch (e) {
+      console.error("Revoke failed:", e);
+    } finally {
+      setShareLoading(false);
+    }
+  }, [chapter, shareToken, shareLoading]);
+
+  const handleCopyShare = useCallback(() => {
+    if (!shareToken) return;
+    const url = `${window.location.origin}/share/${shareToken}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    });
+  }, [shareToken]);
 
   const generateSection = useCallback(async (sectionKey: string) => {
     if (!chapter || generatingSection) return;
@@ -558,6 +611,53 @@ export default function ChapterPage() {
                 }`}>
                   {chapter.language === "hindi" ? "हिंदी" : "English"}
                 </span>
+              )}
+            </div>
+
+            {/* ── Share Notes ── */}
+            <div className="mt-3 mb-3">
+              {!shareToken ? (
+                <button
+                  onClick={handleCreateShare}
+                  disabled={shareLoading || !chapter.notes}
+                  className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-green-600 dark:hover:text-green-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors w-full"
+                >
+                  {shareLoading
+                    ? <Loader2 className="w-3 h-3 animate-spin" />
+                    : <Share2 className="w-3 h-3" />}
+                  {shareRevoked ? "Link removed" : "Share Notes"}
+                </button>
+              ) : (
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                    <span className="text-xs font-medium text-green-600 dark:text-green-400">Share active</span>
+                  </div>
+                  <div className="flex items-center gap-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-2 pr-1 py-1">
+                    <span className="text-xs text-gray-400 flex-1 truncate font-mono leading-none">
+                      /share/{shareToken.slice(0, 10)}…
+                    </span>
+                    <button
+                      onClick={handleCopyShare}
+                      title="Copy link"
+                      className="flex-shrink-0 p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors rounded"
+                    >
+                      {shareCopied
+                        ? <CheckCheck className="w-3.5 h-3.5 text-green-500" />
+                        : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                  <button
+                    onClick={handleRevokeShare}
+                    disabled={shareLoading}
+                    className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 transition-colors disabled:opacity-40"
+                  >
+                    {shareLoading
+                      ? <Loader2 className="w-3 h-3 animate-spin" />
+                      : <Trash2 className="w-3 h-3" />}
+                    Remove link
+                  </button>
+                </div>
               )}
             </div>
 
