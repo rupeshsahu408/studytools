@@ -53,7 +53,7 @@ export default function UsernameSetupPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const displayName = user?.displayName || user?.email?.split("@")[0] || "Student";
+  const displayName = user?.displayName || "Student";
   const initials = getInitials(displayName);
 
   useEffect(() => {

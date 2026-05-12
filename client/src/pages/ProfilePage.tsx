@@ -286,7 +286,7 @@ export default function ProfilePage() {
     ((c.questionsWrong || 0) / (c.questionsAttempted || 1)) > 0.3
   );
 
-  const displayName = profile?.name || user?.displayName || user?.email?.split("@")[0] || "Student";
+  const displayName = profile?.name || user?.displayName || "Student";
   const avatarLetter = displayName.charAt(0).toUpperCase();
 
   if (loadingUser) {
@@ -437,7 +437,11 @@ export default function ProfilePage() {
                     <h2 className="font-bold text-gray-900 dark:text-white text-lg leading-tight">
                       {displayName}
                     </h2>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{user?.email}</p>
+                    {socialUser?.username ? (
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-0.5 font-medium">@{socialUser.username}</p>
+                    ) : (
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 italic">No username set</p>
+                    )}
                     {profile?.class && (
                       <span className="inline-block mt-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-medium">
                         Class {profile.class}

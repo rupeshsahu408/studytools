@@ -1280,7 +1280,8 @@ export interface PublicNote {
   userId: string;
   chapterId: string;
   chapterName: string;
-  publisherName: string;
+  publisherName: string;               // display name (full name set in profile)
+  publisherUsername?: string;          // @handle — shown publicly; never exposes email
   board: string;                       // e.g. "Bihar Board", "CBSE"
   classNum: string;                    // "9" | "10" | "11" | "12"
   medium: string;                      // "hindi" | "english"

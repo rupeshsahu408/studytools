@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Globe, Search, BookOpen, X, ChevronDown, ChevronUp,
   Loader2, Filter, ArrowLeft, Eye, Atom, FlaskConical,
@@ -337,10 +337,22 @@ function ContentModal({ note, sectionKey, onClose }: {
                 {note.medium === "hindi" ? "Hindi Medium" : "English Medium"}
               </span>
             </div>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5 flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              By {note.publisherName} · {formatDate(note.publishedAt)}
-            </p>
+            <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 mt-1.5">
+              <Users className="w-3 h-3 flex-shrink-0" />
+              <span>By</span>
+              {note.publisherUsername ? (
+                <Link
+                  to={`/u/${note.publisherUsername}`}
+                  onClick={e => e.stopPropagation()}
+                  className="text-green-600 dark:text-green-400 font-semibold hover:underline"
+                >
+                  @{note.publisherUsername}
+                </Link>
+              ) : (
+                <span className="font-medium text-gray-500 dark:text-gray-400">{note.publisherName}</span>
+              )}
+              <span>· {formatDate(note.publishedAt)}</span>
+            </div>
           </div>
           <button onClick={onClose} className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
             <X className="w-4 h-4" />
@@ -455,9 +467,19 @@ function SectionCard({ note, sectionKey, onOpen }: {
       <div className="text-xs text-gray-400 dark:text-gray-500 mb-2">{sectionDetail()}</div>
 
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
-          <Users className="w-3 h-3" />
-          <span className="truncate max-w-[100px]">{note.publisherName}</span>
+        <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 min-w-0">
+          <Users className="w-3 h-3 flex-shrink-0" />
+          {note.publisherUsername ? (
+            <Link
+              to={`/u/${note.publisherUsername}`}
+              onClick={e => e.stopPropagation()}
+              className="truncate max-w-[110px] text-green-600 dark:text-green-400 font-medium hover:underline"
+            >
+              @{note.publisherUsername}
+            </Link>
+          ) : (
+            <span className="truncate max-w-[110px]">{note.publisherName}</span>
+          )}
         </div>
         <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
           <Eye className="w-3 h-3" /> View
@@ -507,7 +529,8 @@ export default function PublicNotesPage() {
         const q = search.toLowerCase();
         if (!n.chapterName.toLowerCase().includes(q) &&
             !n.subject.toLowerCase().includes(q) &&
-            !n.publisherName.toLowerCase().includes(q)) return false;
+            !n.publisherName.toLowerCase().includes(q) &&
+            !(n.publisherUsername || "").toLowerCase().includes(q)) return false;
       }
       return true;
     });
@@ -524,7 +547,7 @@ export default function PublicNotesPage() {
         if (filterSubject && n.subject  !== filterSubject) return false;
         if (search) {
           const q = search.toLowerCase();
-          if (!n.chapterName.toLowerCase().includes(q) && !n.subject.toLowerCase().includes(q) && !n.publisherName.toLowerCase().includes(q)) return false;
+          if (!n.chapterName.toLowerCase().includes(q) && !n.subject.toLowerCase().includes(q) && !n.publisherName.toLowerCase().includes(q) && !(n.publisherUsername || "").toLowerCase().includes(q)) return false;
         }
         return true;
       }).length;

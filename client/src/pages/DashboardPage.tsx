@@ -11,9 +11,10 @@ import { useProgress } from "../contexts/ProgressContext";
 import {
   deleteChapter, updateChapterSection,
   publishNote, unpublishNote, getMyPublishedNotes,
+  subscribeToSocialUser,
 } from "../lib/firestore";
 import { generateNotes, generateQuestions } from "../lib/api";
-import type { Chapter } from "../lib/firestore";
+import type { Chapter, SocialUser } from "../lib/firestore";
 import Navbar from "../components/Navbar";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -231,6 +232,13 @@ export default function DashboardPage() {
   const [publishing,    setPublishing]    = useState(false);
   const [unpublishing,  setUnpublishing]  = useState(false);
 
+  // Social user — for username in publish flow (never exposes email)
+  const [socialUser, setSocialUser] = useState<SocialUser | null>(null);
+  useEffect(() => {
+    if (!user?.uid) return;
+    return subscribeToSocialUser(user.uid, setSocialUser);
+  }, [user?.uid]);
+
   // Load which of the user's chapters are already published
   useEffect(() => {
     if (!user) return;
@@ -291,25 +299,27 @@ export default function DashboardPage() {
     if (!user || !publishModal) return;
     setPublishing(true);
     try {
-      const publisherName = userData?.profile?.name || user.displayName || user.email?.split("@")[0] || "Student";
+      const publisherName     = userData?.profile?.name || user.displayName || "Student";
+      const publisherUsername = socialUser?.username || "";
       const ch = publishModal;
 
       // Compute which sections are actually generated
       type Sec = "notes"|"questions"|"summary"|"formulas"|"mindmap"|"flashcards"|"mistakes";
       const publishedSections: Sec[] = [];
-      if (ch.notes)                                                      publishedSections.push("notes");
-      if (ch.questions)                                                  publishedSections.push("questions");
-      if (ch.summary)                                                    publishedSections.push("summary");
-      if (Array.isArray(ch.formulas)   && ch.formulas.length)           publishedSections.push("formulas");
-      if (ch.mindmap)                                                    publishedSections.push("mindmap");
-      if (Array.isArray(ch.flashcards) && ch.flashcards.length)         publishedSections.push("flashcards");
-      if (Array.isArray(ch.mistakes)   && ch.mistakes.length)           publishedSections.push("mistakes");
+      if (ch.notes)                                              publishedSections.push("notes");
+      if (ch.questions)                                          publishedSections.push("questions");
+      if (ch.summary)                                            publishedSections.push("summary");
+      if (Array.isArray(ch.formulas)   && ch.formulas.length)   publishedSections.push("formulas");
+      if (ch.mindmap)                                            publishedSections.push("mindmap");
+      if (Array.isArray(ch.flashcards) && ch.flashcards.length) publishedSections.push("flashcards");
+      if (Array.isArray(ch.mistakes)   && ch.mistakes.length)   publishedSections.push("mistakes");
 
       const data: any = {
         userId:           user.uid,
         chapterId:        ch.id,
         chapterName:      ch.chapterName,
         publisherName,
+        publisherUsername,
         board:            form.board,
         classNum:         form.classNum,
         medium:           form.medium,
@@ -355,7 +365,7 @@ export default function DashboardPage() {
   const totalAnswered = userData?.totalQuestionsAnswered || 0;
   const totalWrong   = userData?.totalQuestionsWrong || 0;
   const accuracy     = totalAnswered > 0 ? Math.round(((totalAnswered - totalWrong) / totalAnswered) * 100) : null;
-  const displayName  = userData?.profile?.name || user?.displayName || user?.email?.split("@")[0] || "Student";
+  const displayName  = userData?.profile?.name || user?.displayName || "Student";
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">

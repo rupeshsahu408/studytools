@@ -8,9 +8,9 @@ import {
 } from "lucide-react";
 import {
   getChapter, updateChapterSection, createShareLink, revokeShareLink,
-  publishNote, unpublishNote, getPublishedNote,
+  publishNote, unpublishNote, getPublishedNote, subscribeToSocialUser,
 } from "../lib/firestore";
-import type { Chapter, PublicNote, PublishableSection } from "../lib/firestore";
+import type { Chapter, PublicNote, PublishableSection, SocialUser } from "../lib/firestore";
 import {
   generateFormulas, generateMindmap, generateMistakes,
   generateFlashcards, generateSimulationCatalog, regenerateQuestionBatch,
@@ -314,6 +314,13 @@ export default function ChapterPage() {
   // Phase 4: progress tracking
   const { markNotesRead, trackQuestionAnswer, markFlashcardsDone, markSimulationSeen, userData } = useProgress();
 
+  // Social user — needed for username in publish flow
+  const [socialUser, setSocialUser] = useState<SocialUser | null>(null);
+  useEffect(() => {
+    if (!user?.uid) return;
+    return subscribeToSocialUser(user.uid, setSocialUser);
+  }, [user?.uid]);
+
   useEffect(() => {
     if (!id) return;
     loadChapter();
@@ -364,12 +371,14 @@ export default function ChapterPage() {
     setPublishLoading(true);
     setPublishError(null);
     try {
-      const name = userData?.profile?.name || user.displayName || "Student";
+      const publisherName = userData?.profile?.name || user.displayName || "Student";
+      const publisherUsername = socialUser?.username || "";
       const data: Omit<PublicNote, "id" | "publishedAt" | "viewCount"> = {
         userId: user.uid,
         chapterId: chapter.id,
         chapterName: chapter.chapterName,
-        publisherName: name,
+        publisherName,
+        publisherUsername,
         board,
         classNum: chapter.classNum,
         medium: chapter.language || "hindi",
@@ -390,7 +399,7 @@ export default function ChapterPage() {
     } finally {
       setPublishLoading(false);
     }
-  }, [chapter, user, userData, publishLoading]);
+  }, [chapter, user, userData, socialUser, publishLoading]);
 
   const handleUnpublish = useCallback(async () => {
     if (!chapter || publishLoading) return;
