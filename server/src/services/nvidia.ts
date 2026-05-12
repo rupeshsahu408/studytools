@@ -48,6 +48,30 @@ export async function callNvidia(
   return response.choices[0]?.message?.content || "";
 }
 
+// ─── Streaming version for Doubt Chat & Simulation Explain ───────────────────
+// Yields text chunks as they arrive from NVIDIA NIM, enabling ChatGPT-like
+// progressive rendering on the client. Used exclusively by /api/chat/stream.
+
+export async function* callNvidiaStream(
+  fullMessages: Array<{ role: string; content: string }>
+): AsyncGenerator<string> {
+  const client = getClient();
+
+  const stream = await client.chat.completions.create({
+    model: MODEL,
+    messages: fullMessages.map(m => ({ role: m.role as any, content: m.content })),
+    temperature: 0.3,
+    top_p: 0.9,
+    max_tokens: 6144,
+    stream: true,
+  });
+
+  for await (const chunk of stream) {
+    const text = chunk.choices[0]?.delta?.content;
+    if (text) yield text;
+  }
+}
+
 // ─── Model Health Check ──────────────────────────────────────────────────────
 
 export interface ModelHealthResult {

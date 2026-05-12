@@ -4,7 +4,7 @@ import {
   Atom, BarChart2, Battery, X, Sparkles, ChevronRight,
   Play, BookOpen, AlertCircle, Library,
 } from "lucide-react";
-import { sendChatMessage } from "../lib/api";
+import { streamChatMessage } from "../lib/api";
 import type { SimulationEntry } from "../lib/firestore";
 import SimulationLibrary from "./SimulationLibrary";
 
@@ -81,11 +81,12 @@ export default function SimulationsView({
       const query = language === "hindi"
         ? `इस simulation को हिंदी में समझाओ: ${activeSim.title}. वर्तमान स्थिति: ${simContext}. इसे class 11-12 Bihar Board के छात्र के लिए आसान भाषा में explain करो।`
         : `Explain what is happening in this simulation: ${activeSim.title}. Current state: ${simContext}. Explain for a Class 11-12 Bihar Board student in simple language.`;
-      const data = await sendChatMessage(
+      await streamChatMessage(
         [{ role: "user", content: query }],
-        chapterText, chapterName, subject, language
+        chapterText, chapterName, subject, language,
+        (fullText) => setExplain({ loading: true, text: fullText, error: "" })
       );
-      setExplain({ loading: false, text: data.reply, error: "" });
+      setExplain(prev => ({ ...prev, loading: false }));
     } catch {
       setExplain({ loading: false, text: "", error: "Could not get explanation. Please try again." });
     }
@@ -219,15 +220,21 @@ export default function SimulationsView({
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-bold text-green-700 dark:text-green-400 mb-2">AI Explanation</p>
-                  {explain.loading && (
+                  {explain.loading && !explain.text && (
                     <div className="flex gap-1.5 items-center">
                       {[0, 1, 2].map(i => (
-                        <div key={i} className="w-2 h-2 bg-green-400 rounded-full" />
+                        <div key={i} className="w-2 h-2 bg-green-400 rounded-full animate-bounce"
+                          style={{ animationDelay: `${i * 150}ms`, animationDuration: "0.9s" }} />
                       ))}
                     </div>
                   )}
                   {explain.text && (
-                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{explain.text}</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                      {explain.text}
+                      {explain.loading && (
+                        <span className="inline-block w-[2px] h-[1em] bg-green-500 ml-0.5 align-middle animate-pulse" />
+                      )}
+                    </p>
                   )}
                   {explain.error && (
                     <div className="flex items-center gap-2 text-red-500 dark:text-red-400 text-sm">

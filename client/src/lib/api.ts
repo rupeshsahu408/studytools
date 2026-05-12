@@ -82,6 +82,60 @@ export async function sendChatMessage(
   return res.data;
 }
 
+// ─── Streaming chat — yields chunks via onChunk, resolves with full reply ─────
+// Uses the /api/chat/stream SSE endpoint for ChatGPT-like progressive rendering.
+
+export async function streamChatMessage(
+  messages: Array<{ role: "user" | "assistant"; content: string }>,
+  chapterContext: string,
+  chapterName: string,
+  subject: string,
+  language: string,
+  onChunk: (fullText: string) => void
+): Promise<string> {
+  const response = await fetch(`${API_BASE}/api/chat/stream`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages, chapterContext, chapterName, subject, language }),
+  });
+
+  if (!response.ok || !response.body) {
+    throw new Error(`Stream request failed: ${response.status}`);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let fullText = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      if (!line.startsWith("data: ")) continue;
+      const payload = line.slice(6).trim();
+      if (!payload) continue;
+
+      let parsed: any;
+      try { parsed = JSON.parse(payload); } catch { continue; }
+
+      if (parsed.error) throw new Error(parsed.error);
+      if (parsed.done) return fullText;
+      if (parsed.chunk) {
+        fullText += parsed.chunk;
+        onChunk(fullText);
+      }
+    }
+  }
+
+  return fullText;
+}
+
 // ─── Phase 3 ──────────────────────────────────────────────────────────────
 
 export async function generateSimulationCatalog(text: string, subject: string, classNum: string, chapterName: string) {

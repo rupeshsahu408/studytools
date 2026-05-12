@@ -4,7 +4,7 @@ import {
   Trash2, Pencil, Check, X, ChevronLeft, MessageSquare,
   Clock, Loader2,
 } from "lucide-react";
-import { sendChatMessage } from "../lib/api";
+import { streamChatMessage } from "../lib/api";
 import {
   subscribeChatSessions, createChatSession, saveChatMessages,
   renameChatSession, toggleChatPin, deleteChatSession,
@@ -201,6 +201,7 @@ export default function DoubtChat({
   const [loading, setLoading]             = useState(false);
   const [error, setError]                 = useState("");
   const [showSidebar, setShowSidebar]     = useState(true); // mobile toggle
+  const [streamingText, setStreamingText] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLTextAreaElement>(null);
 
@@ -243,7 +244,7 @@ export default function DoubtChat({
     setTimeout(() => inputRef.current?.focus(), 100);
   }, []);
 
-  // ── Send a message ─────────────────────────────────────────────────────────
+  // ── Send a message (streaming) ─────────────────────────────────────────────
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || loading) return;
@@ -254,18 +255,30 @@ export default function DoubtChat({
     setInput("");
     setError("");
     setLoading(true);
+    setStreamingText(""); // empty string = streaming started, bubble is visible
+
+    // Capture these at call-time to avoid stale-closure issues in the async flow
+    const capturedSessionId = activeSessionId;
+    const capturedIsFirst   = messages.length === 0;
+    const autoTitle         = capturedIsFirst ? makeTitle(trimmed) : undefined;
 
     try {
-      const data = await sendChatMessage(newMessages, chapterText, chapterName, subject, language);
-      const reply: ChatMessage = { role: "assistant", content: data.reply };
+      const fullReply = await streamChatMessage(
+        newMessages,
+        chapterText,
+        chapterName,
+        subject,
+        language,
+        (fullText) => setStreamingText(fullText)
+      );
+
+      const reply: ChatMessage = { role: "assistant", content: fullReply };
       const finalMessages = [...newMessages, reply];
       setMessages(finalMessages);
+      setStreamingText(null);
 
-      // Persist: if first message, create session; otherwise update existing
-      let sessionId = activeSessionId;
-      const isFirstMessage = messages.length === 0;
-      const autoTitle = isFirstMessage ? makeTitle(trimmed) : undefined;
-
+      // Persist to Firestore
+      let sessionId = capturedSessionId;
       if (!sessionId) {
         sessionId = await createChatSession(userId, chapterId, chapterName, subject, autoTitle || "New Chat");
         setActiveSessionId(sessionId);
@@ -273,13 +286,14 @@ export default function DoubtChat({
       await saveChatMessages(sessionId, finalMessages, autoTitle);
 
     } catch {
-      setError("Could not get a response. Please try again.");
+      setError(isHindi ? "जवाब नहीं मिला। दोबारा कोशिश करो।" : "Could not get a response. Please try again.");
       setMessages(prev => prev.slice(0, -1));
+      setStreamingText(null);
     } finally {
       setLoading(false);
       inputRef.current?.focus();
     }
-  }, [loading, messages, activeSessionId, userId, chapterId, chapterName, subject, language, chapterText]);
+  }, [loading, messages, activeSessionId, userId, chapterId, chapterName, subject, language, chapterText, isHindi]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input); }
@@ -476,22 +490,25 @@ export default function DoubtChat({
           ))}
         
 
-        {/* Typing indicator */}
-        {loading && (
+        {/* Streaming bubble — shows text progressively as it arrives, ChatGPT-style */}
+        {streamingText !== null && (
           <div className="flex items-start gap-2.5">
             <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
               <Bot className="w-3.5 h-3.5 text-gray-500" />
             </div>
-            <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl rounded-tl-sm px-4 py-3">
-              <div className="flex gap-1.5 items-center">
-                {[0, 1, 2].map(i => (
-                  <div
-                    key={i}
-                    className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce"
-                    style={{ animationDelay: `${i * 150}ms`, animationDuration: "0.9s" }}
-                  />
-                ))}
-              </div>
+            <div className="max-w-[78%] bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm leading-relaxed text-gray-800 dark:text-gray-200"
+              style={{ whiteSpace: "pre-wrap" }}>
+              {streamingText || (
+                <span className="flex gap-1.5 items-center py-0.5">
+                  {[0, 1, 2].map(i => (
+                    <span key={i} className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce inline-block"
+                      style={{ animationDelay: `${i * 150}ms`, animationDuration: "0.9s" }} />
+                  ))}
+                </span>
+              )}
+              {streamingText && (
+                <span className="inline-block w-[2px] h-[1em] bg-green-500 ml-0.5 align-middle animate-pulse" />
+              )}
             </div>
           </div>
         )}
