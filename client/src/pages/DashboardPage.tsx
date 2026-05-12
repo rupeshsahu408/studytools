@@ -112,10 +112,10 @@ function PublishModal({
             </div>
             <div>
               <h3 className="font-bold text-gray-900 dark:text-white text-base">
-                {isPublished ? "Published Notes" : "Publish to Community"}
+                {isPublished ? "Published to Community" : "Publish to Community"}
               </h3>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {isPublished ? "Your notes are live for everyone" : "Share with students everywhere"}
+                {isPublished ? "Your content is live for everyone" : "Share all generated content with students"}
               </p>
             </div>
           </div>
@@ -192,7 +192,7 @@ function PublishModal({
 
             <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1.5 pt-1">
               <Globe className="w-3 h-3 flex-shrink-0" />
-              Anyone with the app can read your published notes
+              All generated content (notes, questions, flashcards, etc.) will be shared
             </p>
 
             <div className="flex gap-2 pt-1">
@@ -203,7 +203,7 @@ function PublishModal({
               <button onClick={() => onPublish(form)} disabled={publishing}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2">
                 {publishing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Globe className="w-3.5 h-3.5" />}
-                {publishing ? "Publishing..." : "Publish Notes"}
+                {publishing ? "Publishing..." : "Publish to Community"}
               </button>
             </div>
           </div>
@@ -292,18 +292,34 @@ export default function DashboardPage() {
     setPublishing(true);
     try {
       const publisherName = userData?.profile?.name || user.displayName || user.email?.split("@")[0] || "Student";
-      await publishNote(publishModal.id, {
-        userId:        user.uid,
-        chapterId:     publishModal.id,
-        chapterName:   publishModal.chapterName,
+      const ch = publishModal;
+
+      // Compute which sections are actually generated
+      type Sec = "notes"|"questions"|"summary"|"formulas"|"mindmap"|"flashcards"|"mistakes";
+      const publishedSections: Sec[] = [];
+      if (ch.notes)                                                      publishedSections.push("notes");
+      if (ch.questions)                                                  publishedSections.push("questions");
+      if (ch.summary)                                                    publishedSections.push("summary");
+      if (Array.isArray(ch.formulas)   && ch.formulas.length)           publishedSections.push("formulas");
+      if (ch.mindmap)                                                    publishedSections.push("mindmap");
+      if (Array.isArray(ch.flashcards) && ch.flashcards.length)         publishedSections.push("flashcards");
+      if (Array.isArray(ch.mistakes)   && ch.mistakes.length)           publishedSections.push("mistakes");
+
+      const data: any = {
+        userId:           user.uid,
+        chapterId:        ch.id,
+        chapterName:      ch.chapterName,
         publisherName,
-        board:         form.board,
-        classNum:      form.classNum,
-        medium:        form.medium,
-        subject:       form.subject,
-        notes:         publishModal.notes,
-      });
-      setPublishedIds(prev => new Set([...prev, publishModal.id]));
+        board:            form.board,
+        classNum:         form.classNum,
+        medium:           form.medium,
+        subject:          form.subject,
+        publishedSections,
+      };
+      publishedSections.forEach(sec => { data[sec] = (ch as any)[sec]; });
+
+      await publishNote(ch.id, data);
+      setPublishedIds(prev => new Set([...prev, ch.id]));
       setPublishModal(null);
     } catch (err) {
       console.error("Publish failed:", err);
