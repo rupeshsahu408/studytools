@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Heart, MessageCircle, Trash2, Send, ChevronDown, ChevronUp,
-  Sparkles, Loader2, Bot, Users, Flame,
+  Sparkles, Loader2, Bot, Users, Flame, Bell, BellOff,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useProgress } from "../contexts/ProgressContext";
@@ -12,9 +12,15 @@ import {
   getDiscussionReplies, addDiscussionReply,
   addUpvoteReply, removeUpvoteReply,
   createReplyNotification,
+  savePushSubscription, getPushSubscription,
   type DiscussionPost, type DiscussionReply,
 } from "../lib/firestore";
 import { sendChatMessage } from "../lib/api";
+import {
+  isPushSupported, getPermissionState,
+  subscribeToPush, getExistingSubscription,
+  sendPushNotification,
+} from "../lib/push";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -76,18 +82,82 @@ function Avatar({ name, isAI = false, size = "sm" }: { name: string; isAI?: bool
   );
 }
 
+// ─── Notification Permission Banner ──────────────────────────────────────────
+
+function NotificationBanner({ uid }: { uid: string }) {
+  const [visible, setVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    if (!isPushSupported()) return;
+    const dismissed = localStorage.getItem("push_dismissed");
+    if (!dismissed && getPermissionState() === "default") {
+      setVisible(true);
+    }
+    // Auto-save subscription silently if already granted
+    if (getPermissionState() === "granted" && uid) {
+      getExistingSubscription()
+        .then(sub => { if (sub) savePushSubscription(uid, sub.toJSON()).catch(console.warn); })
+        .catch(console.warn);
+    }
+  }, [uid]);
+
+  if (!visible || done) return null;
+
+  const handleEnable = async () => {
+    setLoading(true);
+    try {
+      const sub = await subscribeToPush();
+      if (sub && uid) {
+        await savePushSubscription(uid, sub.toJSON());
+        setDone(true);
+        setVisible(false);
+      }
+    } catch (e) { console.warn("[push] enable failed:", e); }
+    setLoading(false);
+  };
+
+  const handleDismiss = () => {
+    localStorage.setItem("push_dismissed", "1");
+    setVisible(false);
+  };
+
+  return (
+    <div className="flex items-center gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-2xl px-4 py-3 mb-4">
+      <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
+        <Bell className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+      </div>
+      <p className="text-sm text-amber-700 dark:text-amber-300 flex-1 leading-snug">
+        <span className="font-semibold">Get reply notifications</span> — even when the app is closed.
+      </p>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <button
+          onClick={handleDismiss}
+          className="text-xs text-amber-500 dark:text-amber-400 hover:text-amber-700 transition-colors p-1"
+          title="Dismiss"
+        >
+          <BellOff className="w-4 h-4" />
+        </button>
+        <button
+          onClick={handleEnable}
+          disabled={loading}
+          className="flex items-center gap-1.5 text-xs font-bold bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white px-3 py-1.5 rounded-xl transition-colors"
+        >
+          {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className="w-3 h-3" />}
+          {loading ? "Enabling…" : "Enable"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Animated Like Button ─────────────────────────────────────────────────────
 
 function LikeButton({
-  count,
-  liked,
-  onLike,
-  size = "sm",
+  count, liked, onLike, size = "sm",
 }: {
-  count: number;
-  liked: boolean;
-  onLike: () => void;
-  size?: "sm" | "xs";
+  count: number; liked: boolean; onLike: () => void; size?: "sm" | "xs";
 }) {
   const [animating, setAnimating] = useState(false);
   const [showBurst, setShowBurst] = useState(false);
@@ -114,20 +184,18 @@ function LikeButton({
           : "text-gray-400 dark:text-gray-500 hover:text-rose-500 dark:hover:text-rose-400"
       }`}
     >
-      {/* Burst ring (only when liking) */}
       {showBurst && (
         <span
-          className="absolute inset-0 rounded-full border-2 border-rose-400 animate-like-burst pointer-events-none"
+          className="absolute rounded-full border-2 border-rose-400 animate-like-burst pointer-events-none"
           style={{ top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "24px", height: "24px" }}
         />
       )}
-
       <Heart
         className={`${iconSz} transition-colors ${animating ? "animate-like-pop" : ""} ${
           liked ? "fill-rose-500 dark:fill-rose-400" : "fill-none group-hover:fill-rose-300/40"
         }`}
       />
-      <span className={`tabular-nums transition-all ${liked ? "text-rose-500 dark:text-rose-400" : ""}`}>
+      <span className={`tabular-nums ${liked ? "text-rose-500 dark:text-rose-400" : ""}`}>
         {count > 0 ? count : ""}
       </span>
     </button>
@@ -187,10 +255,31 @@ function ReplyList({
     try {
       await addDiscussionReply(chapterId, postId, currentUid, userName, text, false);
       setReplyText("");
-      if (postAuthorUid && postAuthorUid !== currentUid) {
+
+      // In-app notification (Firestore)
+      if (postAuthorUid && postAuthorUid !== currentUid && postAuthorUid !== "ai") {
         createReplyNotification(postAuthorUid, chapterId, postId, userName, text, chapterName)
           .catch(console.warn);
       }
+
+      // Web Push notification to the post author
+      if (postAuthorUid && postAuthorUid !== currentUid && postAuthorUid !== "ai") {
+        getPushSubscription(postAuthorUid)
+          .then(sub => {
+            if (!sub) return;
+            const notifUrl = chapterId.startsWith("_room_")
+              ? "/community"
+              : `/chapter/${chapterId}?section=discussion`;
+            return sendPushNotification({
+              subscription: sub,
+              title: `${userName} replied to your post`,
+              body: text.length > 80 ? text.slice(0, 80) + "…" : text,
+              url: notifUrl,
+            });
+          })
+          .catch(console.warn);
+      }
+
       await loadReplies();
       setTimeout(() => inputRef.current?.focus(), 50);
     } catch (e) { console.error(e); }
@@ -237,7 +326,6 @@ function ReplyList({
 
   return (
     <div className="mt-2.5">
-      {/* Action row */}
       <div className="flex items-center gap-3 flex-wrap">
         <button
           onClick={handleExpand}
@@ -258,16 +346,12 @@ function ReplyList({
             disabled={aiAnswering}
             className="flex items-center gap-1.5 text-xs font-semibold text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 disabled:opacity-50 transition-colors"
           >
-            {aiAnswering
-              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              : <Sparkles className="w-3.5 h-3.5" />
-            }
+            {aiAnswering ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
             {aiAnswering ? "AI thinking…" : "Ask AI"}
           </button>
         )}
       </div>
 
-      {/* Replies panel */}
       {expanded && (
         <div className="mt-3 ml-3 pl-4 border-l-2 border-gray-100 dark:border-gray-800 space-y-3">
           {loading && (
@@ -313,7 +397,6 @@ function ReplyList({
             <p className="text-xs text-gray-400 dark:text-gray-500 py-1">No replies yet — be the first!</p>
           )}
 
-          {/* Reply input */}
           <div className="flex items-center gap-2 pt-0.5">
             <div className="flex-1 flex items-center gap-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 focus-within:border-green-400 dark:focus-within:border-green-600 transition-colors">
               <input
@@ -344,16 +427,8 @@ function ReplyList({
 // ─── Post Card ────────────────────────────────────────────────────────────────
 
 function PostCard({
-  post,
-  currentUid,
-  chapterId,
-  chapterName,
-  subject,
-  language,
-  chapterText,
-  userName,
-  onDelete,
-  onLike,
+  post, currentUid, chapterId, chapterName, subject, language, chapterText,
+  userName, onDelete, onLike,
 }: {
   post: DiscussionPost;
   currentUid: string;
@@ -368,16 +443,13 @@ function PostCard({
 }) {
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-4 md:p-5 hover:border-gray-200 dark:hover:border-gray-700 transition-colors animate-post-in">
-      {/* Header */}
       <div className="flex items-start gap-3 mb-3">
         <Avatar name={post.userName} size="md" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-0.5">
             <span className="text-sm font-semibold text-gray-900 dark:text-white">{post.userName}</span>
             {post.uid === currentUid && (
-              <span className="text-[10px] bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded-full font-semibold">
-                You
-              </span>
+              <span className="text-[10px] bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded-full font-semibold">You</span>
             )}
             <span className="text-xs text-gray-400 dark:text-gray-500">{formatTimeAgo(post.createdAt)}</span>
           </div>
@@ -394,10 +466,8 @@ function PostCard({
         )}
       </div>
 
-      {/* Divider */}
       <div className="h-px bg-gray-50 dark:bg-gray-800 mb-2.5" />
 
-      {/* Actions row */}
       <div className="flex items-center gap-4">
         <LikeButton
           count={post.upvotes.length}
@@ -450,7 +520,7 @@ export default function DiscussionView({
     return unsub;
   }, [chapterId]);
 
-  // ── Post ───────────────────────────────────────────────────────────────────
+  // ── Post ────────────────────────────────────────────────────────────────────
   const handlePost = async () => {
     const text = postText.trim();
     if (!text || posting || !uid) return;
@@ -459,9 +529,7 @@ export default function DiscussionView({
     try {
       await createDiscussionPost(chapterId, uid, userName, text);
       setPostText("");
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto";
-      }
+      if (textareaRef.current) textareaRef.current.style.height = "auto";
     } catch {
       setError("Could not post. Please try again.");
     } finally {
@@ -469,21 +537,14 @@ export default function DiscussionView({
     }
   };
 
-  // ── Like (fully optimistic — no await before UI update) ────────────────────
+  // ── Like (fully optimistic) ─────────────────────────────────────────────────
   const handleLike = useCallback((post: DiscussionPost) => {
     if (!uid) return;
     const wasLiked = post.upvotes.includes(uid);
-
     setPosts(prev => prev.map(p => {
       if (p.id !== post.id) return p;
-      return {
-        ...p,
-        upvotes: wasLiked
-          ? p.upvotes.filter(u => u !== uid)
-          : [...p.upvotes, uid],
-      };
+      return { ...p, upvotes: wasLiked ? p.upvotes.filter(u => u !== uid) : [...p.upvotes, uid] };
     }));
-
     if (wasLiked) {
       removeUpvotePost(chapterId, post.id, uid).catch(() => {
         setPosts(prev => prev.map(p => p.id === post.id ? { ...p, upvotes: [...p.upvotes, uid] } : p));
@@ -495,18 +556,19 @@ export default function DiscussionView({
     }
   }, [uid, chapterId]);
 
-  // ── Delete ─────────────────────────────────────────────────────────────────
+  // ── Delete ──────────────────────────────────────────────────────────────────
   const handleDelete = async (postId: string) => {
     if (!confirm("Delete this post?")) return;
-    try {
-      await deleteDiscussionPost(chapterId, postId);
-    } catch (e) { console.error(e); }
+    try { await deleteDiscussionPost(chapterId, postId); } catch (e) { console.error(e); }
   };
 
   const isGlobalRoom = chapterId.startsWith("_room_");
 
   return (
     <div className="max-w-2xl">
+
+      {/* Notification permission banner */}
+      {uid && <NotificationBanner uid={uid} />}
 
       {/* Header */}
       <div className="flex items-center justify-between mb-5 gap-3">
@@ -549,9 +611,7 @@ export default function DiscussionView({
                   e.target.style.height = "auto";
                   e.target.style.height = Math.min(e.target.scrollHeight, 160) + "px";
                 }}
-                onKeyDown={e => {
-                  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) handlePost();
-                }}
+                onKeyDown={e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) handlePost(); }}
                 placeholder={
                   isGlobalRoom
                     ? "Ask a question or share something useful for Bihar Board students…"

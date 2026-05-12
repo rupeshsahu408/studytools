@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { registerServiceWorker } from "./lib/push";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProgressProvider } from "./contexts/ProgressContext";
 import LandingPage from "./pages/LandingPage";
@@ -63,6 +65,10 @@ function AuthenticatedApp() {
 }
 
 export default function App() {
+  useEffect(() => {
+    registerServiceWorker().catch(console.warn);
+  }, []);
+
   return (
     <ThemeProvider>
       <AuthProvider>

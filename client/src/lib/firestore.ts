@@ -492,6 +492,25 @@ export async function getLeaderboard(weekKey?: string): Promise<LeaderboardEntry
   });
 }
 
+// ─── Push Subscriptions ───────────────────────────────────────────────────────
+
+export async function savePushSubscription(
+  uid: string,
+  subscription: PushSubscriptionJSON
+): Promise<void> {
+  const ref = doc(db, "pushSubscriptions", uid);
+  await setDoc(ref, { subscription, updatedAt: serverTimestamp() });
+}
+
+export async function getPushSubscription(
+  uid: string
+): Promise<PushSubscriptionJSON | null> {
+  const ref = doc(db, "pushSubscriptions", uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+  return snap.data().subscription as PushSubscriptionJSON;
+}
+
 // ─── Phase 5 — Discussions ───────────────────────────────────────────────────
 
 export function subscribeDiscussionPosts(
