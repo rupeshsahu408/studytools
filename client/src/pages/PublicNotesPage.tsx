@@ -10,7 +10,7 @@ import {
 import Navbar from "../components/Navbar";
 import {
   getAllPublicNotes, togglePublicNoteLike, sendCoinTip, getUserCoins,
-  type PublicNote, type PublishableSection,
+  getUserLikedNotes, type PublicNote, type PublishableSection,
 } from "../lib/firestore";
 import { useAuth } from "../contexts/AuthContext";
 import QuestionsView from "../components/QuestionsView";
@@ -759,17 +759,23 @@ export default function PublicNotesPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Initialize like state from loaded notes
+  // Initialize like state.
+  // Source of truth for "did I like this?" is users/{uid}.likedNotes —
+  // this works without any Firestore rule changes.
+  // Like counts come from publicNotes.likeCount (populated once the updated
+  // Firestore rule is deployed; falls back to 0 until then).
   useEffect(() => {
     if (!user || allNotes.length === 0) return;
-    const liked: Record<string, boolean> = {};
-    const counts: Record<string, number> = {};
-    allNotes.forEach(n => {
-      liked[n.id] = (n.likes || []).includes(user.uid);
-      counts[n.id] = n.likeCount ?? (n.likes?.length ?? 0);
-    });
-    setLikedNotes(liked);
-    setLikeCounts(counts);
+    getUserLikedNotes(user.uid).then(likedNoteIds => {
+      const liked: Record<string, boolean> = {};
+      const counts: Record<string, number> = {};
+      allNotes.forEach(n => {
+        liked[n.id] = likedNoteIds.includes(n.id);
+        counts[n.id] = n.likeCount ?? (n.likes?.length ?? 0);
+      });
+      setLikedNotes(liked);
+      setLikeCounts(counts);
+    }).catch(() => {});
   }, [allNotes, user]);
 
   // Load user's coin balance

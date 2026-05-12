@@ -27,7 +27,8 @@ service cloud.firestore {
     // public profiles, leaderboard display, and friend-request flows).
     // Only the owner can create or delete their own doc.
     // Any authenticated user can update (needed for friend requests / accepts /
-    // declines / removals which write to the other party's document).
+    // declines / removals which write to the other party's document, AND for
+    // coin tips which credit coins into the recipient's document).
     match /users/{userId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null
@@ -125,18 +126,50 @@ service cloud.firestore {
 
     // ── publicNotes ───────────────────────────────────────────────────────────
     // Any authenticated user can read the community notes library.
-    // Only the owner (userId field) can publish (create/update) or unpublish
-    // (delete) their own note. Any authenticated user may increment viewCount.
+    // Only the owner (userId field) can publish (create/update all fields) or
+    // unpublish (delete) their own note.
+    // Any authenticated user may increment viewCount (existing rule).
+    // Any authenticated user may update the likes / likeCount fields — this
+    // enables the community like feature without exposing other fields.
     match /publicNotes/{chapterId} {
       allow read: if request.auth != null;
+
       allow create: if request.auth != null
                     && request.auth.uid == request.resource.data.userId;
+
       allow update: if request.auth != null
-                    && (request.auth.uid == resource.data.userId
-                        || request.resource.data.diff(resource.data).affectedKeys()
-                           .hasOnly(['viewCount']));
+                    && (
+                         // Owner can update anything
+                         request.auth.uid == resource.data.userId
+
+                         // Anyone can increment viewCount
+                         || request.resource.data.diff(resource.data).affectedKeys()
+                              .hasOnly(['viewCount'])
+
+                         // Anyone can toggle their like (likes array + likeCount counter)
+                         || request.resource.data.diff(resource.data).affectedKeys()
+                              .hasOnly(['likes', 'likeCount'])
+                       );
+
       allow delete: if request.auth != null
                     && request.auth.uid == resource.data.userId;
+
+      // ── tips subcollection ─────────────────────────────────────────────────
+      // Any authenticated user can log a tip they sent.
+      // Only the sender or recipient may read a tip record.
+      match /tips/{tipId} {
+        allow create: if request.auth != null
+                      && request.resource.data.fromUid == request.auth.uid;
+        allow read:   if request.auth != null
+                      && (request.auth.uid == resource.data.fromUid
+                          || request.auth.uid == resource.data.toUid);
+      }
+    }
+
+    // ── pushSubscriptions ─────────────────────────────────────────────────────
+    match /pushSubscriptions/{uid} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == uid;
     }
   }
 }
