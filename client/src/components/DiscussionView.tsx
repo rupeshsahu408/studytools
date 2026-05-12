@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Heart, MessageCircle, Trash2, Send, ChevronDown, ChevronUp,
-  Sparkles, Loader2, Bot, Users, Flame, Bell, BellOff,
+  Sparkles, Loader2, Bot, Users, Flame, Bell, BellOff, EyeOff,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useProgress } from "../contexts/ProgressContext";
@@ -13,7 +13,8 @@ import {
   addUpvoteReply, removeUpvoteReply,
   createReplyNotification,
   savePushSubscription, getPushSubscription,
-  type DiscussionPost, type DiscussionReply,
+  subscribeToSocialUser,
+  type DiscussionPost, type DiscussionReply, type SocialUser,
 } from "../lib/firestore";
 import { sendChatMessage } from "../lib/api";
 import {
@@ -44,6 +45,35 @@ function formatTimeAgo(ts: any): string {
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
     return `${Math.floor(diff / 86400)}d ago`;
   } catch { return ""; }
+}
+
+// Deterministic anonymous number: consistent for a given user in a given room/chapter
+function getAnonNumber(uid: string, chapterId: string): number {
+  const str = uid + chapterId;
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return (Math.abs(hash) % 99) + 1;
+}
+
+// Resolve the display name to use — never exposes email
+function resolveDisplayName(
+  uid: string,
+  chapterId: string,
+  socialUser: SocialUser | null,
+  userData: any,
+  firebaseUser: any
+): string {
+  if (socialUser?.isAnonymous) {
+    return `Anonymous User ${getAnonNumber(uid, chapterId)}`;
+  }
+  return (
+    socialUser?.username ||
+    userData?.profile?.name ||
+    firebaseUser?.displayName ||
+    "Student"
+  );
 }
 
 const AVATAR_PALETTES = [
@@ -95,7 +125,6 @@ function NotificationBanner({ uid }: { uid: string }) {
     if (!dismissed && getPermissionState() === "default") {
       setVisible(true);
     }
-    // Auto-save subscription silently if already granted
     if (getPermissionState() === "granted" && uid) {
       getExistingSubscription()
         .then(sub => { if (sub) savePushSubscription(uid, sub.toJSON()).catch(console.warn); })
@@ -256,13 +285,11 @@ function ReplyList({
       await addDiscussionReply(chapterId, postId, currentUid, userName, text, false);
       setReplyText("");
 
-      // In-app notification (Firestore)
       if (postAuthorUid && postAuthorUid !== currentUid && postAuthorUid !== "ai") {
         createReplyNotification(postAuthorUid, chapterId, postId, userName, text, chapterName)
           .catch(console.warn);
       }
 
-      // Web Push notification to the post author
       if (postAuthorUid && postAuthorUid !== currentUid && postAuthorUid !== "ai") {
         getPushSubscription(postAuthorUid)
           .then(sub => {
@@ -499,6 +526,7 @@ export default function DiscussionView({
 }: DiscussionViewProps) {
   const { user } = useAuth();
   const { userData } = useProgress();
+  const [socialUser, setSocialUser] = useState<SocialUser | null>(null);
   const [posts, setPosts] = useState<DiscussionPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [postText, setPostText] = useState("");
@@ -506,8 +534,23 @@ export default function DiscussionView({
   const [error, setError] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const userName = userData?.profile?.name || user?.displayName || user?.email?.split("@")[0] || "Student";
   const uid = user?.uid || "";
+
+  // Subscribe to the current user's social profile for username + anonymous status
+  useEffect(() => {
+    if (!uid) return;
+    const unsub = subscribeToSocialUser(uid, (su) => {
+      setSocialUser(su);
+    });
+    return unsub;
+  }, [uid]);
+
+  // Resolve display name — username preferred, never email, anonymous masked
+  const displayName = uid
+    ? resolveDisplayName(uid, chapterId, socialUser, userData, user)
+    : "Student";
+
+  const isAnonymous = socialUser?.isAnonymous ?? false;
 
   // ── Real-time subscription ──────────────────────────────────────────────────
   useEffect(() => {
@@ -527,7 +570,7 @@ export default function DiscussionView({
     setPosting(true);
     setError("");
     try {
-      await createDiscussionPost(chapterId, uid, userName, text);
+      await createDiscussionPost(chapterId, uid, displayName, text);
       setPostText("");
       if (textareaRef.current) textareaRef.current.style.height = "auto";
     } catch {
@@ -570,6 +613,17 @@ export default function DiscussionView({
       {/* Notification permission banner */}
       {uid && <NotificationBanner uid={uid} />}
 
+      {/* Anonymous mode active banner */}
+      {uid && isAnonymous && (
+        <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-2xl px-4 py-3 mb-4">
+          <EyeOff className="w-4 h-4 text-slate-400 dark:text-slate-500 flex-shrink-0" />
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">
+            <span className="font-semibold text-slate-600 dark:text-slate-300">Anonymous mode is on.</span>{" "}
+            Others will see you as <span className="font-semibold text-slate-700 dark:text-slate-200">{displayName}</span> in this room.
+          </p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-5 gap-3">
         <div>
@@ -601,8 +655,20 @@ export default function DiscussionView({
       {uid && (
         <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-4 mb-5 shadow-sm">
           <div className="flex items-start gap-3">
-            <Avatar name={userName} size="md" />
+            <Avatar name={displayName} size="md" />
             <div className="flex-1 min-w-0">
+              {/* Identity indicator */}
+              <div className="flex items-center gap-1.5 mb-2">
+                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  {displayName}
+                </span>
+                {isAnonymous && (
+                  <span className="flex items-center gap-1 text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-full">
+                    <EyeOff className="w-2.5 h-2.5" />
+                    Anonymous
+                  </span>
+                )}
+              </div>
               <textarea
                 ref={textareaRef}
                 value={postText}
@@ -672,7 +738,7 @@ export default function DiscussionView({
               subject={subject}
               language={language}
               chapterText={chapterText}
-              userName={userName}
+              userName={displayName}
               onDelete={handleDelete}
               onLike={handleLike}
             />

@@ -109,7 +109,7 @@ export default function ChapterPage() {
   const { user } = useAuth();
 
   // Phase 4: progress tracking
-  const { markNotesRead, trackQuestionAnswer, markFlashcardsDone, markSimulationSeen } = useProgress();
+  const { markNotesRead, trackQuestionAnswer, markFlashcardsDone, markSimulationSeen, userData } = useProgress();
 
   useEffect(() => {
     if (!id) return;
@@ -134,7 +134,7 @@ export default function ChapterPage() {
     if (!chapter || !user || shareLoading) return;
     setShareLoading(true);
     try {
-      const name = user.displayName || user.email?.split("@")[0] || "Student";
+      const name = userData?.profile?.name || user.displayName || "A student";
       const token = await createShareLink(chapter.id, user.uid, {
         chapterName: chapter.chapterName,
         subject: chapter.subject,

@@ -1,0 +1,56 @@
+Right now, our main focus is shifting more towards a social/community experience within the platform.
+
+We already have an Anonymous mode implemented. As you know, when a user enables Anonymous mode, their profile gets hidden everywhere, and they are removed from search results. This part is working well.
+
+However, there is a critical issue in the Discuss (community/chat) section:
+
+When a user goes anonymous, their email is still being displayed in the Discuss page. This is incorrect.
+
+Here is what needs to be fixed and implemented properly:
+
+1. **Username System Consistency**
+
+* After signup, users log in using email.
+* Once they choose a username, that username should be used everywhere across the platform.
+* The email should never be shown in the UI (especially in Discuss/community sections).
+* Instead, only the username should be displayed in chats, posts, and discussions.
+
+---
+
+2. **Anonymous Mode Behavior (Fix Required)**
+   When a user enables Anonymous mode:
+
+* Their profile must be hidden everywhere (already partially working).
+* Their username should NOT be shown in public areas.
+* In the Discuss/community section, instead of showing email or username, the system should display:
+
+  * “Anonymous User 1”
+  * “Anonymous User 2”
+  * and so on (consistent anonymous identity system)
+
+This means:
+
+* No email should appear anywhere in the community/discussion system.
+* No real username should be exposed in anonymous mode.
+* Only randomized anonymous identifiers should be shown.
+
+---
+
+3. **Expected Behavior Summary**
+
+* Normal mode: show username everywhere
+* Anonymous mode: show “Anonymous User X” everywhere
+* Email must never be visible in any public/community UI
+
+---
+
+Please implement this carefully and ensure consistency across all parts of the system, especially the Discuss page.
+
+After implementation, thoroughly test:
+
+* Username display across the platform
+* Anonymous mode switching behavior
+* Discuss/community chat visibility
+* Ensuring no email leakage anywhere in UI
+
+Make sure everything works smoothly and consistently without breaking the user experience.
