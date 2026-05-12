@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, ChevronUp, Star, Lightbulb, BookOpen,
   FlaskConical, GitBranch, Image, Hash, ChevronRight,
-  RefreshCw, Loader2, BarChart2,
+  RefreshCw, Loader2, BarChart2, Download,
 } from "lucide-react";
+import { exportNotesPDF } from "../lib/pdfExport";
 
 interface SubTopic {
   title: string;
@@ -45,6 +46,8 @@ interface Notes {
 interface NotesViewProps {
   notes: Notes;
   subject?: string;
+  chapterName?: string;
+  classNum?: string;
   onRead?: () => void;
   onRegenerate?: () => void;
   regenerating?: boolean;
@@ -82,7 +85,7 @@ function getDepthInfo(wordCount: number): { label: string; sublabel: string; pil
   };
 }
 
-export default function NotesView({ notes, onRead, onRegenerate, regenerating }: NotesViewProps) {
+export default function NotesView({ notes, subject, chapterName, classNum, onRead, onRegenerate, regenerating }: NotesViewProps) {
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(
     new Set(notes.topics?.[0]?.id ? [notes.topics[0].id] : [])
   );
@@ -273,10 +276,22 @@ export default function NotesView({ notes, onRead, onRegenerate, regenerating }:
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <button onClick={expandAll} className="text-xs text-green-600 hover:underline">Expand All</button>
           <span className="text-gray-300 dark:text-gray-600">|</span>
           <button onClick={collapseAll} className="text-xs text-gray-400 hover:underline">Collapse All</button>
+          <span className="text-gray-300 dark:text-gray-600">|</span>
+          <button
+            onClick={() => exportNotesPDF(notes, {
+              chapterName: chapterName || "Chapter",
+              subject: subject || "",
+              classNum: classNum || "11",
+            })}
+            title="Export notes as PDF"
+            className="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
+          >
+            <Download className="w-3.5 h-3.5" /> Export PDF
+          </button>
           {onRegenerate && (
             <>
               <span className="text-gray-300 dark:text-gray-600">|</span>

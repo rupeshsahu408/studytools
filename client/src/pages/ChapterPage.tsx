@@ -346,6 +346,8 @@ export default function ChapterPage() {
           ? <NotesView
               notes={chapter.notes}
               subject={chapter.subject}
+              chapterName={chapter.chapterName}
+              classNum={chapter.classNum}
               onRead={handleNotesRead}
               onRegenerate={handleRegenerateNotes}
               regenerating={regeneratingNotes}
