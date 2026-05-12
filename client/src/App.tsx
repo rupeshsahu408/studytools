@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { registerServiceWorker } from "./lib/push";
@@ -13,25 +13,39 @@ import ProfilePage from "./pages/ProfilePage";
 import ProgressPage from "./pages/ProgressPage";
 import CommunityPage from "./pages/CommunityPage";
 import SharePage from "./pages/SharePage";
+import UsernameSetupPage from "./pages/UsernameSetupPage";
+import PublicProfilePage from "./pages/PublicProfilePage";
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  if (loading) return (
+function Spinner() {
+  return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
       <div className="w-8 h-8 border-2 border-green-200 border-t-green-600 rounded-full animate-spin" />
     </div>
   );
+}
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading, hasUsername } = useAuth();
+  const location = useLocation();
+  if (loading || (user && hasUsername === null)) return <Spinner />;
   if (!user) return <Navigate to="/login" replace />;
+  if (hasUsername === false && location.pathname !== "/setup") {
+    return <Navigate to="/setup" replace />;
+  }
+  return <>{children}</>;
+}
+
+function SetupRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading, hasUsername } = useAuth();
+  if (loading || (user && hasUsername === null)) return <Spinner />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (hasUsername === true) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-green-200 border-t-green-600 rounded-full animate-spin" />
-    </div>
-  );
+  if (loading) return <Spinner />;
   if (user) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 }
@@ -42,12 +56,14 @@ function AppRoutes() {
       <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
       <Route path="/login" element={<PublicRoute><AuthPage mode="login" /></PublicRoute>} />
       <Route path="/signup" element={<PublicRoute><AuthPage mode="signup" /></PublicRoute>} />
+      <Route path="/setup" element={<SetupRoute><UsernameSetupPage /></SetupRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
       <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
       <Route path="/chapter/:id" element={<ProtectedRoute><ChapterPage /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path="/progress" element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
       <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
+      <Route path="/u/:username" element={<ProtectedRoute><PublicProfilePage /></ProtectedRoute>} />
       <Route path="/share/:token" element={<SharePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

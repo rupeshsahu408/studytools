@@ -1,16 +1,44 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Flame, Target, Calendar, Trophy, Brain,
   Edit2, Check, X, ChevronRight, AlertTriangle, Loader2,
   BookOpen, Zap, Star, GraduationCap, Users, ExternalLink,
+  Camera, AtSign, UserPlus, UserCheck, UserMinus, Search,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "../contexts/AuthContext";
 import { useProgress, ALL_BADGES } from "../contexts/ProgressContext";
 import { analyzeWeakAreas } from "../lib/api";
 import type { WeakAreaResult } from "../lib/api";
-import { saveUserData } from "../lib/firestore";
+import {
+  saveUserData,
+  subscribeToSocialUser, updateSocialProfile,
+  getFriends, getFriendRequests,
+  acceptFriendRequest, declineFriendRequest,
+  removeFriend, searchUsersByUsername, sendFriendRequest,
+  type SocialUser,
+} from "../lib/firestore";
+import { storage } from "../lib/firebase";
 import Navbar from "../components/Navbar";
+
+const SOCIAL_GRADIENTS = [
+  "from-violet-500 to-purple-600",
+  "from-blue-500 to-indigo-600",
+  "from-rose-500 to-pink-600",
+  "from-amber-500 to-orange-600",
+  "from-teal-500 to-cyan-600",
+  "from-green-500 to-emerald-600",
+  "from-fuchsia-500 to-pink-600",
+  "from-sky-500 to-blue-600",
+];
+function getSocialGradient(uid: string): string {
+  const idx = Math.abs(uid.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0)) % SOCIAL_GRADIENTS.length;
+  return SOCIAL_GRADIENTS[idx];
+}
+function getSocialInitials(name: string): string {
+  return name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "?";
+}
 
 const BIHAR_DISTRICTS = [
   "Araria","Arwal","Aurangabad","Banka","Begusarai","Bhagalpur","Bhojpur","Buxar",
@@ -99,6 +127,20 @@ export default function ProfilePage() {
   const [weakError, setWeakError] = useState("");
   const [weakAnalyzed, setWeakAnalyzed] = useState(false);
 
+  // ── Social ──────────────────────────────────────────────────────────────────
+  const [socialUser, setSocialUser] = useState<SocialUser | null>(null);
+  const [friends, setFriends] = useState<SocialUser[]>([]);
+  const [friendRequests, setFriendRequests] = useState<SocialUser[]>([]);
+  const [loadingFriends, setLoadingFriends] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResult, setSearchResult] = useState<SocialUser | null | "none">(null);
+  const [searching, setSearching] = useState(false);
+  const [editingBio, setEditingBio] = useState(false);
+  const [editBioText, setEditBioText] = useState("");
+  const [savingBio, setSavingBio] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (userData) {
       setEditName(userData.profile?.name || user?.displayName || "");
@@ -113,6 +155,28 @@ export default function ProfilePage() {
   useEffect(() => {
     refreshChapters();
   }, []);
+
+  // Social effects
+  useEffect(() => {
+    if (!user?.uid) return;
+    return subscribeToSocialUser(user.uid, (su) => {
+      setSocialUser(su);
+      if (!editingBio) setEditBioText(su?.bio || "");
+    });
+  }, [user?.uid]);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    setLoadingFriends(true);
+    Promise.all([
+      getFriends(user.uid),
+      getFriendRequests(user.uid),
+    ]).then(([f, r]) => {
+      setFriends(f);
+      setFriendRequests(r);
+      setLoadingFriends(false);
+    }).catch(() => setLoadingFriends(false));
+  }, [user?.uid, socialUser?.friends?.length, socialUser?.friendRequestsReceived?.length]);
 
   const handleRoleSwitch = async (newRole: "student" | "teacher") => {
     if (!user || switchingRole) return;
@@ -166,6 +230,66 @@ export default function ProfilePage() {
     } catch (e: any) {
       setGoalError(e?.message || "Failed to save goal. Please try again.");
     }
+  };
+
+  // ── Social Handlers ─────────────────────────────────────────────────────────
+  const handleBioSave = async () => {
+    if (!user) return;
+    setSavingBio(true);
+    try {
+      await updateSocialProfile(user.uid, { bio: editBioText.trim() });
+      setEditingBio(false);
+    } catch (e) { console.error(e); }
+    finally { setSavingBio(false); }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (file.size > 5 * 1024 * 1024) return;
+    setPhotoUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const pathRef = storageRef(storage, `profilePhotos/${user.uid}.${ext}`);
+      await uploadBytes(pathRef, file);
+      const url = await getDownloadURL(pathRef);
+      await updateSocialProfile(user.uid, { photoURL: url });
+    } catch (e) { console.error(e); }
+    finally { setPhotoUploading(false); if (photoInputRef.current) photoInputRef.current.value = ""; }
+  };
+
+  const handleSearch = async () => {
+    const q = searchQuery.trim().toLowerCase().replace(/^@/, "");
+    if (!q) return;
+    setSearching(true);
+    setSearchResult(null);
+    try {
+      const results = await searchUsersByUsername(q);
+      setSearchResult(results[0] || "none");
+    } catch { setSearchResult("none"); }
+    finally { setSearching(false); }
+  };
+
+  const handleAddFriend = async (targetUid: string) => {
+    if (!user) return;
+    await sendFriendRequest(user.uid, targetUid);
+    setSearchResult(null);
+    setSearchQuery("");
+  };
+
+  const handleAcceptRequest = async (fromUid: string) => {
+    if (!user) return;
+    await acceptFriendRequest(user.uid, fromUid);
+  };
+
+  const handleDeclineRequest = async (fromUid: string) => {
+    if (!user) return;
+    await declineFriendRequest(user.uid, fromUid);
+  };
+
+  const handleRemoveFriend = async (friendUid: string) => {
+    if (!user || !confirm("Remove this friend?")) return;
+    await removeFriend(user.uid, friendUid);
   };
 
   const handleAnalyzeWeakAreas = async () => {
@@ -234,12 +358,108 @@ export default function ProfilePage() {
       <div className="pt-14 max-w-5xl mx-auto px-4 py-8">
 
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Profile</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
             Manage your account, track your streak, and set your exam goal.
           </p>
         </div>
+
+        {/* ── Social Profile Card ── */}
+        {user && (
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm mb-6 overflow-hidden">
+            {/* Gradient banner */}
+            <div className={`h-20 bg-gradient-to-br ${getSocialGradient(user.uid)} opacity-75`} />
+
+            <div className="px-6 pb-6">
+              {/* Avatar + edit row */}
+              <div className="flex items-end justify-between -mt-10 mb-4">
+                <div className="relative">
+                  {socialUser?.photoURL ? (
+                    <img
+                      src={socialUser.photoURL}
+                      alt={displayName}
+                      className="w-20 h-20 rounded-full object-cover ring-4 ring-white dark:ring-gray-900 shadow-lg"
+                    />
+                  ) : (
+                    <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${getSocialGradient(user.uid)} flex items-center justify-center ring-4 ring-white dark:ring-gray-900 shadow-lg`}>
+                      <span className="text-white text-2xl font-bold">{getSocialInitials(displayName)}</span>
+                    </div>
+                  )}
+                  <button
+                    onClick={() => photoInputRef.current?.click()}
+                    disabled={photoUploading}
+                    className="absolute bottom-0 right-0 w-7 h-7 bg-green-600 hover:bg-green-700 disabled:opacity-60 rounded-full flex items-center justify-center shadow-md transition-colors"
+                    title="Change photo"
+                  >
+                    {photoUploading ? <Loader2 className="w-3.5 h-3.5 text-white animate-spin" /> : <Camera className="w-3.5 h-3.5 text-white" />}
+                  </button>
+                  <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+                </div>
+                <Link
+                  to={`/u/${socialUser?.username || ""}`}
+                  className={`text-xs font-semibold text-green-600 dark:text-green-400 hover:underline flex items-center gap-1 ${!socialUser?.username ? "opacity-0 pointer-events-none" : ""}`}
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> View public profile
+                </Link>
+              </div>
+
+              {/* Name + username */}
+              <div className="mb-3">
+                <h2 className="text-lg font-black text-gray-900 dark:text-white">{displayName}</h2>
+                {socialUser?.username && (
+                  <p className="text-green-600 dark:text-green-400 font-medium text-sm flex items-center gap-1">
+                    <AtSign className="w-3.5 h-3.5" />{socialUser.username}
+                  </p>
+                )}
+                <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  <span>{friends.length} {friends.length === 1 ? "friend" : "friends"}</span>
+                  {friendRequests.length > 0 && (
+                    <span className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-bold px-2 py-0.5 rounded-full">
+                      {friendRequests.length} request{friendRequests.length !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Bio */}
+              {editingBio ? (
+                <div className="space-y-2">
+                  <textarea
+                    value={editBioText}
+                    onChange={e => setEditBioText(e.target.value.slice(0, 120))}
+                    rows={2}
+                    placeholder="Write a short bio…"
+                    className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3.5 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:border-green-400 transition-colors resize-none"
+                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleBioSave}
+                      disabled={savingBio}
+                      className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-colors"
+                    >
+                      {savingBio ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                      Save
+                    </button>
+                    <button onClick={() => setEditingBio(false)} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-2 py-1.5 rounded-xl transition-colors">
+                      Cancel
+                    </button>
+                    <span className="ml-auto text-xs text-gray-400">{editBioText.length}/120</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start gap-2">
+                  <p className={`text-sm flex-1 leading-relaxed ${socialUser?.bio ? "text-gray-600 dark:text-gray-400" : "text-gray-400 dark:text-gray-600 italic"}`}>
+                    {socialUser?.bio || "No bio yet — tell the world about yourself!"}
+                  </p>
+                  <button onClick={() => setEditingBio(true)} className="flex-shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -451,6 +671,155 @@ export default function ProfilePage() {
                     className="mt-2 text-xs text-green-600 dark:text-green-400 font-medium hover:underline">
                     Start studying →
                   </button>
+                </div>
+              )}
+            </div>
+
+            {/* Study Friends Card */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="w-5 h-5 text-green-600" />
+                <h3 className="font-bold text-gray-900 dark:text-white">Study Friends</h3>
+                {friends.length > 0 && (
+                  <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">{friends.length} friend{friends.length !== 1 ? "s" : ""}</span>
+                )}
+              </div>
+
+              {/* Search to add */}
+              <div className="mb-4">
+                <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 focus-within:border-green-400 dark:focus-within:border-green-600 transition-colors">
+                  <AtSign className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => { setSearchQuery(e.target.value); setSearchResult(null); }}
+                    onKeyDown={e => { if (e.key === "Enter") handleSearch(); }}
+                    placeholder="Search by username…"
+                    className="flex-1 text-sm bg-transparent outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                  />
+                  <button
+                    onClick={handleSearch}
+                    disabled={!searchQuery.trim() || searching}
+                    className="flex-shrink-0 text-green-600 dark:text-green-400 hover:text-green-700 disabled:opacity-40 transition-colors"
+                  >
+                    {searching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+
+                {/* Search result */}
+                {searchResult && searchResult !== "none" && (
+                  <div className="mt-2 flex items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-xl p-3">
+                    <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${getSocialGradient(searchResult.uid)} flex items-center justify-center flex-shrink-0`}>
+                      {searchResult.photoURL ? (
+                        <img src={searchResult.photoURL} alt="" className="w-9 h-9 rounded-full object-cover" />
+                      ) : (
+                        <span className="text-white text-xs font-bold">{getSocialInitials(searchResult.displayName)}</span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{searchResult.displayName}</p>
+                      <p className="text-xs text-green-600 dark:text-green-400">@{searchResult.username}</p>
+                    </div>
+                    {searchResult.uid === user?.uid ? (
+                      <span className="text-xs text-gray-400 px-2">That's you!</span>
+                    ) : socialUser?.friends.includes(searchResult.uid) ? (
+                      <span className="text-xs font-semibold text-green-600 dark:text-green-400 flex items-center gap-1"><UserCheck className="w-3.5 h-3.5" /> Friends</span>
+                    ) : socialUser?.friendRequestsSent.includes(searchResult.uid) ? (
+                      <span className="text-xs text-gray-400">Sent</span>
+                    ) : (
+                      <button
+                        onClick={() => handleAddFriend(searchResult.uid)}
+                        className="flex items-center gap-1 text-xs font-bold bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-xl transition-colors"
+                      >
+                        <UserPlus className="w-3 h-3" /> Add
+                      </button>
+                    )}
+                  </div>
+                )}
+                {searchResult === "none" && (
+                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 text-center py-1">No user found with that username.</p>
+                )}
+              </div>
+
+              {/* Incoming Requests */}
+              {friendRequests.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                    Incoming Requests ({friendRequests.length})
+                  </p>
+                  <div className="space-y-2">
+                    {friendRequests.map(req => (
+                      <div key={req.uid} className="flex items-center gap-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 rounded-xl p-3">
+                        <Link to={`/u/${req.username}`} className="flex-shrink-0">
+                          <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${getSocialGradient(req.uid)} flex items-center justify-center overflow-hidden`}>
+                            {req.photoURL ? (
+                              <img src={req.photoURL} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-white text-xs font-bold">{getSocialInitials(req.displayName)}</span>
+                            )}
+                          </div>
+                        </Link>
+                        <div className="flex-1 min-w-0">
+                          <Link to={`/u/${req.username}`} className="text-sm font-semibold text-gray-900 dark:text-white hover:underline truncate block">{req.displayName}</Link>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">@{req.username}</p>
+                        </div>
+                        <div className="flex gap-1.5 flex-shrink-0">
+                          <button
+                            onClick={() => handleAcceptRequest(req.uid)}
+                            className="flex items-center gap-1 text-xs font-bold bg-green-600 hover:bg-green-700 text-white px-2.5 py-1.5 rounded-xl transition-colors"
+                          >
+                            <UserCheck className="w-3 h-3" /> Accept
+                          </button>
+                          <button
+                            onClick={() => handleDeclineRequest(req.uid)}
+                            className="text-xs font-medium bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 px-2.5 py-1.5 rounded-xl transition-colors"
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Friends List */}
+              {loadingFriends ? (
+                <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading friends…
+                </div>
+              ) : friends.length === 0 ? (
+                <div className="text-center py-4">
+                  <Users className="w-8 h-8 text-gray-200 dark:text-gray-700 mx-auto mb-2" />
+                  <p className="text-sm text-gray-400 dark:text-gray-600">No friends yet.</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-600 mt-0.5">Search by username to add a study friend!</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {friends.map(friend => (
+                    <div key={friend.uid} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
+                      <Link to={`/u/${friend.username}`} className="flex-shrink-0">
+                        <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${getSocialGradient(friend.uid)} flex items-center justify-center overflow-hidden shadow-sm`}>
+                          {friend.photoURL ? (
+                            <img src={friend.photoURL} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-white text-xs font-bold">{getSocialInitials(friend.displayName)}</span>
+                          )}
+                        </div>
+                      </Link>
+                      <div className="flex-1 min-w-0">
+                        <Link to={`/u/${friend.username}`} className="text-sm font-semibold text-gray-900 dark:text-white hover:underline truncate block">{friend.displayName}</Link>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">@{friend.username} · 🔥 {friend.streak || 0}</p>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveFriend(friend.uid)}
+                        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-gray-300 dark:text-gray-700 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                        title="Remove friend"
+                      >
+                        <UserMinus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

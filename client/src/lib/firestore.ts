@@ -905,3 +905,175 @@ export async function incrementShareViews(token: string): Promise<void> {
     await updateDoc(ref, { views: (snap.data().views || 0) + 1 });
   }
 }
+
+// ─── Social Profile ───────────────────────────────────────────────────────────
+
+export interface SocialUser {
+  uid: string;
+  username: string;
+  displayName: string;
+  bio: string;
+  photoURL: string | null;
+  friends: string[];
+  friendRequestsSent: string[];
+  friendRequestsReceived: string[];
+  streak?: number;
+  badges?: string[];
+  role?: string;
+  class?: string;
+  school?: string;
+  district?: string;
+}
+
+export async function checkUsernameAvailable(username: string): Promise<boolean> {
+  const ref = doc(db, "usernames", username.toLowerCase());
+  const snap = await getDoc(ref);
+  return !snap.exists();
+}
+
+export async function setupUserProfile(
+  uid: string,
+  data: { username: string; bio?: string; photoURL?: string | null }
+): Promise<void> {
+  const username = data.username.toLowerCase().trim();
+  const batch = writeBatch(db);
+  batch.set(doc(db, "usernames", username), { uid, createdAt: serverTimestamp() });
+  batch.set(doc(db, "users", uid), {
+    username,
+    bio: data.bio?.trim() || "",
+    photoURL: data.photoURL || null,
+    friends: [],
+    friendRequestsSent: [],
+    friendRequestsReceived: [],
+  }, { merge: true });
+  await batch.commit();
+}
+
+export async function getUserById(uid: string): Promise<SocialUser | null> {
+  const ref = doc(db, "users", uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+  const data = snap.data();
+  return {
+    uid,
+    username: data.username || "",
+    displayName: data.profile?.name || data.username || "Student",
+    bio: data.bio || "",
+    photoURL: data.photoURL || null,
+    friends: data.friends || [],
+    friendRequestsSent: data.friendRequestsSent || [],
+    friendRequestsReceived: data.friendRequestsReceived || [],
+    streak: data.streak?.current || 0,
+    badges: data.badges || [],
+    role: data.role || "student",
+    class: data.profile?.class || "",
+    school: data.profile?.school || "",
+    district: data.profile?.district || "",
+  };
+}
+
+export async function getUserByUsername(username: string): Promise<SocialUser | null> {
+  const snap = await getDoc(doc(db, "usernames", username.toLowerCase()));
+  if (!snap.exists()) return null;
+  return getUserById(snap.data().uid);
+}
+
+export async function updateSocialProfile(
+  uid: string,
+  data: { bio?: string; photoURL?: string | null }
+): Promise<void> {
+  await setDoc(doc(db, "users", uid), data, { merge: true });
+}
+
+export function subscribeToSocialUser(
+  uid: string,
+  callback: (user: SocialUser | null) => void
+): () => void {
+  return onSnapshot(doc(db, "users", uid), (snap) => {
+    if (!snap.exists()) { callback(null); return; }
+    const data = snap.data();
+    callback({
+      uid,
+      username: data.username || "",
+      displayName: data.profile?.name || data.username || "Student",
+      bio: data.bio || "",
+      photoURL: data.photoURL || null,
+      friends: data.friends || [],
+      friendRequestsSent: data.friendRequestsSent || [],
+      friendRequestsReceived: data.friendRequestsReceived || [],
+      streak: data.streak?.current || 0,
+      badges: data.badges || [],
+      role: data.role || "student",
+      class: data.profile?.class || "",
+      school: data.profile?.school || "",
+      district: data.profile?.district || "",
+    });
+  });
+}
+
+export async function sendFriendRequest(fromUid: string, toUid: string): Promise<void> {
+  const batch = writeBatch(db);
+  batch.set(doc(db, "users", fromUid), { friendRequestsSent: arrayUnion(toUid) }, { merge: true });
+  batch.set(doc(db, "users", toUid), { friendRequestsReceived: arrayUnion(fromUid) }, { merge: true });
+  await batch.commit();
+}
+
+export async function cancelFriendRequest(fromUid: string, toUid: string): Promise<void> {
+  const batch = writeBatch(db);
+  batch.set(doc(db, "users", fromUid), { friendRequestsSent: arrayRemove(toUid) }, { merge: true });
+  batch.set(doc(db, "users", toUid), { friendRequestsReceived: arrayRemove(fromUid) }, { merge: true });
+  await batch.commit();
+}
+
+export async function acceptFriendRequest(uid: string, fromUid: string): Promise<void> {
+  const batch = writeBatch(db);
+  batch.set(doc(db, "users", uid), {
+    friends: arrayUnion(fromUid),
+    friendRequestsReceived: arrayRemove(fromUid),
+  }, { merge: true });
+  batch.set(doc(db, "users", fromUid), {
+    friends: arrayUnion(uid),
+    friendRequestsSent: arrayRemove(uid),
+  }, { merge: true });
+  await batch.commit();
+}
+
+export async function declineFriendRequest(uid: string, fromUid: string): Promise<void> {
+  const batch = writeBatch(db);
+  batch.set(doc(db, "users", uid), { friendRequestsReceived: arrayRemove(fromUid) }, { merge: true });
+  batch.set(doc(db, "users", fromUid), { friendRequestsSent: arrayRemove(uid) }, { merge: true });
+  await batch.commit();
+}
+
+export async function removeFriend(uid: string, friendUid: string): Promise<void> {
+  const batch = writeBatch(db);
+  batch.set(doc(db, "users", uid), { friends: arrayRemove(friendUid) }, { merge: true });
+  batch.set(doc(db, "users", friendUid), { friends: arrayRemove(uid) }, { merge: true });
+  await batch.commit();
+}
+
+export async function getFriends(uid: string): Promise<SocialUser[]> {
+  const userSnap = await getDoc(doc(db, "users", uid));
+  if (!userSnap.exists()) return [];
+  const friendUids: string[] = userSnap.data().friends || [];
+  if (friendUids.length === 0) return [];
+  const results = await Promise.all(friendUids.map(fuid => getUserById(fuid)));
+  return results.filter(Boolean) as SocialUser[];
+}
+
+export async function getFriendRequests(uid: string): Promise<SocialUser[]> {
+  const userSnap = await getDoc(doc(db, "users", uid));
+  if (!userSnap.exists()) return [];
+  const requestUids: string[] = userSnap.data().friendRequestsReceived || [];
+  if (requestUids.length === 0) return [];
+  const results = await Promise.all(requestUids.map(ruid => getUserById(ruid)));
+  return results.filter(Boolean) as SocialUser[];
+}
+
+export async function searchUsersByUsername(query: string): Promise<SocialUser[]> {
+  if (!query || query.length < 2) return [];
+  const snap = await getDoc(doc(db, "usernames", query.toLowerCase()));
+  if (!snap.exists()) return [];
+  const user = await getUserById(snap.data().uid);
+  return user ? [user] : [];
+}
