@@ -262,8 +262,8 @@ function renderSphericalMirror(
   const fm = concave ? -fAbs : fAbs;
   const um = -uPx; // real object always negative
   const vm = 1 / (1 / fm - 1 / um);
-  const m = vm / um;
-  const imgH = m * OBJ_H; // negative m → inverted
+  const m = -vm / um; // mirror magnification: m = -v/u
+  const imgH = m * OBJ_H; // m < 0 → inverted; m > 0 → erect
 
   // Image canvas position
   const imgX = POLE + vm; // vm negative → left of pole (real), positive → right (virtual)
@@ -581,7 +581,7 @@ function renderLens(
   const imgX = LX + v;
   const imgH = m * OBJ_H;
   if (isFinite(v) && Math.abs(v) < 450 && imgX > 10 && imgX < W - 10 && Math.abs(uPx - fAbs) > 4) {
-    imageArr(ctx, imgX, -imgH, isReal);
+    imageArr(ctx, imgX, imgH, isReal); // imgH already negative for inverted images (m = v/u, u<0, v>0 → m<0)
     txt(ctx, isReal ? "Real Image" : "Virtual Image", imgX + 4, CY + Math.abs(imgH) + 14, isReal ? "#22c55e" : "#a78bfa", 10);
   }
   // Ray 1: parallel → through F2 (converging) or appears from F1 (diverging)
