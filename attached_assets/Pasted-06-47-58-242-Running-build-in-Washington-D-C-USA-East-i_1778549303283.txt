@@ -1,0 +1,99 @@
+06:47:58.242 Running build in Washington, D.C., USA (East) – iad1
+06:47:58.242 Build machine configuration: 2 cores, 8 GB
+06:47:58.370 Cloning github.com/rupeshsahu408/studytools (Branch: main, Commit: b364b4a)
+06:47:58.900 Cloning completed: 530.000ms
+06:47:59.349 Restored build cache from previous deployment (DypSZpUcgF641UEYFdnFvPhhvdkz)
+06:47:59.565 Running "vercel build"
+06:48:00.676 Vercel CLI 53.3.2
+06:48:01.598 Installing dependencies...
+06:48:04.041 
+06:48:04.042 added 8 packages in 2s
+06:48:04.042 
+06:48:04.042 139 packages are looking for funding
+06:48:04.043   run `npm fund` for details
+06:48:04.189 
+06:48:04.189 > client@0.0.0 build
+06:48:04.190 > tsc -b && vite build
+06:48:04.190 
+06:48:11.223 src/components/DoubtChat.tsx(6,3): error TS6133: 'Clock' is declared but its value is never read.
+06:48:11.225 src/components/ExamPaperGenerating.tsx(190,19): error TS6133: 'Icon' is declared but its value is never read.
+06:48:11.225 src/components/ExamPaperView.tsx(3,47): error TS6133: 'Loader2' is declared but its value is never read.
+06:48:11.226 src/components/SimulationLibrary.tsx(4,3): error TS6133: 'Atom' is declared but its value is never read.
+06:48:11.226 src/components/SimulationLibrary.tsx(4,9): error TS6133: 'Beaker' is declared but its value is never read.
+06:48:11.226 src/components/SimulationLibrary.tsx(4,17): error TS6133: 'FlaskConical' is declared but its value is never read.
+06:48:11.226 src/components/SimulationLibrary.tsx(5,9): error TS6133: 'X' is declared but its value is never read.
+06:48:11.226 src/components/SimulationLibrary.tsx(5,30): error TS6133: 'Filter' is declared but its value is never read.
+06:48:11.226 src/components/SimulationLibrary.tsx(5,51): error TS6133: 'Zap' is declared but its value is never read.
+06:48:11.226 src/components/SimulationLibrary.tsx(99,3): error TS6133: 'subject' is declared but its value is never read.
+06:48:11.227 src/components/simulations/engines/ChargeDistributions.tsx(26,3): error TS6133: 'showE' is declared but its value is never read.
+06:48:11.227 src/components/simulations/engines/ChargeDistributions.tsx(28,3): error TS6133: 'showAxis' is declared but its value is never read.
+06:48:11.227 src/components/simulations/engines/ChargeDistributions.tsx(29,3): error TS6133: 'showMaxPoint' is declared but its value is never read.
+06:48:11.227 src/components/simulations/engines/ChargeDistributions.tsx(31,3): error TS6133: 'showCancellation' is declared but its value is never read.
+06:48:11.228 src/components/simulations/engines/ChargeDistributions.tsx(33,3): error TS6133: 'showShellTheorem' is declared but its value is never read.
+06:48:11.228 src/components/simulations/engines/ChargeDistributions.tsx(34,3): error TS6133: 'showInsideField' is declared but its value is never read.
+06:48:11.228 src/components/simulations/engines/ChargeDistributions.tsx(40,17): error TS6133: 'setSigma' is declared but its value is never read.
+06:48:11.228 src/components/simulations/engines/ChargeDistributions.tsx(41,18): error TS6133: 'setRadius' is declared but its value is never read.
+06:48:11.228 src/components/simulations/engines/ChargeDistributions.tsx(42,18): error TS6133: 'setPointX' is declared but its value is never read.
+06:48:11.228 src/components/simulations/engines/ChargeDistributions.tsx(188,96): error TS6133: 'inside' is declared but its value is never read.
+06:48:11.228 src/components/simulations/engines/ChargeDistributions.tsx(415,82): error TS6133: 't' is declared but its value is never read.
+06:48:11.228 src/components/simulations/engines/ChargeDistributions.tsx(448,70): error TS6133: 'cy' is declared but its value is never read.
+06:48:11.229 src/components/simulations/engines/ChargeDistributions.tsx(448,82): error TS6133: 't' is declared but its value is never read.
+06:48:11.229 src/components/simulations/engines/CoulombLab.tsx(2,1): error TS6133: 'RotateCcw' is declared but its value is never read.
+06:48:11.229 src/components/simulations/engines/CoulombLab.tsx(30,3): error TS6133: 'particles' is declared but its value is never read.
+06:48:11.229 src/components/simulations/engines/ElectricDipole.tsx(16,7): error TS6133: 'K' is declared but its value is never read.
+06:48:11.229 src/components/simulations/engines/ElectricDipole.tsx(22,3): error TS6133: 'showAngle' is declared but its value is never read.
+06:48:11.229 src/components/simulations/engines/ElectricDipole.tsx(24,3): error TS6133: 'showStability' is declared but its value is never read.
+06:48:11.230 src/components/simulations/engines/ElectricDipole.tsx(26,3): error TS6133: 'animated' is declared but its value is never read.
+06:48:11.230 src/components/simulations/engines/ElectricDipole.tsx(337,63): error TS6133: 'cx' is declared but its value is never read.
+06:48:11.230 src/components/simulations/engines/ElectricDipole.tsx(337,87): error TS6133: 't' is declared but its value is never read.
+06:48:11.230 src/components/simulations/engines/ElectricDipole.tsx(423,76): error TS6133: 'ang' is declared but its value is never read.
+06:48:11.231 src/components/simulations/engines/ElectricDipole.tsx(423,89): error TS6133: 'fs' is declared but its value is never read.
+06:48:11.231 src/components/simulations/engines/ElectricDipole.tsx(423,101): error TS6133: 'dl' is declared but its value is never read.
+06:48:11.233 src/components/simulations/engines/ElectricFieldExplorer.tsx(2,21): error TS6133: 'ZoomIn' is declared but its value is never read.
+06:48:11.262 src/components/simulations/engines/ElectricFieldExplorer.tsx(2,29): error TS6133: 'ZoomOut' is declared but its value is never read.
+06:48:11.263 src/components/simulations/engines/ElectricFieldExplorer.tsx(46,7): error TS6133: 'K' is declared but its value is never read.
+06:48:11.263 src/components/simulations/engines/ElectricFieldExplorer.tsx(140,25): error TS6133: 'showCalculation' is declared but its value is never read.
+06:48:11.263 src/components/simulations/engines/ElectricFieldExplorer.tsx(144,9): error TS6133: 'particlesRef' is declared but its value is never read.
+06:48:11.263 src/components/simulations/engines/ElectricFieldExplorer.tsx(147,10): error TS6133: 'fieldMag' is declared but its value is never read.
+06:48:11.264 src/components/simulations/engines/ElectricFieldExplorer.tsx(147,20): error TS6133: 'setFieldMag' is declared but its value is never read.
+06:48:11.264 src/components/simulations/engines/GaussLawExplorer.tsx(2,1): error TS6192: All imports in import declaration are unused.
+06:48:11.264 src/components/simulations/engines/GaussLawExplorer.tsx(29,3): error TS6133: 'chargeType' is declared but its value is never read.
+06:48:11.264 src/components/simulations/engines/GaussLawExplorer.tsx(169,15): error TS6133: 'enterDir' is declared but its value is never read.
+06:48:11.264 src/components/simulations/engines/GaussLawExplorer.tsx(178,85): error TS6133: 'r' is declared but its value is never read.
+06:48:11.264 src/components/simulations/engines/GaussLawExplorer.tsx(178,128): error TS6133: 'q' is declared but its value is never read.
+06:48:11.264 src/components/simulations/engines/GaussLawExplorer.tsx(239,84): error TS6133: 'r' is declared but its value is never read.
+06:48:11.264 src/components/simulations/engines/GaussLawExplorer.tsx(239,95): error TS6133: 't' is declared but its value is never read.
+06:48:11.264 src/components/simulations/engines/GaussLawExplorer.tsx(239,127): error TS6133: 'q' is declared but its value is never read.
+06:48:11.265 src/components/simulations/engines/GaussLawExplorer.tsx(292,85): error TS6133: 't' is declared but its value is never read.
+06:48:11.265 src/components/simulations/engines/GaussLawExplorer.tsx(292,96): error TS6133: 'angle' is declared but its value is never read.
+06:48:11.265 src/components/simulations/engines/GaussLawExplorer.tsx(354,98): error TS6133: 'q' is declared but its value is never read.
+06:48:11.265 src/components/simulations/engines/GaussLawExplorer.tsx(391,73): error TS6133: 'inside' is declared but its value is never read.
+06:48:11.265 src/components/simulations/engines/GaussLawExplorer.tsx(391,123): error TS6133: 't' is declared but its value is never read.
+06:48:11.265 src/components/simulations/engines/GaussLawExplorer.tsx(404,11): error TS6133: 'displayFlux' is declared but its value is never read.
+06:48:11.265 src/components/simulations/engines/GaussLawExplorer.tsx(417,72): error TS6133: 'inside' is declared but its value is never read.
+06:48:11.266 src/components/simulations/engines/GaussLawExplorer.tsx(417,89): error TS6133: 'outside' is declared but its value is never read.
+06:48:11.266 src/components/simulations/engines/GaussLawExplorer.tsx(417,107): error TS6133: 'pair' is declared but its value is never read.
+06:48:11.266 src/components/simulations/engines/GaussLawExplorer.tsx(417,122): error TS6133: 'q' is declared but its value is never read.
+06:48:11.266 src/components/simulations/engines/ImmersiveElectrostatics.tsx(26,3): error TS6133: 'showMechanism' is declared but its value is never read.
+06:48:11.266 src/components/simulations/engines/ImmersiveElectrostatics.tsx(27,3): error TS6133: 'showForceBalance' is declared but its value is never read.
+06:48:11.266 src/components/simulations/engines/ImmersiveElectrostatics.tsx(28,3): error TS6133: 'showStorm' is declared but its value is never read.
+06:48:11.266 src/components/simulations/engines/ImmersiveElectrostatics.tsx(29,3): error TS6133: 'showGrounding' is declared but its value is never read.
+06:48:11.266 src/components/simulations/engines/ImmersiveElectrostatics.tsx(30,3): error TS6133: 'showShielding' is declared but its value is never read.
+06:48:11.267 src/components/simulations/engines/ImmersiveElectrostatics.tsx(32,3): error TS6133: 'showFactory' is declared but its value is never read.
+06:48:11.267 src/components/simulations/engines/ImmersiveElectrostatics.tsx(33,3): error TS6133: 'showParticles' is declared but its value is never read.
+06:48:11.267 src/components/simulations/engines/ImmersiveElectrostatics.tsx(34,3): error TS6133: 'showFreeCharges' is declared but its value is never read.
+06:48:11.267 src/components/simulations/engines/ImmersiveElectrostatics.tsx(35,3): error TS6133: 'animated' is declared but its value is never read.
+06:48:11.267 src/components/simulations/engines/ImmersiveElectrostatics.tsx(36,3): error TS6133: 'showBeforeAfter' is declared but its value is never read.
+06:48:11.267 src/components/simulations/engines/ImmersiveElectrostatics.tsx(37,3): error TS6133: 'showInduction' is declared but its value is never read.
+06:48:11.267 src/components/simulations/engines/ImmersiveElectrostatics.tsx(38,3): error TS6133: 'showAttraction' is declared but its value is never read.
+06:48:11.268 src/components/simulations/engines/ImmersiveElectrostatics.tsx(46,21): error TS6133: 'setVdgCharge' is declared but its value is never read.
+06:48:11.268 src/components/simulations/engines/ImmersiveElectrostatics.tsx(47,10): error TS6133: 'dropVelocity' is declared but its value is never read.
+06:48:11.268 src/components/simulations/engines/ImmersiveElectrostatics.tsx(47,24): error TS6133: 'setDropVelocity' is declared but its value is never read.
+06:48:11.273 src/components/simulations/engines/ImmersiveElectrostatics.tsx(48,17): error TS6133: 'setDropY' is declared but its value is never read.
+06:48:11.274 src/components/simulations/engines/ImmersiveElectrostatics.tsx(49,19): error TS6133: 'setFieldOn' is declared but its value is never read.
+06:48:11.274 src/components/simulations/engines/ImmersiveElectrostatics.tsx(50,17): error TS6133: 'setPhase' is declared but its value is never read.
+06:48:11.274 src/components/simulations/engines/ImmersiveElectrostatics.tsx(355,59): error TS6133: 't' is declared but its value is never read.
+06:48:11.285 src/components/simulations/engines/ImmersiveElectrostatics.tsx(636,60): error TS6133: 't' is declared but its value is never read.
+06:48:11.297 src/components/simulations/engines/ImmersiveElectrostatics.tsx(679,60): error TS6133: 't' is declared but its value is never read.
+06:48:11.298 src/components/simulations/engines/ImmersiveElectrostatics.tsx(684,11): error TS6133: 'showAfterSec' is declared but its value is never read.
+06:48:12.006 Error: Command "npm run build" exited with 2
