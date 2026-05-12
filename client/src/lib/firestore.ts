@@ -949,6 +949,7 @@ export interface SocialUser {
   isAnonymous?: boolean;
   coins?: number;
   blockedUsers?: string[];
+  blockedBy?: string[];
 }
 
 export async function checkUsernameAvailable(username: string): Promise<boolean> {
@@ -1008,6 +1009,7 @@ export async function getUserById(uid: string): Promise<SocialUser | null> {
     isAnonymous: data.isAnonymous || false,
     coins: data.coins ?? (data.username ? 600 : 0),
     blockedUsers: data.blockedUsers || [],
+    blockedBy: data.blockedBy || [],
   };
 }
 
@@ -1055,6 +1057,7 @@ export function subscribeToSocialUser(
       isAnonymous: data.isAnonymous || false,
       coins: data.coins ?? (data.username ? 600 : 0),
       blockedUsers: data.blockedUsers || [],
+      blockedBy: data.blockedBy || [],
     });
   });
 }
@@ -1173,6 +1176,7 @@ function docToSocialUser(d: DocumentSnapshot): SocialUser | null {
     isAnonymous: false,
     coins: data.coins ?? 600,
     blockedUsers: data.blockedUsers || [],
+    blockedBy: data.blockedBy || [],
   };
 }
 
@@ -1211,8 +1215,10 @@ export async function searchUsersByPrefix(prefix: string): Promise<SocialUser[]>
 
 export async function blockUser(uid: string, targetUid: string): Promise<void> {
   const batch = writeBatch(db);
-  // Add to blocked list
+  // Add to blocker's blockedUsers list
   batch.set(doc(db, "users", uid), { blockedUsers: arrayUnion(targetUid) }, { merge: true });
+  // Write blockedBy on the target so they know they've been blocked (own private data)
+  batch.set(doc(db, "users", targetUid), { blockedBy: arrayUnion(uid) }, { merge: true });
   // Remove from friends (both sides)
   batch.set(doc(db, "users", uid), { friends: arrayRemove(targetUid) }, { merge: true });
   batch.set(doc(db, "users", targetUid), { friends: arrayRemove(uid) }, { merge: true });
@@ -1229,7 +1235,11 @@ export async function blockUser(uid: string, targetUid: string): Promise<void> {
 }
 
 export async function unblockUser(uid: string, targetUid: string): Promise<void> {
-  await setDoc(doc(db, "users", uid), { blockedUsers: arrayRemove(targetUid) }, { merge: true });
+  const batch = writeBatch(db);
+  batch.set(doc(db, "users", uid), { blockedUsers: arrayRemove(targetUid) }, { merge: true });
+  // Remove from target's blockedBy list as well
+  batch.set(doc(db, "users", targetUid), { blockedBy: arrayRemove(uid) }, { merge: true });
+  await batch.commit();
 }
 
 export async function getBlockedUsers(uid: string): Promise<SocialUser[]> {

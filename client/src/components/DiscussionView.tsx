@@ -245,11 +245,14 @@ interface ReplyListProps {
   chapterText?: string;
   userName: string;
   replyCount: number;
+  blockedUsers: string[];
+  blockedBy: string[];
 }
 
 function ReplyList({
   chapterId, postId, postAuthorUid, postText, currentUid,
   chapterName, subject, language, chapterText, userName, replyCount,
+  blockedUsers, blockedBy,
 }: ReplyListProps) {
   const [replies, setReplies] = useState<DiscussionReply[]>([]);
   const [expanded, setExpanded] = useState(false);
@@ -259,14 +262,18 @@ function ReplyList({
   const [aiAnswering, setAiAnswering] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Bidirectional block filter — hide replies from users you blocked or who blocked you
+  const isBlocked = (replyUid: string) =>
+    blockedUsers.includes(replyUid) || blockedBy.includes(replyUid);
+
   const loadReplies = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getDiscussionReplies(chapterId, postId);
-      setReplies(data);
+      setReplies(data.filter(r => !r.uid || r.uid === "ai" || !isBlocked(r.uid)));
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  }, [chapterId, postId]);
+  }, [chapterId, postId, blockedUsers, blockedBy]);
 
   const handleExpand = () => {
     const next = !expanded;
@@ -478,7 +485,7 @@ function ReplyList({
 
 function PostCard({
   post, currentUid, chapterId, chapterName, subject, language, chapterText,
-  userName, onDelete, onLike,
+  userName, onDelete, onLike, blockedUsers, blockedBy,
 }: {
   post: DiscussionPost;
   currentUid: string;
@@ -490,6 +497,8 @@ function PostCard({
   userName: string;
   onDelete: (id: string) => void;
   onLike: (post: DiscussionPost) => void;
+  blockedUsers: string[];
+  blockedBy: string[];
 }) {
   // For the current user's own posts, always use the resolved display name
   // (respects anonymous mode and removes stale stored email/name)
@@ -540,6 +549,8 @@ function PostCard({
           chapterText={chapterText}
           userName={userName}
           replyCount={post.replyCount}
+          blockedUsers={blockedUsers}
+          blockedBy={blockedBy}
         />
       </div>
     </div>
@@ -756,7 +767,12 @@ export default function DiscussionView({
       ) : (
         <div className="space-y-3">
           {posts
-            .filter(post => !(socialUser?.blockedUsers || []).includes(post.uid))
+            .filter(post => {
+              if (!post.uid || post.uid === "ai") return true;
+              const blockedUsers = socialUser?.blockedUsers || [];
+              const blockedBy = socialUser?.blockedBy || [];
+              return !blockedUsers.includes(post.uid) && !blockedBy.includes(post.uid);
+            })
             .map(post => (
               <PostCard
                 key={post.id}
@@ -770,6 +786,8 @@ export default function DiscussionView({
                 userName={displayName}
                 onDelete={handleDelete}
                 onLike={handleLike}
+                blockedUsers={socialUser?.blockedUsers || []}
+                blockedBy={socialUser?.blockedBy || []}
               />
             ))}
         </div>
