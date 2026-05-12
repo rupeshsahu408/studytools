@@ -4,10 +4,13 @@ import {
   BookOpen, HelpCircle, ArrowLeft, Atom, FlaskConical,
   Calculator, Leaf, Calendar, Sigma, Network, AlertTriangle,
   Layers, MessageCircle, HelpingHand, Loader2, Beaker, Users, Zap, FileText,
-  Share2, Copy, CheckCheck, Trash2,
+  Share2, Copy, CheckCheck, Trash2, Globe, X, Check,
 } from "lucide-react";
-import { getChapter, updateChapterSection, createShareLink, revokeShareLink } from "../lib/firestore";
-import type { Chapter } from "../lib/firestore";
+import {
+  getChapter, updateChapterSection, createShareLink, revokeShareLink,
+  publishNote, unpublishNote, getPublishedNote,
+} from "../lib/firestore";
+import type { Chapter, PublicNote, PublishableSection } from "../lib/firestore";
 import {
   generateFormulas, generateMindmap, generateMistakes,
   generateFlashcards, generateSimulationCatalog, regenerateQuestionBatch,
@@ -84,6 +87,200 @@ function SectionEmpty({ label, description, onGenerate, generating }: {
   );
 }
 
+// ─── Publish Modal ────────────────────────────────────────────────────────────
+
+const PUBLISH_BOARDS = [
+  "Bihar Board", "UP Board", "MP Board", "Rajasthan Board",
+  "Haryana Board", "Uttarakhand Board", "CBSE", "ICSE", "Other",
+];
+
+const SECTION_META: { key: PublishableSection; label: string; icon: any }[] = [
+  { key: "notes",      label: "Notes",              icon: BookOpen },
+  { key: "questions",  label: "Questions",           icon: HelpCircle },
+  { key: "summary",    label: "Quick Revision",      icon: Zap },
+  { key: "formulas",   label: "Formulas",            icon: Sigma },
+  { key: "mindmap",    label: "Concept Map",         icon: Network },
+  { key: "flashcards", label: "Flash Cards",         icon: Layers },
+  { key: "mistakes",   label: "Ye Galti Mat Karo",   icon: AlertTriangle },
+];
+
+function getAvailableSections(chapter: Chapter): PublishableSection[] {
+  const secs: PublishableSection[] = [];
+  if (chapter.notes)                                        secs.push("notes");
+  if (chapter.questions)                                    secs.push("questions");
+  if (chapter.summary)                                      secs.push("summary");
+  if (Array.isArray(chapter.formulas) && chapter.formulas.length)   secs.push("formulas");
+  if (chapter.mindmap)                                      secs.push("mindmap");
+  if (Array.isArray(chapter.flashcards) && chapter.flashcards.length) secs.push("flashcards");
+  if (Array.isArray(chapter.mistakes) && chapter.mistakes.length)   secs.push("mistakes");
+  return secs;
+}
+
+function PublishModal({
+  chapter, currentPublish, onClose, onPublish, onUnpublish, loading, error,
+}: {
+  chapter: Chapter;
+  currentPublish: PublicNote | null;
+  onClose: () => void;
+  onPublish: (sections: PublishableSection[], board: string) => void;
+  onUnpublish: () => void;
+  loading: boolean;
+  error: string | null;
+}) {
+  const available = getAvailableSections(chapter);
+  const initial: Set<PublishableSection> = currentPublish
+    ? new Set(currentPublish.publishedSections)
+    : new Set(available);
+  const [selected, setSelected] = useState<Set<PublishableSection>>(initial);
+  const [board, setBoard] = useState(currentPublish?.board || "Bihar Board");
+  const [confirmUnpublish, setConfirmUnpublish] = useState(false);
+
+  const toggle = (key: PublishableSection) => {
+    setSelected(prev => {
+      const s = new Set(prev);
+      s.has(key) ? s.delete(key) : s.add(key);
+      return s;
+    });
+  };
+
+  const handleSubmit = () => {
+    const secs = Array.from(selected);
+    if (!secs.length) return;
+    onPublish(secs, board);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="bg-gray-50 dark:bg-gray-950 w-full sm:max-w-md sm:rounded-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <Globe className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <h2 className="font-bold text-gray-900 dark:text-white text-base">
+              {currentPublish ? "Update Community Post" : "Publish to Community"}
+            </h2>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
+          {/* Chapter info */}
+          <div className="bg-white dark:bg-gray-900 rounded-xl p-3 border border-gray-100 dark:border-gray-800">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white leading-snug">{chapter.chapterName}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{chapter.subject} · Class {chapter.classNum}</p>
+          </div>
+
+          {/* Board selector */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1.5">
+              Board
+            </label>
+            <select
+              value={board}
+              onChange={e => setBoard(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-800 dark:text-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/30"
+            >
+              {PUBLISH_BOARDS.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+          </div>
+
+          {/* Section checkboxes */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-2">
+              Select what to publish
+            </label>
+            {available.length === 0 ? (
+              <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">
+                Generate some content first, then you can publish it.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {SECTION_META.filter(m => available.includes(m.key)).map(({ key, label, icon: Icon }) => (
+                  <button
+                    key={key}
+                    onClick={() => toggle(key)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
+                      selected.has(key)
+                        ? "border-green-400 dark:border-green-600 bg-green-50 dark:bg-green-900/20"
+                        : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600"
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                      selected.has(key)
+                        ? "bg-green-100 dark:bg-green-900/40"
+                        : "bg-gray-100 dark:bg-gray-800"
+                    }`}>
+                      <Icon className={`w-4 h-4 ${selected.has(key) ? "text-green-600 dark:text-green-400" : "text-gray-400"}`} />
+                    </div>
+                    <span className={`text-sm font-medium flex-1 ${selected.has(key) ? "text-green-700 dark:text-green-300" : "text-gray-700 dark:text-gray-300"}`}>
+                      {label}
+                    </span>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                      selected.has(key)
+                        ? "bg-green-500 border-green-500"
+                        : "border-gray-300 dark:border-gray-600"
+                    }`}>
+                      {selected.has(key) && <Check className="w-3 h-3 text-white" />}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {error && (
+            <p className="text-sm text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-xl px-3 py-2">{error}</p>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 sm:p-5 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex-shrink-0 space-y-2">
+          <button
+            onClick={handleSubmit}
+            disabled={loading || selected.size === 0}
+            className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+            {loading ? "Publishing…" : currentPublish ? "Update Post" : "Publish to Community"}
+          </button>
+
+          {currentPublish && !confirmUnpublish && (
+            <button
+              onClick={() => setConfirmUnpublish(true)}
+              className="w-full text-sm text-red-500 hover:text-red-600 py-2 transition-colors"
+            >
+              Remove from community
+            </button>
+          )}
+          {currentPublish && confirmUnpublish && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmUnpublish(false)}
+                className="flex-1 text-sm text-gray-500 border border-gray-200 dark:border-gray-700 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onUnpublish}
+                disabled={loading}
+                className="flex-1 text-sm text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 py-2 rounded-xl transition-colors flex items-center justify-center gap-1"
+              >
+                {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                Yes, Remove
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
 export default function ChapterPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -106,6 +303,12 @@ export default function ChapterPage() {
   const [shareCopied, setShareCopied] = useState(false);
   const [shareRevoked, setShareRevoked] = useState(false);
 
+  const [currentPublish, setCurrentPublish] = useState<PublicNote | null>(null);
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [publishLoading, setPublishLoading] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
+  const [publishSuccess, setPublishSuccess] = useState(false);
+
   const { user } = useAuth();
 
   // Phase 4: progress tracking
@@ -114,6 +317,11 @@ export default function ChapterPage() {
   useEffect(() => {
     if (!id) return;
     loadChapter();
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    getPublishedNote(id).then(setCurrentPublish).catch(() => {});
   }, [id]);
 
   const loadChapter = async () => {
@@ -150,6 +358,54 @@ export default function ChapterPage() {
       setShareLoading(false);
     }
   }, [chapter, user, shareLoading]);
+
+  const handlePublish = useCallback(async (sections: PublishableSection[], board: string) => {
+    if (!chapter || !user || publishLoading) return;
+    setPublishLoading(true);
+    setPublishError(null);
+    try {
+      const name = userData?.profile?.name || user.displayName || "Student";
+      const data: Omit<PublicNote, "id" | "publishedAt" | "viewCount"> = {
+        userId: user.uid,
+        chapterId: chapter.id,
+        chapterName: chapter.chapterName,
+        publisherName: name,
+        board,
+        classNum: chapter.classNum,
+        medium: chapter.language || "hindi",
+        subject: chapter.subject,
+        publishedSections: sections,
+      };
+      sections.forEach(sec => {
+        (data as any)[sec] = (chapter as any)[sec];
+      });
+      await publishNote(chapter.id, data);
+      const updated = await getPublishedNote(chapter.id);
+      setCurrentPublish(updated);
+      setShowPublishModal(false);
+      setPublishSuccess(true);
+      setTimeout(() => setPublishSuccess(false), 3000);
+    } catch {
+      setPublishError("Publish failed. Please try again.");
+    } finally {
+      setPublishLoading(false);
+    }
+  }, [chapter, user, userData, publishLoading]);
+
+  const handleUnpublish = useCallback(async () => {
+    if (!chapter || publishLoading) return;
+    setPublishLoading(true);
+    setPublishError(null);
+    try {
+      await unpublishNote(chapter.id);
+      setCurrentPublish(null);
+      setShowPublishModal(false);
+    } catch {
+      setPublishError("Failed to remove. Please try again.");
+    } finally {
+      setPublishLoading(false);
+    }
+  }, [chapter, publishLoading]);
 
   const handleRevokeShare = useCallback(async () => {
     if (!chapter || !shareToken || shareLoading) return;
@@ -675,6 +931,49 @@ export default function ChapterPage() {
               )}
             </div>
 
+            {/* ── Publish to Community ── */}
+            <div className="mb-3">
+              {publishSuccess && (
+                <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 mb-1.5 bg-green-50 dark:bg-green-900/20 rounded-lg px-2 py-1.5">
+                  <Check className="w-3 h-3" />
+                  <span>Published successfully!</span>
+                </div>
+              )}
+              {currentPublish ? (
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                    <span className="text-xs font-medium text-green-600 dark:text-green-400">Community post live</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {currentPublish.publishedSections.map(s => {
+                      const meta = SECTION_META.find(m => m.key === s);
+                      return meta ? (
+                        <span key={s} className="text-xs bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 px-1.5 py-0.5 rounded-full">
+                          {meta.label}
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
+                  <button
+                    onClick={() => { setPublishError(null); setShowPublishModal(true); }}
+                    className="flex items-center gap-1 text-xs text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                  >
+                    <Globe className="w-3 h-3" />
+                    Update post
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => { setPublishError(null); setShowPublishModal(true); }}
+                  className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors w-full"
+                >
+                  <Globe className="w-3 h-3" />
+                  Publish to Community
+                </button>
+              )}
+            </div>
+
             <div className="h-px bg-gray-100 dark:bg-gray-800 mb-3" />
 
             {/* Study sections */}
@@ -872,6 +1171,18 @@ export default function ChapterPage() {
           
         </main>
       </div>
+
+      {showPublishModal && chapter && (
+        <PublishModal
+          chapter={chapter}
+          currentPublish={currentPublish}
+          onClose={() => setShowPublishModal(false)}
+          onPublish={handlePublish}
+          onUnpublish={handleUnpublish}
+          loading={publishLoading}
+          error={publishError}
+        />
+      )}
     </div>
   );
 }

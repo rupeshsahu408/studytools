@@ -1266,20 +1266,33 @@ export async function getBlockedUsers(uid: string): Promise<SocialUser[]> {
   return results.filter(Boolean) as SocialUser[];
 }
 
-// ─── Public Notes ────────────────────────────────────────────────────────────
-// Each published note lives in publicNotes/{chapterId} — one entry per chapter.
+// ─── Public Content ───────────────────────────────────────────────────────────
+// Each published chapter lives in publicNotes/{chapterId}.
+// A single document can carry any combination of 7 content sections.
+// `publishedSections` lists which sections are actually included.
+
+export type PublishableSection =
+  | "notes" | "questions" | "summary"
+  | "formulas" | "mindmap" | "flashcards" | "mistakes";
 
 export interface PublicNote {
-  id: string;            // = chapterId (document ID)
+  id: string;                          // = chapterId (document ID)
   userId: string;
   chapterId: string;
   chapterName: string;
   publisherName: string;
-  board: string;         // e.g. "Bihar Board", "CBSE"
-  classNum: string;      // "9" | "10" | "11" | "12"
-  medium: string;        // "hindi" | "english"
-  subject: string;       // "Physics", "Chemistry", etc.
-  notes: any;            // same shape as Chapter.notes
+  board: string;                       // e.g. "Bihar Board", "CBSE"
+  classNum: string;                    // "9" | "10" | "11" | "12"
+  medium: string;                      // "hindi" | "english"
+  subject: string;                     // "Physics", "Chemistry", etc.
+  publishedSections: PublishableSection[];
+  notes?: any;
+  questions?: any;
+  summary?: any;
+  formulas?: any[];
+  mindmap?: any;
+  flashcards?: any[];
+  mistakes?: any[];
   publishedAt: any;
   viewCount: number;
 }
@@ -1288,11 +1301,12 @@ export async function publishNote(
   chapterId: string,
   data: Omit<PublicNote, "id" | "publishedAt" | "viewCount">
 ): Promise<void> {
+  const existing = await getDoc(doc(db, "publicNotes", chapterId));
   await setDoc(doc(db, "publicNotes", chapterId), {
     ...data,
     chapterId,
     publishedAt: serverTimestamp(),
-    viewCount: 0,
+    viewCount: existing.exists() ? (existing.data().viewCount || 0) : 0,
   });
 }
 
@@ -1306,15 +1320,13 @@ export async function getPublishedNote(chapterId: string): Promise<PublicNote | 
   return { id: snap.id, ...snap.data() } as PublicNote;
 }
 
-// Fetch all notes published by a specific user (for dashboard indicators)
 export async function getMyPublishedNotes(userId: string): Promise<PublicNote[]> {
   const q = query(collection(db, "publicNotes"), where("userId", "==", userId));
   const snap = await getDocs(q);
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as PublicNote));
 }
 
-// Fetch all public notes ordered by newest first; filters applied client-side
-export async function getAllPublicNotes(pageSize = 200): Promise<PublicNote[]> {
+export async function getAllPublicNotes(pageSize = 300): Promise<PublicNote[]> {
   const q = query(
     collection(db, "publicNotes"),
     orderBy("publishedAt", "desc"),
