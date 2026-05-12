@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen, Target, AlignLeft, PenLine, FileText, Sparkles,
   CheckCircle2, Loader2, Wifi,
@@ -147,25 +148,32 @@ export default function ExamPaperGenerating() {
           {/* Outer ring — slow clockwise */}
           <div
             className={`absolute inset-0 rounded-full border-4 border-dashed ${accent.ring} opacity-30`}
+            style={{ animation: "spin 8s linear infinite" }}
           />
           {/* Middle ring — counter-clockwise */}
           <div
-            className={`absolute inset-3 rounded-full border-4 border-transparent border-t-amber-400 border-r-amber-300`}
+            className="absolute inset-3 rounded-full border-4 border-transparent border-t-amber-400 border-r-amber-300"
+            style={{ animation: "spin 2s linear infinite reverse" }}
           />
           {/* Inner ring — clockwise fast */}
           <div
-            className={`absolute inset-6 rounded-full border-2 border-transparent border-b-amber-500`}
+            className="absolute inset-6 rounded-full border-2 border-transparent border-b-amber-500"
+            style={{ animation: "spin 1.2s linear infinite" }}
           />
           {/* Centre icon — changes with step */}
           <div className="absolute inset-0 flex items-center justify-center">
-            
-              <div
+            <AnimatePresence mode="wait">
+              <motion.div
                 key={activeStep.id}
+                initial={{ opacity: 0, scale: 0.7, rotate: -15 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                exit={{ opacity: 0, scale: 0.7, rotate: 15 }}
+                transition={{ duration: 0.3 }}
                 className={`w-14 h-14 rounded-2xl ${accent.bg} flex items-center justify-center`}
               >
                 <StepIcon className={`w-7 h-7 ${accent.text}`} />
-              </div>
-            
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
 
@@ -200,17 +208,25 @@ export default function ExamPaperGenerating() {
 
                 {/* Text */}
                 <div className="flex-1 min-w-0">
-                  
+                  <AnimatePresence mode="wait">
                     {current ? (
-                      <p
+                      <motion.p
                         key="hi"
+                        initial={{ opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 6 }}
+                        transition={{ duration: 0.2 }}
                         className={`text-sm font-semibold ${ac.text} leading-snug`}
                       >
                         {step.hi}
-                      </p>
+                      </motion.p>
                     ) : (
-                      <p
+                      <motion.p
                         key="en"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
                         className={`text-sm font-medium leading-snug ${
                           done
                             ? "text-green-700 dark:text-green-400 line-through decoration-green-400/60"
@@ -218,13 +234,11 @@ export default function ExamPaperGenerating() {
                         }`}
                       >
                         {done ? step.hi : step.en}
-                      </p>
+                      </motion.p>
                     )}
-                  
+                  </AnimatePresence>
                   {current && (
-                    <p
-                      className="text-xs text-gray-500 dark:text-gray-400 mt-0.5"
-                    >
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                       {step.en}
                     </p>
                   )}
@@ -277,15 +291,19 @@ export default function ExamPaperGenerating() {
 
       {/* ── Rotating tips ── */}
       <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl px-4 py-3 min-h-[56px] flex items-center gap-3">
-        
-          <div
+        <AnimatePresence mode="wait">
+          <motion.div
             key={tipIdx}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.3 }}
             className="flex items-start gap-2 w-full"
           >
             <span className="text-lg leading-none mt-0.5 flex-shrink-0">{tip.emoji}</span>
             <p className="text-sm text-gray-600 dark:text-gray-300">{tip.text}</p>
-          </div>
-        
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* ── Bottom reassurance ── */}

@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useDropzone } from "react-dropzone";
 import { useNavigate } from "react-router-dom";
 import {
@@ -117,14 +118,20 @@ function UploadingScreen({ fileName, fileSize }: { fileName: string; fileSize: n
         {/* Animated icon */}
         <div className="relative w-24 h-24 mx-auto mb-6">
           <div className="absolute inset-0 rounded-full border-4 border-green-100 dark:border-green-900/40" />
-          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-500" />
-          <div className="absolute inset-2 rounded-full border-2 border-transparent border-b-green-300 dark:border-b-green-700" />
+          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-500 animate-spin" />
+          <div className="absolute inset-2 rounded-full border-2 border-transparent border-b-green-300 dark:border-b-green-700" style={{ animation: "spin 2s linear infinite reverse" }} />
           <div className="absolute inset-0 flex items-center justify-center">
-            
-              <div key={stepIdx}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={stepIdx}
+                initial={{ opacity: 0, scale: 0.75 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.75 }}
+                transition={{ duration: 0.2 }}
+              >
                 <StepIcon className={`w-8 h-8 ${steps[stepIdx].color}`} />
-              </div>
-            
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
 
@@ -138,12 +145,18 @@ function UploadingScreen({ fileName, fileSize }: { fileName: string; fileSize: n
         </div>
 
         {/* Current step message */}
-        
-          <p key={stepIdx}
-            className="text-base font-semibold text-gray-800 dark:text-white mb-4">
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={stepIdx}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25 }}
+            className="text-base font-semibold text-gray-800 dark:text-white mb-4"
+          >
             {steps[stepIdx].msg}
-          </p>
-        
+          </motion.p>
+        </AnimatePresence>
 
         {/* Progress bar */}
         <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 mb-1.5 overflow-hidden">
@@ -155,12 +168,18 @@ function UploadingScreen({ fileName, fileSize }: { fileName: string; fileSize: n
         {/* Tip box */}
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/40 rounded-2xl p-4">
           <p className="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide mb-1.5">Topper Tip</p>
-          
-            <p key={tipIdx}
-              className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={tipIdx}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed"
+            >
               {TOPPER_TIPS[tipIdx]}
-            </p>
-          
+            </motion.p>
+          </AnimatePresence>
         </div>
       </div>
     </div>
@@ -291,11 +310,18 @@ function GeneratingScreen({
         {/* Tip box */}
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/40 rounded-xl px-4 py-3">
           <p className="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide mb-1">Topper Tip</p>
-          
-            <p key={tipIdx}
-              className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={tipIdx}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed"
+            >
               {TOPPER_TIPS[tipIdx]}
-            </p>
+            </motion.p>
+          </AnimatePresence>
           
         </div>
 
