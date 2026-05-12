@@ -6,6 +6,7 @@ import {
   TrendingUp, Flame, Eye, Award, List, Sparkles,
   Download, RefreshCw, AlertTriangle, X,
 } from "lucide-react";
+import { exportSummaryPDF } from "../lib/pdfExport";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -41,6 +42,7 @@ interface SummaryViewProps {
   summary: Summary;
   chapterName: string;
   subject: string;
+  classNum?: string;
   onRegenerate?: () => void;
   regenerating?: boolean;
 }
@@ -148,7 +150,7 @@ function ConceptCard({ concept, index }: { concept: Concept; index: number }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
-export default function SummaryView({ summary, chapterName, subject, onRegenerate, regenerating }: SummaryViewProps) {
+export default function SummaryView({ summary, chapterName, subject, classNum = "11", onRegenerate, regenerating }: SummaryViewProps) {
   const [checkedPoints, setCheckedPoints] = useState<Set<number>>(new Set());
   const [revisionComplete, setRevisionComplete] = useState(false);
   const [printing, setPrinting] = useState(false);
@@ -165,10 +167,11 @@ export default function SummaryView({ summary, chapterName, subject, onRegenerat
 
   const handlePrint = () => {
     setPrinting(true);
-    setTimeout(() => {
-      window.print();
-      setTimeout(() => setPrinting(false), 800);
-    }, 120);
+    try {
+      exportSummaryPDF(summary, { chapterName, subject, classNum });
+    } finally {
+      setTimeout(() => setPrinting(false), 600);
+    }
   };
 
   const handleRegenerate = () => {

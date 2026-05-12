@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp, Sigma, Info, BookOpen, Copy, Check } from "lucide-react";
+import { ChevronDown, ChevronUp, Sigma, Info, BookOpen, Copy, Check, FileDown } from "lucide-react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
+import { exportFormulasPDF } from "../lib/pdfExport";
 
 interface Variable {
   symbol: string;
@@ -23,6 +24,9 @@ interface Formula {
 
 interface FormulaSheetProps {
   formulas: Formula[];
+  chapterName?: string;
+  subject?: string;
+  classNum?: string;
 }
 
 function renderLatex(latex: string): string {
@@ -150,9 +154,19 @@ function buildPlainText(formulas: Formula[]): string {
   return lines.join("\n").trim();
 }
 
-export default function FormulaSheet({ formulas }: FormulaSheetProps) {
+export default function FormulaSheet({ formulas, chapterName = "Chapter", subject = "Science", classNum = "11" }: FormulaSheetProps) {
   const [filter, setFilter] = useState<string>("All");
   const [copied, setCopied] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportPDF = () => {
+    setExporting(true);
+    try {
+      exportFormulasPDF(formulas, { chapterName, subject, classNum });
+    } finally {
+      setTimeout(() => setExporting(false), 600);
+    }
+  };
 
   // Group by chapter_section
   const sections = ["All", ...Array.from(new Set(formulas.map(f => f.chapter_section || "General").filter(Boolean)))];
@@ -178,32 +192,48 @@ export default function FormulaSheet({ formulas }: FormulaSheetProps) {
 
   return (
     <div className="max-w-3xl">
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <Sigma className="w-5 h-5 text-green-600" /> Formula Sheet
           <span className="text-sm font-normal text-gray-400 ml-1">{formulas.length} formulas</span>
         </h2>
-        <motion.button
-          onClick={handleCopy}
-          whileTap={{ scale: 0.95 }}
-          className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl border transition-all ${
-            copied
-              ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400"
-              : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-green-300 dark:hover:border-green-700 hover:text-green-600 dark:hover:text-green-400"
-          }`}
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            {copied ? (
-              <motion.span key="check" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-1.5">
-                <Check className="w-3.5 h-3.5" /> Copied!
-              </motion.span>
+        <div className="flex items-center gap-2">
+          <motion.button
+            onClick={handleCopy}
+            whileTap={{ scale: 0.95 }}
+            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl border transition-all ${
+              copied
+                ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400"
+                : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-green-300 dark:hover:border-green-700 hover:text-green-600 dark:hover:text-green-400"
+            }`}
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              {copied ? (
+                <motion.span key="check" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5" /> Copied!
+                </motion.span>
+              ) : (
+                <motion.span key="copy" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-1.5">
+                  <Copy className="w-3.5 h-3.5" /> Copy as Text
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
+
+          <motion.button
+            onClick={handleExportPDF}
+            disabled={exporting}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {exporting ? (
+              <span className="w-3.5 h-3.5 border border-green-400 border-t-green-700 rounded-full animate-spin" />
             ) : (
-              <motion.span key="copy" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-1.5">
-                <Copy className="w-3.5 h-3.5" /> Copy as Text
-              </motion.span>
+              <FileDown className="w-3.5 h-3.5" />
             )}
-          </AnimatePresence>
-        </motion.button>
+            {exporting ? "Opening…" : "Export PDF"}
+          </motion.button>
+        </div>
       </div>
 
       {/* Section filter */}

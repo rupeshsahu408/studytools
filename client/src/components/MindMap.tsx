@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronRight, ChevronDown, Network, X, Lightbulb,
   ChevronsDownUp, ChevronsUpDown, Search, BookOpen,
-  FlaskConical, Calculator, Hash,
+  FlaskConical, Calculator, Hash, FileDown,
 } from "lucide-react";
+import { exportMindMapPDF } from "../lib/pdfExport";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -22,6 +23,9 @@ interface MindMapData {
 
 interface MindMapProps {
   mindmap: MindMapData;
+  chapterName?: string;
+  subject?: string;
+  classNum?: string;
 }
 
 // ─── Depth colour system (4 levels) ──────────────────────────────────────────
@@ -198,7 +202,7 @@ function HighlightMatch({ text, query }: { text: string; query: string }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function MindMap({ mindmap }: MindMapProps) {
+export default function MindMap({ mindmap, chapterName = "Chapter", subject = "Science", classNum = "11" }: MindMapProps) {
   const [selectedNode, setSelectedNode] = useState<MindNode | null>(mindmap.root);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
     // Auto-expand root + all depth-1 nodes by default
@@ -232,6 +236,16 @@ export default function MindMap({ mindmap }: MindMapProps) {
   }, [mindmap.root.id]);
 
   const allExpanded = expandedIds.size === allIds.size;
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportPDF = useCallback(() => {
+    setExporting(true);
+    try {
+      exportMindMapPDF(mindmap, { chapterName, subject, classNum });
+    } finally {
+      setTimeout(() => setExporting(false), 600);
+    }
+  }, [mindmap, chapterName, subject, classNum]);
 
   if (!mindmap?.root) {
     return (
@@ -252,7 +266,7 @@ export default function MindMap({ mindmap }: MindMapProps) {
           <span className="text-sm font-normal text-gray-400 ml-1">{mindmap.title}</span>
         </h2>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
@@ -261,7 +275,7 @@ export default function MindMap({ mindmap }: MindMapProps) {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search concepts…"
-              className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400 w-44"
+              className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400 w-40"
             />
           </div>
 
@@ -273,6 +287,20 @@ export default function MindMap({ mindmap }: MindMapProps) {
             {allExpanded
               ? <><ChevronsDownUp className="w-3.5 h-3.5" /> Collapse All</>
               : <><ChevronsUpDown className="w-3.5 h-3.5" /> Expand All</>}
+          </button>
+
+          {/* Export PDF */}
+          <button
+            onClick={handleExportPDF}
+            disabled={exporting}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {exporting ? (
+              <span className="w-3.5 h-3.5 border border-green-400 border-t-green-700 rounded-full animate-spin" />
+            ) : (
+              <FileDown className="w-3.5 h-3.5" />
+            )}
+            {exporting ? "Opening…" : "Export PDF"}
           </button>
         </div>
       </div>

@@ -673,3 +673,399 @@ export function exportQuestionsPDF(
 
   openPrintWindow(html);
 }
+
+// ─── SUMMARY / QUICK REVISION PDF ────────────────────────────────────────────
+
+const SUMMARY_EXTRA = `
+  .essence-box { background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:14px 16px; margin-bottom:14px; }
+  .essence-label { font-size:9pt; font-weight:700; color:#1d4ed8; text-transform:uppercase; letter-spacing:.5px; margin-bottom:5px; }
+  .essence-text { font-size:10.5pt; color:#1e40af; line-height:1.75; }
+
+  .priority-high   { border-left:4px solid #ef4444; background:#fef2f2; }
+  .priority-medium { border-left:4px solid #f59e0b; background:#fffbeb; }
+  .priority-low    { border-left:4px solid #9ca3af; background:#f9fafb; }
+  .pbadge-high   { background:#fee2e2; color:#b91c1c; font-size:8.5pt; font-weight:700; padding:2px 8px; border-radius:9px; white-space:nowrap; }
+  .pbadge-medium { background:#fef3c7; color:#92400e; font-size:8.5pt; font-weight:700; padding:2px 8px; border-radius:9px; white-space:nowrap; }
+  .pbadge-low    { background:#f3f4f6; color:#4b5563; font-size:8.5pt; font-weight:700; padding:2px 8px; border-radius:9px; white-space:nowrap; }
+  .concept-card { border-radius:9px; padding:12px 14px; margin-bottom:8px; }
+  .concept-top  { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:5px; }
+  .concept-title { font-size:11pt; font-weight:700; color:#111827; }
+  .concept-expl  { font-size:10pt; color:#374151; line-height:1.7; }
+  .concept-kf    { font-family:'Courier New',monospace; font-size:11pt; font-weight:700; color:#15803d; background:#dcfce7; padding:3px 9px; border-radius:6px; display:inline-block; margin-top:6px; }
+
+  .fsnap-panel { background:#f8fafc; border:1px solid #e5e7eb; border-radius:10px; padding:14px; }
+  .fsnap-item  { display:flex; gap:10px; align-items:flex-start; margin-bottom:10px; }
+  .fsnap-num   { width:22px; height:22px; border-radius:6px; background:#dcfce7; border:1px solid #86efac; display:flex; align-items:center; justify-content:center; font-size:9pt; font-weight:700; color:#15803d; flex-shrink:0; margin-top:2px; }
+  .fsnap-formula { font-family:'Courier New',monospace; font-size:11pt; font-weight:700; color:#15803d; line-height:1.4; }
+  .fsnap-ctx   { font-size:9.5pt; color:#6b7280; margin-top:2px; line-height:1.5; }
+
+  .spotlight-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  @media print, (max-width:640px) { .spotlight-grid { grid-template-columns:1fr; } }
+  .spot-card   { border-radius:9px; padding:12px 14px; }
+  .spot-red    { background:#fef2f2; border:1px solid #fecaca; }
+  .spot-purple { background:#faf5ff; border:1px solid #e9d5ff; }
+  .spot-amber  { background:#fffbeb; border:1px solid #fde68a; }
+  .spot-label  { font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
+  .sl-red    { color:#dc2626; }
+  .sl-purple { color:#7c3aed; }
+  .sl-amber  { color:#d97706; }
+  .spot-li   { display:flex; gap:6px; align-items:flex-start; margin-bottom:5px; font-size:10pt; color:#374151; line-height:1.6; }
+  .spot-num  { width:16px; height:16px; border-radius:50%; font-size:8pt; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+  .sn-red    { background:#fee2e2; color:#dc2626; }
+  .spot-dot  { width:6px; height:6px; border-radius:50%; background:#a78bfa; flex-shrink:0; margin-top:7px; }
+  .spot-warn { font-weight:700; color:#d97706; flex-shrink:0; }
+
+  .revision-list { background:#fff; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; }
+  .revision-item { display:flex; gap:10px; align-items:flex-start; padding:10px 14px; border-bottom:1px solid #f3f4f6; }
+  .revision-item:last-child { border-bottom:none; }
+  .rev-num  { width:20px; height:20px; border-radius:50%; background:#f3f4f6; font-size:9pt; font-weight:700; color:#6b7280; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+  .rev-check { width:16px; height:16px; border:2px solid #d1d5db; border-radius:4px; flex-shrink:0; margin-top:3px; background:#fff; }
+  .rev-text  { font-size:10.5pt; color:#374151; line-height:1.65; }
+`;
+
+export function exportSummaryPDF(
+  summary: any,
+  meta: { chapterName: string; subject: string; classNum: string }
+): void {
+  const { chapterName, subject, classNum } = meta;
+  const concepts = [...(summary.concepts || [])].sort((a: any, b: any) => {
+    const o: Record<string, number> = { high: 0, medium: 1, low: 2 };
+    return (o[a.examWeight] ?? 1) - (o[b.examWeight] ?? 1);
+  });
+
+  let body = "";
+
+  if (summary.chapterEssence) {
+    body += `<div class="essence-box avoid-break">
+      <div class="essence-label">🧠 Chapter Essence</div>
+      <div class="essence-text">${escMl(summary.chapterEssence)}</div>
+    </div>`;
+  }
+
+  if (concepts.length > 0) {
+    body += `<div class="sec-heading sh-green" style="font-size:11pt;">🎯 Key Concepts (${concepts.length})</div>`;
+    concepts.forEach((c: any) => {
+      const w = c.examWeight === "high" ? "high" : c.examWeight === "low" ? "low" : "medium";
+      const bl = w === "high" ? "High Priority" : w === "medium" ? "Medium Priority" : "Good to Know";
+      body += `<div class="concept-card priority-${w} avoid-break">
+        <div class="concept-top">
+          <span class="concept-title">${esc(c.title)}</span>
+          <span class="pbadge-${w}">${bl}</span>
+        </div>
+        <div class="concept-expl">${escMl(c.explanation)}</div>
+        ${c.keyFormula ? `<div><span class="concept-kf">${esc(c.keyFormula)}</span></div>` : ""}
+      </div>`;
+    });
+  }
+
+  if ((summary.formulaSnapshot || []).length > 0) {
+    body += `<div class="sec-heading sh-green" style="font-size:11pt;">⚡ Formula Snapshot</div>
+    <div class="fsnap-panel avoid-break">`;
+    summary.formulaSnapshot.forEach((item: any, i: number) => {
+      body += `<div class="fsnap-item">
+        <span class="fsnap-num">${i + 1}</span>
+        <div style="flex:1;">
+          <div class="fsnap-formula">${esc(item.formula)}</div>
+          <div class="fsnap-ctx">${esc(item.context)}</div>
+        </div>
+      </div>`;
+    });
+    body += `</div>`;
+  }
+
+  if (summary.examSpotlight) {
+    const es = summary.examSpotlight;
+    body += `<div class="sec-heading sh-amber" style="font-size:11pt;">📊 Exam Spotlight</div>
+    <div class="spotlight-grid">`;
+    if ((es.highValueTopics || []).length > 0) {
+      body += `<div class="spot-card spot-red avoid-break">
+        <div class="spot-label sl-red">🔥 High Value Topics</div>`;
+      es.highValueTopics.forEach((t: string, i: number) => {
+        body += `<div class="spot-li"><span class="spot-num sn-red">${i + 1}</span><span>${esc(t)}</span></div>`;
+      });
+      body += `</div>`;
+    }
+    if ((es.questionPatterns || []).length > 0) {
+      body += `<div class="spot-card spot-purple avoid-break">
+        <div class="spot-label sl-purple">👁 Question Patterns</div>`;
+      es.questionPatterns.forEach((p: string) => {
+        body += `<div class="spot-li"><span class="spot-dot" style="margin-top:8px;"></span><span>${esc(p)}</span></div>`;
+      });
+      body += `</div>`;
+    }
+    if ((es.mustMemorize || []).length > 0) {
+      body += `<div class="spot-card spot-amber avoid-break">
+        <div class="spot-label sl-amber">⭐ Must Memorize</div>`;
+      es.mustMemorize.forEach((m: string) => {
+        body += `<div class="spot-li"><span class="spot-warn">!</span><span style="font-weight:600;">${esc(m)}</span></div>`;
+      });
+      body += `</div>`;
+    }
+    body += `</div>`;
+  }
+
+  if ((summary.lastNightRevision || []).length > 0) {
+    body += `<div class="sec-heading sh-gray" style="font-size:11pt;margin-top:16px;">🌙 Last Night Revision Checklist</div>
+    <div class="revision-list">`;
+    summary.lastNightRevision.forEach((point: string, i: number) => {
+      body += `<div class="revision-item">
+        <span class="rev-num">${i + 1}</span>
+        <span class="rev-check"></span>
+        <span class="rev-text">${escMl(point)}</span>
+      </div>`;
+    });
+    body += `</div>`;
+  }
+
+  const stats = [
+    `${summary.readTime || "?"}min read`,
+    `${concepts.length} concepts`,
+    `${(summary.formulaSnapshot || []).length} formulas`,
+    `${(summary.lastNightRevision || []).length} revision pts`,
+  ].join(" · ");
+
+  const html = `<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Quick Revision — ${esc(chapterName)}</title>
+  <style>${BASE_STYLES}${SUMMARY_EXTRA}</style>
+</head>
+<body>
+  <div class="no-print print-toolbar">
+    <strong>⚡ ${esc(chapterName)} — Quick Revision</strong>
+    <button class="btn-save" onclick="window.print()">📥 Save as PDF</button>
+    <button class="btn-close" onclick="window.close()">✕ Close</button>
+  </div>
+  <div class="doc-wrap">
+    ${makeHeader("Quick Revision", chapterName, subject, classNum, stats)}
+    ${body}
+    ${makeFooter(chapterName)}
+  </div>
+</body>
+</html>`;
+
+  openPrintWindow(html);
+}
+
+// ─── FORMULA SHEET PDF ────────────────────────────────────────────────────────
+
+const FORMULA_EXTRA = `
+  .formula-card { border:1px solid #e5e7eb; border-radius:10px; padding:14px 16px; margin-bottom:12px; }
+  .formula-card-header { display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; }
+  .formula-idx { width:26px; height:26px; border-radius:8px; background:#dcfce7; border:1px solid #86efac; display:flex; align-items:center; justify-content:center; font-size:9pt; font-weight:700; color:#15803d; flex-shrink:0; }
+  .formula-name { font-size:11pt; font-weight:700; color:#111827; line-height:1.3; }
+  .formula-sec-tag { font-size:8.5pt; color:#6b7280; margin-top:2px; }
+  .formula-expr-wrap { background:#f1f5f9; border:1px solid #e2e8f0; border-radius:9px; padding:12px 16px; margin-bottom:10px; text-align:center; }
+  .formula-expr-text { font-family:'Courier New','Lucida Console',monospace; font-size:14pt; font-weight:700; color:#0f172a; letter-spacing:0.5px; word-break:break-word; }
+  .formula-si { display:inline-flex; align-items:center; gap:6px; margin-bottom:10px; }
+  .formula-si-label { font-size:9pt; color:#6b7280; }
+  .formula-si-val { font-size:9.5pt; font-weight:600; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; padding:2px 9px; border-radius:9px; }
+  .vars-table { width:100%; border-collapse:collapse; margin-bottom:10px; font-size:9.5pt; }
+  .vars-table th { background:#f8fafc; color:#6b7280; font-size:8.5pt; text-transform:uppercase; letter-spacing:.4px; padding:5px 9px; text-align:left; border-bottom:1px solid #e5e7eb; }
+  .vars-table td { padding:5px 9px; border-bottom:1px solid #f3f4f6; color:#374151; vertical-align:top; }
+  .var-symbol { font-family:'Courier New',monospace; font-weight:700; color:#15803d; }
+  .var-unit { color:#6b7280; font-size:9pt; }
+  .deriv-box { background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:9px 12px; margin-top:6px; font-size:9.5pt; color:#374151; line-height:1.65; }
+  .deriv-label { font-size:9pt; font-weight:700; color:#d97706; margin-bottom:3px; }
+  .sec-divider { font-size:10pt; font-weight:700; color:#475569; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:7px; padding:6px 12px; margin:16px 0 10px; }
+`;
+
+export function exportFormulasPDF(
+  formulas: any[],
+  meta: { chapterName: string; subject: string; classNum: string }
+): void {
+  const { chapterName, subject, classNum } = meta;
+  if (!formulas || formulas.length === 0) return;
+
+  const grouped = new Map<string, any[]>();
+  formulas.forEach(f => {
+    const sec = (f.chapter_section || "General").trim();
+    if (!grouped.has(sec)) grouped.set(sec, []);
+    grouped.get(sec)!.push(f);
+  });
+  const multiSec = grouped.size > 1;
+
+  let idx = 0;
+  let body = "";
+
+  grouped.forEach((group, section) => {
+    if (multiSec) body += `<div class="sec-divider">📑 ${esc(section)}</div>`;
+    group.forEach(f => {
+      idx++;
+      const plainText = f.plain_text || f.latex || "";
+      const hasVars = (f.variables || []).length > 0;
+      body += `<div class="formula-card avoid-break">
+        <div class="formula-card-header">
+          <span class="formula-idx">${idx}</span>
+          <div style="flex:1;">
+            <div class="formula-name">${esc(f.name)}</div>
+            ${f.chapter_section && !multiSec ? `<div class="formula-sec-tag">📖 ${esc(f.chapter_section)}</div>` : ""}
+          </div>
+        </div>
+        <div class="formula-expr-wrap">
+          <div class="formula-expr-text">${esc(plainText)}</div>
+        </div>
+        ${f.si_unit ? `<div class="formula-si"><span class="formula-si-label">SI Unit:</span><span class="formula-si-val">${esc(f.si_unit)}</span></div>` : ""}
+        ${hasVars ? `<table class="vars-table">
+          <thead><tr><th>Symbol</th><th>Meaning</th><th>Unit</th></tr></thead>
+          <tbody>${f.variables.map((v: any) => `<tr>
+            <td><span class="var-symbol">${esc(v.symbol)}</span></td>
+            <td>${esc(v.meaning)}</td>
+            <td class="var-unit">${esc(v.unit)}</td>
+          </tr>`).join("")}</tbody>
+        </table>` : ""}
+        ${f.derivation_hint ? `<div class="deriv-box"><div class="deriv-label">💡 Derivation Hint</div>${escMl(f.derivation_hint)}</div>` : ""}
+      </div>`;
+    });
+  });
+
+  const html = `<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Formula Sheet — ${esc(chapterName)}</title>
+  <style>${BASE_STYLES}${FORMULA_EXTRA}</style>
+</head>
+<body>
+  <div class="no-print print-toolbar">
+    <strong>Σ ${esc(chapterName)} — Formula Sheet</strong>
+    <button class="btn-save" onclick="window.print()">📥 Save as PDF</button>
+    <button class="btn-close" onclick="window.close()">✕ Close</button>
+  </div>
+  <div class="doc-wrap">
+    ${makeHeader("Formula Sheet", chapterName, subject, classNum, `${formulas.length} formulas`)}
+    ${body}
+    ${makeFooter(chapterName)}
+  </div>
+</body>
+</html>`;
+
+  openPrintWindow(html);
+}
+
+// ─── CONCEPT MAP PDF ──────────────────────────────────────────────────────────
+
+const MINDMAP_EXTRA = `
+  .mm-stats { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+  .mm-stat  { background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px; padding:6px 12px; font-size:9.5pt; color:#475569; }
+  .mm-stat strong { color:#15803d; }
+  .mm-root-bar { font-size:14pt; font-weight:800; color:#15803d; background:#f0fdf4; border:2px solid #86efac; border-radius:10px; padding:10px 16px; margin-bottom:12px; }
+  .mm-root-expl { font-size:10pt; color:#374151; line-height:1.7; padding:0 4px; margin-bottom:14px; }
+  .mm-l1-block { margin-bottom:14px; }
+  .mm-l1-row   { display:flex; align-items:flex-start; gap:10px; margin-bottom:4px; }
+  .mm-l1-num   { width:24px; height:24px; border-radius:50%; background:#3b82f6; color:#fff; font-size:10pt; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+  .mm-l1-title { font-size:12pt; font-weight:700; color:#1d4ed8; line-height:1.3; }
+  .mm-l1-expl  { font-size:9.5pt; color:#374151; line-height:1.65; margin-top:2px; }
+  .mm-l1-kids  { margin-left:20px; padding-left:16px; border-left:2px solid #bfdbfe; margin-top:8px; }
+  .mm-l2-block { margin-bottom:9px; }
+  .mm-l2-row   { display:flex; align-items:flex-start; gap:8px; }
+  .mm-l2-dot   { width:8px; height:8px; border-radius:50%; background:#a855f7; flex-shrink:0; margin-top:5px; }
+  .mm-l2-title { font-size:10.5pt; font-weight:600; color:#7e22ce; line-height:1.4; }
+  .mm-l2-expl  { font-size:9.5pt; color:#374151; line-height:1.65; margin-top:2px; padding-left:16px; }
+  .mm-l2-kids  { margin-left:16px; padding-left:14px; border-left:2px solid #e9d5ff; margin-top:6px; }
+  .mm-l3-block { margin-bottom:7px; }
+  .mm-l3-row   { display:flex; align-items:flex-start; gap:7px; }
+  .mm-l3-dot   { width:6px; height:6px; border-radius:50%; background:#f97316; flex-shrink:0; margin-top:5px; }
+  .mm-l3-title { font-size:10pt; font-weight:500; color:#c2410c; line-height:1.4; }
+  .mm-l3-expl  { font-size:9.5pt; color:#374151; line-height:1.65; margin-top:2px; padding-left:13px; }
+`;
+
+function renderMindNodeHTML(node: any, depth: number, idx?: number): string {
+  if (depth === 0) {
+    let h = `<div class="mm-root-bar">🌐 ${esc(node.label)}</div>`;
+    if (node.explanation) h += `<div class="mm-root-expl">${escMl(node.explanation)}</div>`;
+    (node.children || []).forEach((c: any, i: number) => { h += renderMindNodeHTML(c, 1, i + 1); });
+    return h;
+  }
+  if (depth === 1) {
+    let h = `<div class="mm-l1-block avoid-break">
+      <div class="mm-l1-row">
+        <span class="mm-l1-num">${idx ?? "•"}</span>
+        <div style="flex:1;">
+          <div class="mm-l1-title">${esc(node.label)}</div>
+          ${node.explanation ? `<div class="mm-l1-expl">${escMl(node.explanation)}</div>` : ""}
+        </div>
+      </div>`;
+    if ((node.children || []).length > 0) {
+      h += `<div class="mm-l1-kids">`;
+      node.children.forEach((c: any) => { h += renderMindNodeHTML(c, 2); });
+      h += `</div>`;
+    }
+    return h + `</div>`;
+  }
+  if (depth === 2) {
+    let h = `<div class="mm-l2-block">
+      <div class="mm-l2-row">
+        <span class="mm-l2-dot"></span>
+        <div style="flex:1;"><div class="mm-l2-title">${esc(node.label)}</div></div>
+      </div>
+      ${node.explanation ? `<div class="mm-l2-expl">${escMl(node.explanation)}</div>` : ""}`;
+    if ((node.children || []).length > 0) {
+      h += `<div class="mm-l2-kids">`;
+      node.children.forEach((c: any) => { h += renderMindNodeHTML(c, 3); });
+      h += `</div>`;
+    }
+    return h + `</div>`;
+  }
+  return `<div class="mm-l3-block">
+    <div class="mm-l3-row">
+      <span class="mm-l3-dot"></span>
+      <div style="flex:1;">
+        <div class="mm-l3-title">${esc(node.label)}</div>
+        ${node.explanation ? `<div class="mm-l3-expl">${escMl(node.explanation)}</div>` : ""}
+      </div>
+    </div>
+    ${(node.children || []).map((c: any) => renderMindNodeHTML(c, 3)).join("")}
+  </div>`;
+}
+
+function countAllNodes(node: any): number {
+  return 1 + (node.children || []).reduce((s: number, c: any) => s + countAllNodes(c), 0);
+}
+
+export function exportMindMapPDF(
+  mindmap: any,
+  meta: { chapterName: string; subject: string; classNum: string }
+): void {
+  const { chapterName, subject, classNum } = meta;
+  if (!mindmap?.root) return;
+
+  const total    = countAllNodes(mindmap.root);
+  const main     = (mindmap.root.children || []).length;
+  const subCount = (mindmap.root.children || []).reduce((s: number, c: any) => s + (c.children || []).length, 0);
+
+  const stats = `<div class="mm-stats">
+    <div class="mm-stat">🌐 <strong>${main}</strong> Main Topics</div>
+    <div class="mm-stat">📌 <strong>${subCount}</strong> Sub-topics</div>
+    <div class="mm-stat">🔵 <strong>${total}</strong> Total Nodes</div>
+  </div>`;
+
+  const body = stats + renderMindNodeHTML(mindmap.root, 0);
+
+  const html = `<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Concept Map — ${esc(chapterName)}</title>
+  <style>${BASE_STYLES}${MINDMAP_EXTRA}</style>
+</head>
+<body>
+  <div class="no-print print-toolbar">
+    <strong>🗺 ${esc(chapterName)} — Concept Map</strong>
+    <button class="btn-save" onclick="window.print()">📥 Save as PDF</button>
+    <button class="btn-close" onclick="window.close()">✕ Close</button>
+  </div>
+  <div class="doc-wrap">
+    ${makeHeader("Concept Map", chapterName, subject, classNum, `${mindmap.title || ""} · ${total} nodes`)}
+    ${body}
+    ${makeFooter(chapterName)}
+  </div>
+</body>
+</html>`;
+
+  openPrintWindow(html);
+}

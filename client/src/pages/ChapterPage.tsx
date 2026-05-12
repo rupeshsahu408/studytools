@@ -385,6 +385,7 @@ export default function ChapterPage() {
             summary={chapter.summary as any}
             chapterName={chapter.chapterName}
             subject={chapter.subject}
+            classNum={String(chapter.classNum || "11")}
             onRegenerate={handleRegenerateSummary}
             regenerating={regeneratingSummary}
           />
@@ -402,7 +403,12 @@ export default function ChapterPage() {
             />
           );
         }
-        return <FormulaSheet formulas={chapter.formulas as any[]} />;
+        return <FormulaSheet
+          formulas={chapter.formulas as any[]}
+          chapterName={chapter.chapterName}
+          subject={chapter.subject}
+          classNum={String(chapter.classNum || "11")}
+        />;
 
       case "mindmap":
         if (isGenerating("mindmap")) return <SectionGenerating label="Concept Map" />;
@@ -416,7 +422,12 @@ export default function ChapterPage() {
             />
           );
         }
-        return <MindMap mindmap={chapter.mindmap} />;
+        return <MindMap
+          mindmap={chapter.mindmap}
+          chapterName={chapter.chapterName}
+          subject={chapter.subject}
+          classNum={String(chapter.classNum || "11")}
+        />;
 
       case "mistakes":
         if (isGenerating("mistakes")) return <SectionGenerating label="Common Mistakes" />;
