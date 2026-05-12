@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { api, uploadPDF, generateNotes, generateQuestions, fetchNCERTChapters } from "../lib/api";
-import { saveChapter } from "../lib/firestore";
+import { saveChapter, updateChapterSection } from "../lib/firestore";
 import Navbar from "../components/Navbar";
 
 const SUBJECTS = ["Physics", "Chemistry", "Mathematics", "Biology"];
@@ -349,11 +349,11 @@ export default function UploadPage() {
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [resolvedChapterName, setResolvedChapterName] = useState("");
 
-  // Generation step tracking
+  // Generation step tracking — save first so chapter is secured before AI generation
   const [genSteps, setGenSteps] = useState<GenStep[]>([
-    { id: "notes", label: "Writing Study Notes", sublabel: "AI crafting detailed notes from your chapter", status: "waiting", icon: BookOpen },
-    { id: "questions", label: "Building Question Bank", sublabel: "Generating MCQs, long answers, case-based & more", status: "waiting", icon: FileText },
-    { id: "save", label: "Saving to Your Library", sublabel: "Storing chapter and all generated content", status: "waiting", icon: Database },
+    { id: "save",      label: "Securing Your Chapter",    sublabel: "Saving extracted text to your library", status: "waiting", icon: Database },
+    { id: "notes",     label: "Writing Study Notes",       sublabel: "AI crafting detailed notes from your chapter", status: "waiting", icon: BookOpen },
+    { id: "questions", label: "Building Question Bank",    sublabel: "Generating MCQs, long answers, case-based & more", status: "waiting", icon: FileText },
   ]);
 
   const updateStep = (id: string, status: StepStatus) => {
@@ -429,28 +429,10 @@ export default function UploadPage() {
     setGenSteps(prev => prev.map(s => ({ ...s, status: "waiting" as StepStatus })));
     setStage("generating");
 
-    // Mark notes + questions as running simultaneously
-    updateStep("notes", "running");
-    updateStep("questions", "running");
-
     try {
-      // Run notes and questions in parallel, updating steps as each completes
-      let notesRes: any = null;
-      let questionsRes: any = null;
-
-      const notesPromise = generateNotes(
-        uploadResult.text, subject, classNum, resolvedChapterName, uploadResult.language
-      ).then(r => { notesRes = r; updateStep("notes", "done"); return r; })
-        .catch(() => { updateStep("notes", "error"); return { notes: null }; });
-
-      const questionsPromise = generateQuestions(
-        uploadResult.text, subject, classNum, resolvedChapterName, uploadResult.language
-      ).then(r => { questionsRes = r; updateStep("questions", "done"); return r; })
-        .catch(() => { updateStep("questions", "error"); return { questions: {} }; });
-
-      await Promise.all([notesPromise, questionsPromise]);
-
-      // Save step
+      // ── Step 1: Save chapter stub FIRST ────────────────────────────────────
+      // This guarantees the chapter exists in the library even if AI generation
+      // fails later. Notes and questions can be retried from the dashboard.
       updateStep("save", "running");
       const chapterId = await saveChapter(user.uid, {
         chapterName: resolvedChapterName,
@@ -458,13 +440,45 @@ export default function UploadPage() {
         classNum,
         language: uploadResult.language,
         text: uploadResult.text,
-        notes: notesRes?.notes ?? null,
-        questions: questionsRes?.questions ?? {},
+        notes: null,
+        questions: null,
       });
       updateStep("save", "done");
 
-      // Brief pause so user sees all steps done
-      await new Promise(r => setTimeout(r, 600));
+      // ── Step 2: Run notes + questions in parallel ──────────────────────────
+      // Each updates Firestore independently as it finishes.
+      // Navigation happens regardless of partial failures — student can retry from dashboard.
+      updateStep("notes", "running");
+      updateStep("questions", "running");
+
+      const notesPromise = generateNotes(
+        uploadResult.text, subject, classNum, resolvedChapterName, uploadResult.language
+      ).then(async r => {
+        if (r?.notes) {
+          await updateChapterSection(chapterId, "notes", r.notes);
+        }
+        updateStep("notes", "done");
+      }).catch(err => {
+        console.error("[upload] Notes generation failed:", err?.message);
+        updateStep("notes", "error");
+      });
+
+      const questionsPromise = generateQuestions(
+        uploadResult.text, subject, classNum, resolvedChapterName, uploadResult.language
+      ).then(async r => {
+        if (r?.questions) {
+          await updateChapterSection(chapterId, "questions", r.questions);
+        }
+        updateStep("questions", "done");
+      }).catch(err => {
+        console.error("[upload] Questions generation failed:", err?.message);
+        updateStep("questions", "error");
+      });
+
+      await Promise.all([notesPromise, questionsPromise]);
+
+      // Brief pause so user sees the completed step indicators
+      await new Promise(r => setTimeout(r, 700));
       navigate(`/chapter/${chapterId}`);
     } catch (e: any) {
       const serverMsg = e?.response?.data?.error;

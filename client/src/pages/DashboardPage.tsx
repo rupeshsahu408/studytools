@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import {
   Plus, BookOpen, Trash2, ChevronRight, FlaskConical,
   Calculator, Leaf, Atom, Flame, Target, BarChart2,
-  UserCircle, TrendingUp,
+  UserCircle, TrendingUp, Loader2, RefreshCw, AlertTriangle,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useProgress } from "../contexts/ProgressContext";
-import { deleteChapter } from "../lib/firestore";
+import { deleteChapter, updateChapterSection } from "../lib/firestore";
+import { generateNotes, generateQuestions } from "../lib/api";
 import type { Chapter } from "../lib/firestore";
 import Navbar from "../components/Navbar";
 
@@ -34,12 +35,20 @@ function getChapterCompletion(chapter: Chapter): number {
   return Math.round((flags.reduce((a, b) => a + b, 0) / 4) * 100);
 }
 
+function hasNoQuestions(questions: any): boolean {
+  if (!questions) return true;
+  return Object.values(questions).every((arr: any) => !Array.isArray(arr) || arr.length === 0);
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { userData, chapters, loadingUser, refreshChapters } = useProgress();
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [retryingNotesId, setRetryingNotesId] = useState<string | null>(null);
+  const [retryingQuestionsId, setRetryingQuestionsId] = useState<string | null>(null);
+  const [retryError, setRetryError] = useState<string | null>(null);
 
   useEffect(() => {
     refreshChapters();
@@ -56,6 +65,50 @@ export default function DashboardPage() {
       console.error(e);
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleRetryNotes = async (chapter: Chapter, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!chapter.text) {
+      setRetryError("Chapter text unavailable — please re-upload the PDF.");
+      return;
+    }
+    setRetryError(null);
+    setRetryingNotesId(chapter.id);
+    try {
+      const r = await generateNotes(chapter.text, chapter.subject, chapter.classNum, chapter.chapterName, chapter.language);
+      if (r?.notes) {
+        await updateChapterSection(chapter.id, "notes", r.notes);
+        await refreshChapters();
+      }
+    } catch (err: any) {
+      console.error("[dashboard] Notes retry failed:", err?.message);
+      setRetryError("Notes generation failed. Please try again in a moment.");
+    } finally {
+      setRetryingNotesId(null);
+    }
+  };
+
+  const handleRetryQuestions = async (chapter: Chapter, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!chapter.text) {
+      setRetryError("Chapter text unavailable — please re-upload the PDF.");
+      return;
+    }
+    setRetryError(null);
+    setRetryingQuestionsId(chapter.id);
+    try {
+      const r = await generateQuestions(chapter.text, chapter.subject, chapter.classNum, chapter.chapterName, chapter.language);
+      if (r?.questions) {
+        await updateChapterSection(chapter.id, "questions", r.questions);
+        await refreshChapters();
+      }
+    } catch (err: any) {
+      console.error("[dashboard] Questions retry failed:", err?.message);
+      setRetryError("Questions generation failed. Please try again in a moment.");
+    } finally {
+      setRetryingQuestionsId(null);
     }
   };
 
@@ -162,6 +215,15 @@ export default function DashboardPage() {
           </h2>
         </div>
 
+        {/* Retry error banner */}
+        {retryError && (
+          <div className="mb-4 flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl px-4 py-3 text-sm">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+            <span>{retryError}</span>
+            <button onClick={() => setRetryError(null)} className="ml-auto text-red-400 hover:text-red-600">✕</button>
+          </div>
+        )}
+
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[1, 2, 3].map(i => (
@@ -174,18 +236,26 @@ export default function DashboardPage() {
               const Icon = SUBJECT_ICONS[ch.subject] || BookOpen;
               const colorClass = SUBJECT_COLORS[ch.subject] || "bg-gray-100 text-gray-600";
               const completion = getChapterCompletion(ch);
+              const missingNotes = !ch.notes;
+              const missingQuestions = hasNoQuestions(ch.questions);
+              const isRetryingNotes = retryingNotesId === ch.id;
+              const isRetryingQuestions = retryingQuestionsId === ch.id;
+              const hasAnythingRetrying = isRetryingNotes || isRetryingQuestions;
+
               return (
                 <div key={ch.id}
-                  onClick={() => navigate(`/chapter/${ch.id}`)}
-                  className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 cursor-pointer hover:border-green-300 dark:hover:border-green-700 hover:shadow-md transition-all group">
+                  onClick={() => !hasAnythingRetrying && navigate(`/chapter/${ch.id}`)}
+                  className={`bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 transition-all group ${
+                    hasAnythingRetrying ? "cursor-wait opacity-90" : "cursor-pointer hover:border-green-300 dark:hover:border-green-700 hover:shadow-md"
+                  }`}>
                   <div className="flex items-start justify-between mb-3">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colorClass}`}>
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button onClick={e => handleDelete(ch.id, e)}
-                        disabled={deletingId === ch.id}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                        disabled={deletingId === ch.id || hasAnythingRetrying}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-40">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                       <ChevronRight className="w-4 h-4 text-green-600" />
@@ -197,6 +267,35 @@ export default function DashboardPage() {
                     <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">Class {ch.classNum}</span>
                     {ch.notes && <span className="text-xs bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 px-2 py-0.5 rounded-full">Ready</span>}
                   </div>
+
+                  {/* Retry buttons for missing content */}
+                  {(missingNotes || missingQuestions) && (
+                    <div className="mb-3 space-y-1.5">
+                      {missingNotes && (
+                        <button
+                          onClick={e => handleRetryNotes(ch, e)}
+                          disabled={isRetryingNotes || isRetryingQuestions}
+                          className="w-full flex items-center justify-center gap-1.5 text-xs font-medium py-1.5 px-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                          {isRetryingNotes
+                            ? <><Loader2 className="w-3 h-3 animate-spin" /> Generating Notes...</>
+                            : <><RefreshCw className="w-3 h-3" /> Generate Notes</>
+                          }
+                        </button>
+                      )}
+                      {missingQuestions && (
+                        <button
+                          onClick={e => handleRetryQuestions(ch, e)}
+                          disabled={isRetryingNotes || isRetryingQuestions}
+                          className="w-full flex items-center justify-center gap-1.5 text-xs font-medium py-1.5 px-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                          {isRetryingQuestions
+                            ? <><Loader2 className="w-3 h-3 animate-spin" /> Generating Questions...</>
+                            : <><RefreshCw className="w-3 h-3" /> Generate Questions</>
+                          }
+                        </button>
+                      )}
+                    </div>
+                  )}
+
                   {/* Completion bar */}
                   <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 overflow-hidden">
                     <div

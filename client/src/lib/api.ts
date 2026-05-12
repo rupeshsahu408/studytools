@@ -22,7 +22,7 @@ export async function uploadPDF(file: File, subject: string, classNum: string, c
 }
 
 export async function generateNotes(text: string, subject: string, classNum: string, chapterName: string, language: string) {
-  const res = await api.post("/api/generate/notes", { text, subject, classNum, chapterName, language });
+  const res = await api.post("/api/generate/notes", { text, subject, classNum, chapterName, language }, { timeout: 300000 });
   return res.data;
 }
 
@@ -32,7 +32,7 @@ export async function regenerateNotes(text: string, subject: string, classNum: s
 }
 
 export async function generateQuestions(text: string, subject: string, classNum: string, chapterName: string, language: string) {
-  const res = await api.post("/api/generate/questions", { text, subject, classNum, chapterName, language });
+  const res = await api.post("/api/generate/questions", { text, subject, classNum, chapterName, language }, { timeout: 300000 });
   return res.data;
 }
 

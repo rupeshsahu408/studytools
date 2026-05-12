@@ -116,14 +116,28 @@ async function callNvidiaWithRetry(
       return safeParseJSON(raw);
     } catch (err: any) {
       lastError = err;
-      console.warn(`[generate] Attempt ${attempt}/${maxAttempts} failed: ${err.message}`);
+      const status = err?.status ?? err?.statusCode ?? 0;
+      console.warn(`[generate] Attempt ${attempt}/${maxAttempts} failed (status=${status}): ${err.message}`);
       if (attempt < maxAttempts) {
-        // Small back-off before retry
-        await new Promise(r => setTimeout(r, 500 * attempt));
+        // Rate limit (429): wait much longer before retry — 3s, 9s, 27s
+        // Timeout/other errors: shorter back-off — 1s, 2s
+        const isRateLimit = status === 429;
+        const backoffMs = isRateLimit ? (3000 * attempt) : (1000 * attempt);
+        console.warn(`[generate] Waiting ${backoffMs}ms before retry ${attempt + 1}...`);
+        await new Promise(r => setTimeout(r, backoffMs));
       }
     }
   }
   throw lastError;
+}
+
+// ─── Staggered Launch Helper ──────────────────────────────────────────────────
+// Starts a Promise-returning function after a given delay.
+// Used to spread parallel NVIDIA API calls over time and avoid rate-limit bursts.
+function later<T>(fn: () => Promise<T>, delayMs: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    setTimeout(() => fn().then(resolve).catch(reject), delayMs);
+  });
 }
 
 // ─── Notes Post-Processing ───────────────────────────────────────────────────
@@ -345,18 +359,22 @@ router.post("/notes", async (req, res) => {
 
     console.log(`[notes] Phase 2 starting — ${batches.length} parallel batches of ≤${BATCH_SIZE} sections each`);
 
+    // Stagger batch launches 400ms apart to avoid simultaneous rate-limit bursts.
     const batchResults = await Promise.allSettled(
       batches.map((batch, i) =>
-        callNvidiaWithRetry(
-          notesContentBatchSystemPrompt(lang),
-          notesContentBatchUserPrompt(batch, text, subject, classNum, chapterName, lang),
-          { maxTokens: 16384 },
-          3
-        ).then(parsed => {
-          const topics = parsed.topics || [];
-          console.log(`[notes] Batch ${i + 1}/${batches.length} done — ${topics.length} topics`);
-          return topics;
-        })
+        later(() =>
+          callNvidiaWithRetry(
+            notesContentBatchSystemPrompt(lang),
+            notesContentBatchUserPrompt(batch, text, subject, classNum, chapterName, lang),
+            { maxTokens: 16384 },
+            3
+          ).then(parsed => {
+            const topics = parsed.topics || [];
+            console.log(`[notes] Batch ${i + 1}/${batches.length} done — ${topics.length} topics`);
+            return topics;
+          }),
+          i * 400
+        )
       )
     );
 
@@ -435,6 +453,9 @@ router.post("/questions", async (req, res) => {
   //   Batch B  — Assertion-Reason + Case-Based + Exam Important
   //
   // Client retry "A" reruns MCQ + 2M + 5M + BatchA; "B" reruns BatchB only.
+  //
+  // IMPORTANT: Calls are staggered 500ms apart to avoid simultaneous rate-limit
+  // bursts (429) from NVIDIA. All 7 still run in parallel — just offset starts.
   const runMCQ = !batch || batch === "A";
   const run2M  = !batch || batch === "A";
   const run5M  = !batch || batch === "A";
@@ -447,65 +468,66 @@ router.post("/questions", async (req, res) => {
   const SHORT_MAX_TOKENS   = 10000;
   const LONG_MAX_TOKENS    = 16384;
 
-  const [mcqP1Result, mcqP2Result, twoMP1Result, twoMP2Result, fiveMResult, batchAResult, batchBResult] =
-    await Promise.allSettled([
-      runMCQ
-        ? callNvidiaWithRetry(
-            sysPrompt,
-            questionsMCQPrompt(text, subject, classNum, chapterName, lang, "P1"),
-            { maxTokens: MCQ_MAX_TOKENS },
-            3
-          )
-        : Promise.resolve(null),
-      runMCQ
-        ? callNvidiaWithRetry(
-            sysPrompt,
-            questionsMCQPrompt(text, subject, classNum, chapterName, lang, "P2"),
-            { maxTokens: MCQ_MAX_TOKENS },
-            3
-          )
-        : Promise.resolve(null),
-      run2M
-        ? callNvidiaWithRetry(
-            sysPrompt,
-            questionsTwoMarkP1Prompt(text, subject, classNum, chapterName, lang),
-            { maxTokens: TWOMARK_MAX_TOKENS },
-            3
-          )
-        : Promise.resolve(null),
-      run2M
-        ? callNvidiaWithRetry(
-            sysPrompt,
-            questionsTwoMarkP2Prompt(text, subject, classNum, chapterName, lang),
-            { maxTokens: TWOMARK_MAX_TOKENS },
-            3
-          )
-        : Promise.resolve(null),
-      run5M
-        ? callNvidiaWithRetry(
-            sysPrompt,
-            questionsFiveMarkPrompt(text, subject, classNum, chapterName, lang),
-            { maxTokens: FIVEMARK_MAX_TOKENS },
-            3
-          )
-        : Promise.resolve(null),
-      runA
-        ? callNvidiaWithRetry(
-            sysPrompt,
-            questionsBatchAPrompt(text, subject, classNum, chapterName, lang),
-            { maxTokens: SHORT_MAX_TOKENS },
-            3
-          )
-        : Promise.resolve(null),
-      runB
-        ? callNvidiaWithRetry(
-            sysPrompt,
-            questionsBatchBPrompt(text, subject, classNum, chapterName, lang),
-            { maxTokens: LONG_MAX_TOKENS },
-            3
-          )
-        : Promise.resolve(null),
-    ]);
+  try {
+    const [mcqP1Result, mcqP2Result, twoMP1Result, twoMP2Result, fiveMResult, batchAResult, batchBResult] =
+      await Promise.allSettled([
+        runMCQ
+          ? later(() => callNvidiaWithRetry(
+              sysPrompt,
+              questionsMCQPrompt(text, subject, classNum, chapterName, lang, "P1"),
+              { maxTokens: MCQ_MAX_TOKENS },
+              3
+            ), 0)
+          : Promise.resolve(null),
+        runMCQ
+          ? later(() => callNvidiaWithRetry(
+              sysPrompt,
+              questionsMCQPrompt(text, subject, classNum, chapterName, lang, "P2"),
+              { maxTokens: MCQ_MAX_TOKENS },
+              3
+            ), 500)
+          : Promise.resolve(null),
+        run2M
+          ? later(() => callNvidiaWithRetry(
+              sysPrompt,
+              questionsTwoMarkP1Prompt(text, subject, classNum, chapterName, lang),
+              { maxTokens: TWOMARK_MAX_TOKENS },
+              3
+            ), 1000)
+          : Promise.resolve(null),
+        run2M
+          ? later(() => callNvidiaWithRetry(
+              sysPrompt,
+              questionsTwoMarkP2Prompt(text, subject, classNum, chapterName, lang),
+              { maxTokens: TWOMARK_MAX_TOKENS },
+              3
+            ), 1500)
+          : Promise.resolve(null),
+        run5M
+          ? later(() => callNvidiaWithRetry(
+              sysPrompt,
+              questionsFiveMarkPrompt(text, subject, classNum, chapterName, lang),
+              { maxTokens: FIVEMARK_MAX_TOKENS },
+              3
+            ), 2000)
+          : Promise.resolve(null),
+        runA
+          ? later(() => callNvidiaWithRetry(
+              sysPrompt,
+              questionsBatchAPrompt(text, subject, classNum, chapterName, lang),
+              { maxTokens: SHORT_MAX_TOKENS },
+              3
+            ), 2500)
+          : Promise.resolve(null),
+        runB
+          ? later(() => callNvidiaWithRetry(
+              sysPrompt,
+              questionsBatchBPrompt(text, subject, classNum, chapterName, lang),
+              { maxTokens: LONG_MAX_TOKENS },
+              3
+            ), 3000)
+          : Promise.resolve(null),
+      ]);
 
   const mcqP1  = mcqP1Result.status   === "fulfilled" ? (mcqP1Result.value   ?? {}) : {};
   const mcqP2  = mcqP2Result.status   === "fulfilled" ? (mcqP2Result.value   ?? {}) : {};
@@ -633,7 +655,11 @@ router.post("/questions", async (req, res) => {
   if (count5M < 8 && run5M && fiveMResult.status !== "rejected")
     console.warn(`[generate/questions] ⚠️ LOW 5-MARK COUNT (${count5M}) — expected 10-15`);
 
-  res.json({ questions: cleanQuestionsObject(questions), language: lang, failedBatches });
+    res.json({ questions: cleanQuestionsObject(questions), language: lang, failedBatches });
+  } catch (err: any) {
+    console.error("[generate/questions] Unhandled error:", err?.message);
+    res.status(500).json({ error: "AI could not generate questions. Please try again in a moment." });
+  }
 });
 
 // ─── Exam Paper Endpoint ──────────────────────────────────────────────────
@@ -724,12 +750,17 @@ router.post("/formulas", async (req, res) => {
     return res.status(400).json({ error: "Missing required fields" });
   }
   const lang = language || "english";
-  const parsed = await callNvidiaWithRetry(
-    formulasSystemPrompt(),
-    formulasUserPrompt(text, subject, classNum || "11", chapterName, lang),
-    { maxTokens: 8192 }
-  );
-  res.json({ formulas: cleanFormulasArray(parsed.formulas || []), language: lang });
+  try {
+    const parsed = await callNvidiaWithRetry(
+      formulasSystemPrompt(),
+      formulasUserPrompt(text, subject, classNum || "11", chapterName, lang),
+      { maxTokens: 8192 }
+    );
+    res.json({ formulas: cleanFormulasArray(parsed.formulas || []), language: lang });
+  } catch (err: any) {
+    console.error("[generate/formulas] error:", err?.message);
+    res.status(500).json({ error: "Could not generate formulas. Please try again." });
+  }
 });
 
 router.post("/mindmap", async (req, res) => {
@@ -737,12 +768,17 @@ router.post("/mindmap", async (req, res) => {
   if (!text || !subject || !chapterName) {
     return res.status(400).json({ error: "Missing required fields" });
   }
-  const parsed = await callNvidiaWithRetry(
-    mindmapSystemPrompt(),
-    mindmapUserPrompt(text, subject, classNum || "11", chapterName, language || "english"),
-    { maxTokens: 12288 }
-  );
-  res.json({ mindmap: parsed, language: language || "auto" });
+  try {
+    const parsed = await callNvidiaWithRetry(
+      mindmapSystemPrompt(),
+      mindmapUserPrompt(text, subject, classNum || "11", chapterName, language || "english"),
+      { maxTokens: 12288 }
+    );
+    res.json({ mindmap: parsed, language: language || "auto" });
+  } catch (err: any) {
+    console.error("[generate/mindmap] error:", err?.message);
+    res.status(500).json({ error: "Could not generate mind map. Please try again." });
+  }
 });
 
 router.post("/mistakes", async (req, res) => {
@@ -750,14 +786,18 @@ router.post("/mistakes", async (req, res) => {
   if (!text || !subject || !chapterName) {
     return res.status(400).json({ error: "Missing required fields" });
   }
-  // Always Hindi-medium: explanations in Hindi, formulas/technical terms in English
   const lang = "hindi";
-  const parsed = await callNvidiaWithRetry(
-    mistakesSystemPrompt(lang),
-    mistakesUserPrompt(text, subject, classNum || "11", chapterName, lang),
-    { maxTokens: 6144 }
-  );
-  res.json({ mistakes: cleanMistakesArray(parsed.mistakes || []), language: lang });
+  try {
+    const parsed = await callNvidiaWithRetry(
+      mistakesSystemPrompt(lang),
+      mistakesUserPrompt(text, subject, classNum || "11", chapterName, lang),
+      { maxTokens: 6144 }
+    );
+    res.json({ mistakes: cleanMistakesArray(parsed.mistakes || []), language: lang });
+  } catch (err: any) {
+    console.error("[generate/mistakes] error:", err?.message);
+    res.status(500).json({ error: "Could not generate mistakes. Please try again." });
+  }
 });
 
 router.post("/flashcards", async (req, res) => {
@@ -765,14 +805,18 @@ router.post("/flashcards", async (req, res) => {
   if (!text || !subject || !chapterName) {
     return res.status(400).json({ error: "Missing required fields" });
   }
-  // Always Hindi-medium: explanations in Hindi, formulas/technical terms in English
   const lang = "hindi";
-  const parsed = await callNvidiaWithRetry(
-    flashcardsSystemPrompt(lang),
-    flashcardsUserPrompt(text, subject, classNum || "11", chapterName, lang),
-    { maxTokens: 6144 }
-  );
-  res.json({ cards: cleanFlashcardsArray(parsed.cards || []), language: lang });
+  try {
+    const parsed = await callNvidiaWithRetry(
+      flashcardsSystemPrompt(lang),
+      flashcardsUserPrompt(text, subject, classNum || "11", chapterName, lang),
+      { maxTokens: 6144 }
+    );
+    res.json({ cards: cleanFlashcardsArray(parsed.cards || []), language: lang });
+  } catch (err: any) {
+    console.error("[generate/flashcards] error:", err?.message);
+    res.status(500).json({ error: "Could not generate flashcards. Please try again." });
+  }
 });
 
 // ─── Phase 3 Endpoint ────────────────────────────────────────────────────
@@ -885,12 +929,17 @@ router.post("/weakareas", async (req, res) => {
     return res.json({ weakAreas: [] });
   }
 
-  const parsed = await callNvidiaWithRetry(
-    weakAreasSystemPrompt(),
-    weakAreasUserPrompt(eligible),
-    { maxTokens: 6144 }
-  );
-  res.json({ weakAreas: parsed.weakAreas || [] });
+  try {
+    const parsed = await callNvidiaWithRetry(
+      weakAreasSystemPrompt(),
+      weakAreasUserPrompt(eligible),
+      { maxTokens: 6144 }
+    );
+    res.json({ weakAreas: parsed.weakAreas || [] });
+  } catch (err: any) {
+    console.error("[generate/weakareas] error:", err?.message);
+    res.status(500).json({ error: "Could not analyze weak areas. Please try again." });
+  }
 });
 
 export default router;

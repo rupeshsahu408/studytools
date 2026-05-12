@@ -2,6 +2,10 @@ import OpenAI from "openai";
 
 export const MODEL = "meta/llama-4-maverick-17b-128e-instruct";
 
+// 55-second timeout per API call — gives buffer before the client-side 5-minute axios timeout.
+// Prevents any single hung NVIDIA request from blocking the entire generation pipeline.
+const PER_CALL_TIMEOUT_MS = 55000;
+
 function getClient(): OpenAI {
   const apiKey = process.env.NVIDIA_API_KEY;
   if (!apiKey) {
@@ -10,10 +14,11 @@ function getClient(): OpenAI {
   return new OpenAI({
     apiKey,
     baseURL: "https://integrate.api.nvidia.com/v1",
+    timeout: PER_CALL_TIMEOUT_MS,
+    maxRetries: 0, // We handle retries manually in callNvidiaWithRetry
   });
 }
 
-// Standard two-message call (system + user)
 export interface NvidiaCallOptions {
   maxTokens?: number;
 }
@@ -44,8 +49,7 @@ export async function callNvidia(
 }
 
 // ─── Model Health Check ──────────────────────────────────────────────────────
-// Sends a minimal 1-token request to verify the model is live.
-// Returns a status object — never throws.
+
 export interface ModelHealthResult {
   ok: boolean;
   model: string;
@@ -84,7 +88,6 @@ export async function checkModelHealth(): Promise<ModelHealthResult> {
   }
 }
 
-// Run on startup — logs clearly so Render logs show the issue immediately
 export async function runStartupHealthCheck(): Promise<void> {
   console.log(`[health] Checking NVIDIA NIM model: ${MODEL} ...`);
   const result = await checkModelHealth();
