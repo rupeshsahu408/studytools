@@ -184,6 +184,12 @@ export default function PublicProfilePage() {
   };
 
   const iBlockedThem = !!(myData?.blockedUsers?.includes(profile?.uid || ""));
+  // If the profile user has blocked the viewer, treat as "not found" (Instagram behaviour)
+  const theyBlockedMe = !!(
+    !isViewingSelf &&
+    user?.uid &&
+    profile?.blockedUsers?.includes(user.uid)
+  );
 
   const handleBlock = async () => {
     if (!user || !profile || blockLoading) return;
@@ -235,6 +241,26 @@ export default function PublicProfilePage() {
 
   const displayName = isAnonymousProfile ? "Anonymous" : profile.displayName;
   const displayBio = isAnonymousProfile ? null : profile.bio;
+
+  // If the profile user blocked the viewer → show "not found" (invisible, Instagram-style)
+  // The blocked user must never know they've been blocked — they just can't find the person
+  if (theyBlockedMe) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+        <Navbar />
+        <div className="pt-14 flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+            <UserX className="w-10 h-10 text-gray-400" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">User not found</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">@{username} doesn't exist or may have changed their username.</p>
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-green-600 dark:text-green-400 font-medium hover:underline">
+            <ArrowLeft className="w-4 h-4" /> Go back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // If current user has blocked this profile, show a restricted view
   if (iBlockedThem && !isViewingSelf) {

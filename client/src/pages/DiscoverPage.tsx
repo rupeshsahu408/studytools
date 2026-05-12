@@ -208,6 +208,12 @@ function DiscoverTab({
   const PAGE_SIZE = 20;
   const blockedUids = myProfile?.blockedUsers || [];
 
+  // Filter helper: hides (1) yourself, (2) users YOU blocked, (3) users who blocked YOU
+  const notBlockRelated = (u: SocialUser) =>
+    u.uid !== currentUid &&
+    !blockedUids.includes(u.uid) &&
+    !(u.blockedUsers?.includes(currentUid));
+
   // Initial feed load
   const loadFeed = useCallback(async (reset = false) => {
     if (reset) {
@@ -218,7 +224,7 @@ function DiscoverTab({
     }
     try {
       const { users, lastDoc: newLast } = await getDiscoverUsers(PAGE_SIZE, reset ? null : lastDoc);
-      const filtered = users.filter(u => u.uid !== currentUid && !blockedUids.includes(u.uid));
+      const filtered = users.filter(notBlockRelated);
       if (reset) {
         setFeedUsers(filtered);
       } else {
@@ -245,7 +251,7 @@ function DiscoverTab({
     setLoadingMore(true);
     try {
       const { users, lastDoc: newLast } = await getDiscoverUsers(PAGE_SIZE, lastDoc);
-      const filtered = users.filter(u => u.uid !== currentUid && !blockedUids.includes(u.uid));
+      const filtered = users.filter(notBlockRelated);
       setFeedUsers(prev => {
         const existing = new Set(prev.map(u => u.uid));
         return [...prev, ...filtered.filter(u => !existing.has(u.uid))];
@@ -272,7 +278,7 @@ function DiscoverTab({
     debounceRef.current = setTimeout(async () => {
       try {
         const results = await searchUsersByPrefix(q);
-        setSearchResults(results.filter(u => u.uid !== currentUid && !blockedUids.includes(u.uid)));
+        setSearchResults(results.filter(notBlockRelated));
       } catch (e) {
         console.error("Search error:", e);
         setSearchResults([]);

@@ -1060,6 +1060,18 @@ export function subscribeToSocialUser(
 }
 
 export async function sendFriendRequest(fromUid: string, toUid: string): Promise<void> {
+  // Guard: if the target has blocked the sender, silently refuse — sender should never know
+  const targetSnap = await getDoc(doc(db, "users", toUid));
+  if (targetSnap.exists()) {
+    const theirBlocked: string[] = targetSnap.data().blockedUsers || [];
+    if (theirBlocked.includes(fromUid)) return;
+  }
+  // Guard: if the sender has blocked the target, also refuse
+  const senderSnap = await getDoc(doc(db, "users", fromUid));
+  if (senderSnap.exists()) {
+    const myBlocked: string[] = senderSnap.data().blockedUsers || [];
+    if (myBlocked.includes(toUid)) return;
+  }
   const batch = writeBatch(db);
   batch.set(doc(db, "users", fromUid), { friendRequestsSent: arrayUnion(toUid) }, { merge: true });
   batch.set(doc(db, "users", toUid), { friendRequestsReceived: arrayUnion(fromUid) }, { merge: true });
