@@ -354,7 +354,7 @@ export default function ProfilePage() {
                 {socialUser?.username && (
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-green-600 dark:text-green-400 font-medium text-sm flex items-center gap-1">
-                      <AtSign className="w-3.5 h-3.5" />{socialUser.username}
+                      @{socialUser.username}
                     </p>
                     <span className="inline-flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
                       <Lock className="w-2.5 h-2.5" /> Permanent
@@ -362,10 +362,10 @@ export default function ProfilePage() {
                   </div>
                 )}
                 <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  <span>{friends.length} {friends.length === 1 ? "friend" : "friends"}</span>
-                  {friendRequests.length > 0 && (
+                  <span>{socialUser?.friends?.length ?? 0} {(socialUser?.friends?.length ?? 0) === 1 ? "friend" : "friends"}</span>
+                  {(socialUser?.friendRequestsReceived?.length ?? 0) > 0 && (
                     <span className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-bold px-2 py-0.5 rounded-full">
-                      {friendRequests.length} request{friendRequests.length !== 1 ? "s" : ""}
+                      {socialUser!.friendRequestsReceived!.length} request{socialUser!.friendRequestsReceived!.length !== 1 ? "s" : ""}
                     </span>
                   )}
                 </div>
