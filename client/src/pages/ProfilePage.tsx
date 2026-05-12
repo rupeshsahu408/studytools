@@ -3,7 +3,7 @@ import {
   Flame, Target, Calendar, Trophy, Brain,
   Edit2, Check, X, ChevronRight, AlertTriangle, Loader2,
   BookOpen, Zap, Star, GraduationCap, Users, ExternalLink,
-  Camera, AtSign, UserPlus, UserCheck, UserMinus, Search, Lock,
+  Camera, Lock,
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -14,9 +14,6 @@ import type { WeakAreaResult } from "../lib/api";
 import {
   saveUserData,
   subscribeToSocialUser, updateSocialProfile,
-  getFriends, getFriendRequests,
-  acceptFriendRequest, declineFriendRequest,
-  removeFriend, searchUsersByUsername, sendFriendRequest,
   type SocialUser,
 } from "../lib/firestore";
 import { storage } from "../lib/firebase";
@@ -129,12 +126,6 @@ export default function ProfilePage() {
 
   // ── Social ──────────────────────────────────────────────────────────────────
   const [socialUser, setSocialUser] = useState<SocialUser | null>(null);
-  const [friends, setFriends] = useState<SocialUser[]>([]);
-  const [friendRequests, setFriendRequests] = useState<SocialUser[]>([]);
-  const [loadingFriends, setLoadingFriends] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResult, setSearchResult] = useState<SocialUser | null | "none">(null);
-  const [searching, setSearching] = useState(false);
   const [editingBio, setEditingBio] = useState(false);
   const [editBioText, setEditBioText] = useState("");
   const [savingBio, setSavingBio] = useState(false);
@@ -164,19 +155,6 @@ export default function ProfilePage() {
       if (!editingBio) setEditBioText(su?.bio || "");
     });
   }, [user?.uid]);
-
-  useEffect(() => {
-    if (!user?.uid) return;
-    setLoadingFriends(true);
-    Promise.all([
-      getFriends(user.uid),
-      getFriendRequests(user.uid),
-    ]).then(([f, r]) => {
-      setFriends(f);
-      setFriendRequests(r);
-      setLoadingFriends(false);
-    }).catch(() => setLoadingFriends(false));
-  }, [user?.uid, socialUser?.friends?.length, socialUser?.friendRequestsReceived?.length]);
 
   const handleRoleSwitch = async (newRole: "student" | "teacher") => {
     if (!user || switchingRole) return;
@@ -256,40 +234,6 @@ export default function ProfilePage() {
       await updateSocialProfile(user.uid, { photoURL: url });
     } catch (e) { console.error(e); }
     finally { setPhotoUploading(false); if (photoInputRef.current) photoInputRef.current.value = ""; }
-  };
-
-  const handleSearch = async () => {
-    const q = searchQuery.trim().toLowerCase().replace(/^@/, "");
-    if (!q) return;
-    setSearching(true);
-    setSearchResult(null);
-    try {
-      const results = await searchUsersByUsername(q);
-      setSearchResult(results[0] || "none");
-    } catch { setSearchResult("none"); }
-    finally { setSearching(false); }
-  };
-
-  const handleAddFriend = async (targetUid: string) => {
-    if (!user) return;
-    await sendFriendRequest(user.uid, targetUid);
-    setSearchResult(null);
-    setSearchQuery("");
-  };
-
-  const handleAcceptRequest = async (fromUid: string) => {
-    if (!user) return;
-    await acceptFriendRequest(user.uid, fromUid);
-  };
-
-  const handleDeclineRequest = async (fromUid: string) => {
-    if (!user) return;
-    await declineFriendRequest(user.uid, fromUid);
-  };
-
-  const handleRemoveFriend = async (friendUid: string) => {
-    if (!user || !confirm("Remove this friend?")) return;
-    await removeFriend(user.uid, friendUid);
   };
 
   const handleAnalyzeWeakAreas = async () => {
@@ -676,155 +620,6 @@ export default function ProfilePage() {
                     className="mt-2 text-xs text-green-600 dark:text-green-400 font-medium hover:underline">
                     Start studying →
                   </button>
-                </div>
-              )}
-            </div>
-
-            {/* Study Friends Card */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <Users className="w-5 h-5 text-green-600" />
-                <h3 className="font-bold text-gray-900 dark:text-white">Study Friends</h3>
-                {friends.length > 0 && (
-                  <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">{friends.length} friend{friends.length !== 1 ? "s" : ""}</span>
-                )}
-              </div>
-
-              {/* Search to add */}
-              <div className="mb-4">
-                <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 focus-within:border-green-400 dark:focus-within:border-green-600 transition-colors">
-                  <AtSign className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={e => { setSearchQuery(e.target.value); setSearchResult(null); }}
-                    onKeyDown={e => { if (e.key === "Enter") handleSearch(); }}
-                    placeholder="Search by username…"
-                    className="flex-1 text-sm bg-transparent outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                  />
-                  <button
-                    onClick={handleSearch}
-                    disabled={!searchQuery.trim() || searching}
-                    className="flex-shrink-0 text-green-600 dark:text-green-400 hover:text-green-700 disabled:opacity-40 transition-colors"
-                  >
-                    {searching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-
-                {/* Search result */}
-                {searchResult && searchResult !== "none" && (
-                  <div className="mt-2 flex items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-xl p-3">
-                    <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${getSocialGradient(searchResult.uid)} flex items-center justify-center flex-shrink-0`}>
-                      {searchResult.photoURL ? (
-                        <img src={searchResult.photoURL} alt="" className="w-9 h-9 rounded-full object-cover" />
-                      ) : (
-                        <span className="text-white text-xs font-bold">{getSocialInitials(searchResult.displayName)}</span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{searchResult.displayName}</p>
-                      <p className="text-xs text-green-600 dark:text-green-400">@{searchResult.username}</p>
-                    </div>
-                    {searchResult.uid === user?.uid ? (
-                      <span className="text-xs text-gray-400 px-2">That's you!</span>
-                    ) : socialUser?.friends.includes(searchResult.uid) ? (
-                      <span className="text-xs font-semibold text-green-600 dark:text-green-400 flex items-center gap-1"><UserCheck className="w-3.5 h-3.5" /> Friends</span>
-                    ) : socialUser?.friendRequestsSent.includes(searchResult.uid) ? (
-                      <span className="text-xs text-gray-400">Sent</span>
-                    ) : (
-                      <button
-                        onClick={() => handleAddFriend(searchResult.uid)}
-                        className="flex items-center gap-1 text-xs font-bold bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-xl transition-colors"
-                      >
-                        <UserPlus className="w-3 h-3" /> Add
-                      </button>
-                    )}
-                  </div>
-                )}
-                {searchResult === "none" && (
-                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 text-center py-1">No user found with that username.</p>
-                )}
-              </div>
-
-              {/* Incoming Requests */}
-              {friendRequests.length > 0 && (
-                <div className="mb-4">
-                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                    Incoming Requests ({friendRequests.length})
-                  </p>
-                  <div className="space-y-2">
-                    {friendRequests.map(req => (
-                      <div key={req.uid} className="flex items-center gap-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 rounded-xl p-3">
-                        <Link to={`/u/${req.username}`} className="flex-shrink-0">
-                          <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${getSocialGradient(req.uid)} flex items-center justify-center overflow-hidden`}>
-                            {req.photoURL ? (
-                              <img src={req.photoURL} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="text-white text-xs font-bold">{getSocialInitials(req.displayName)}</span>
-                            )}
-                          </div>
-                        </Link>
-                        <div className="flex-1 min-w-0">
-                          <Link to={`/u/${req.username}`} className="text-sm font-semibold text-gray-900 dark:text-white hover:underline truncate block">{req.displayName}</Link>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">@{req.username}</p>
-                        </div>
-                        <div className="flex gap-1.5 flex-shrink-0">
-                          <button
-                            onClick={() => handleAcceptRequest(req.uid)}
-                            className="flex items-center gap-1 text-xs font-bold bg-green-600 hover:bg-green-700 text-white px-2.5 py-1.5 rounded-xl transition-colors"
-                          >
-                            <UserCheck className="w-3 h-3" /> Accept
-                          </button>
-                          <button
-                            onClick={() => handleDeclineRequest(req.uid)}
-                            className="text-xs font-medium bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 px-2.5 py-1.5 rounded-xl transition-colors"
-                          >
-                            Decline
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Friends List */}
-              {loadingFriends ? (
-                <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading friends…
-                </div>
-              ) : friends.length === 0 ? (
-                <div className="text-center py-4">
-                  <Users className="w-8 h-8 text-gray-200 dark:text-gray-700 mx-auto mb-2" />
-                  <p className="text-sm text-gray-400 dark:text-gray-600">No friends yet.</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-600 mt-0.5">Search by username to add a study friend!</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {friends.map(friend => (
-                    <div key={friend.uid} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
-                      <Link to={`/u/${friend.username}`} className="flex-shrink-0">
-                        <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${getSocialGradient(friend.uid)} flex items-center justify-center overflow-hidden shadow-sm`}>
-                          {friend.photoURL ? (
-                            <img src={friend.photoURL} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="text-white text-xs font-bold">{getSocialInitials(friend.displayName)}</span>
-                          )}
-                        </div>
-                      </Link>
-                      <div className="flex-1 min-w-0">
-                        <Link to={`/u/${friend.username}`} className="text-sm font-semibold text-gray-900 dark:text-white hover:underline truncate block">{friend.displayName}</Link>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">@{friend.username} · 🔥 {friend.streak || 0}</p>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveFriend(friend.uid)}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-gray-300 dark:text-gray-700 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
-                        title="Remove friend"
-                      >
-                        <UserMinus className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
                 </div>
               )}
             </div>

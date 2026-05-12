@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Sun, Moon, LogOut, BarChart2, UserCircle, Users } from "lucide-react";
+import { Sun, Moon, LogOut, BarChart2, UserCircle, Users, Compass, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
@@ -43,6 +43,16 @@ export default function Navbar() {
 
           {user ? (
             <>
+              <Link to="/discover"
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                  isActive("/discover")
+                    ? "bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400"
+                    : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800"
+                }`}
+                title="Discover People">
+                <Compass className="w-4 h-4" />
+              </Link>
+
               <Link to="/community"
                 className={`relative w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
                   isActive("/community")
@@ -76,6 +86,16 @@ export default function Navbar() {
                 }`}
                 title="Profile">
                 <UserCircle className="w-4 h-4" />
+              </Link>
+
+              <Link to="/settings"
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                  isActive("/settings")
+                    ? "bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400"
+                    : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800"
+                }`}
+                title="Settings">
+                <Settings className="w-4 h-4" />
               </Link>
 
               <button onClick={handleLogout}

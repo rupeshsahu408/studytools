@@ -15,6 +15,8 @@ import CommunityPage from "./pages/CommunityPage";
 import SharePage from "./pages/SharePage";
 import UsernameSetupPage from "./pages/UsernameSetupPage";
 import PublicProfilePage from "./pages/PublicProfilePage";
+import DiscoverPage from "./pages/DiscoverPage";
+import SettingsPage from "./pages/SettingsPage";
 
 function Spinner() {
   return (
@@ -63,6 +65,8 @@ function AppRoutes() {
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path="/progress" element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
       <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
+      <Route path="/discover" element={<ProtectedRoute><DiscoverPage /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/u/:username" element={<ProtectedRoute><PublicProfilePage /></ProtectedRoute>} />
       <Route path="/share/:token" element={<SharePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />

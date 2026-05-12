@@ -908,6 +908,14 @@ export async function incrementShareViews(token: string): Promise<void> {
 
 // ─── Social Profile ───────────────────────────────────────────────────────────
 
+export interface SocialLinks {
+  website?: string;
+  instagram?: string;
+  facebook?: string;
+  twitter?: string;
+  reddit?: string;
+}
+
 export interface SocialUser {
   uid: string;
   username: string;
@@ -923,6 +931,8 @@ export interface SocialUser {
   class?: string;
   school?: string;
   district?: string;
+  socialLinks?: SocialLinks;
+  isAnonymous?: boolean;
 }
 
 export async function checkUsernameAvailable(username: string): Promise<boolean> {
@@ -976,6 +986,8 @@ export async function getUserById(uid: string): Promise<SocialUser | null> {
     class: data.profile?.class || "",
     school: data.profile?.school || "",
     district: data.profile?.district || "",
+    socialLinks: data.socialLinks || {},
+    isAnonymous: data.isAnonymous || false,
   };
 }
 
@@ -987,7 +999,12 @@ export async function getUserByUsername(username: string): Promise<SocialUser | 
 
 export async function updateSocialProfile(
   uid: string,
-  data: { bio?: string; photoURL?: string | null }
+  data: {
+    bio?: string;
+    photoURL?: string | null;
+    socialLinks?: SocialLinks;
+    isAnonymous?: boolean;
+  }
 ): Promise<void> {
   await setDoc(doc(db, "users", uid), data, { merge: true });
 }
@@ -1014,6 +1031,8 @@ export function subscribeToSocialUser(
       class: data.profile?.class || "",
       school: data.profile?.school || "",
       district: data.profile?.district || "",
+      socialLinks: data.socialLinks || {},
+      isAnonymous: data.isAnonymous || false,
     });
   });
 }
@@ -1077,10 +1096,20 @@ export async function getFriendRequests(uid: string): Promise<SocialUser[]> {
   return results.filter(Boolean) as SocialUser[];
 }
 
+export async function getSentRequests(uid: string): Promise<SocialUser[]> {
+  const userSnap = await getDoc(doc(db, "users", uid));
+  if (!userSnap.exists()) return [];
+  const sentUids: string[] = userSnap.data().friendRequestsSent || [];
+  if (sentUids.length === 0) return [];
+  const results = await Promise.all(sentUids.map(suid => getUserById(suid)));
+  return results.filter(Boolean) as SocialUser[];
+}
+
 export async function searchUsersByUsername(query: string): Promise<SocialUser[]> {
   if (!query || query.length < 2) return [];
   const snap = await getDoc(doc(db, "usernames", query.toLowerCase()));
   if (!snap.exists()) return [];
   const user = await getUserById(snap.data().uid);
-  return user ? [user] : [];
+  if (!user || user.isAnonymous) return [];
+  return [user];
 }
