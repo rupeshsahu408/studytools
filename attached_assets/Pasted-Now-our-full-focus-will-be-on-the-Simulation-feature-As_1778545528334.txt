@@ -1,0 +1,29 @@
+Now our full focus will be on the Simulation feature. As you can also see in the image and in the sidebar of the project, there is a separate button for simulations.
+
+So the entire focus of the system will be on simulations. Right now, the problem is that the simulations are very basic. Since our whole project is actually based on simulations, this is a core idea meant to impress students.
+
+At the moment, only a very small number of simulations are being generated, which is not enough.
+
+What we need to do is:
+We should depend heavily on the backend and make it very powerful. From a single chapter, we should generate as many simulations as possible — small, large, and everything in between. The goal is to generate at least 100, 200, 250 or even more simulations if possible.
+
+These simulations should not be basic. They should be real-life, immersive simulations, including:
+
+3D-like experiences
+Video-like simulations
+Interactive and engaging visuals
+NFS-style or game-like simulations
+
+The user should be able to interact with them and feel like they are inside a real-world environment. It should give a real experience similar to professional simulation websites.
+
+In these simulations, there should feel like a real world exists — with people, buildings, nature, and environments. The student should practically experience the concept while interacting with it, so they can clearly understand how it works.
+
+Because simulations are a very important part of learning, this feature needs to be taken to the next level.
+
+We should use maximum backend processing, and depend on AI only where necessary. From a single chapter or concept, we should be able to generate a large number of meaningful simulations.
+
+This system should be extremely powerful and next-level.
+
+I may be explaining it in a slightly mixed way, but I hope you are able to understand the overall idea.
+
+First, please confirm what you understood from this, and then also share your suggestions and ideas. You have full freedom to improve and design this system in the best possible way.
