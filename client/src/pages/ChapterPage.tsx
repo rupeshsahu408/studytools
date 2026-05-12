@@ -33,17 +33,17 @@ const SUBJECT_ICONS: Record<string, any> = {
 };
 
 const SIDEBAR_ITEMS = [
-  { key: "notes",       label: "Notes",              icon: BookOpen,       phase: 1 },
-  { key: "questions",   label: "Questions",           icon: HelpCircle,    phase: 1 },
-  { key: "summary",     label: "Quick Revision",      icon: Zap,           phase: 2 },
-  { key: "formulas",    label: "Formulas",            icon: Sigma,         phase: 2 },
-  { key: "mindmap",     label: "Concept Map",         icon: Network,       phase: 2 },
-  { key: "mistakes",    label: "Ye Galti Mat Karo",   icon: AlertTriangle, phase: 2 },
-  { key: "flashcards",  label: "Flash Cards",         icon: Layers,        phase: 2 },
-  { key: "chat",        label: "Doubt Chat",          icon: MessageCircle, phase: 2 },
-  { key: "simulations", label: "Simulations",         icon: Beaker,        phase: 3 },
-  { key: "discussion",  label: "Discussion",          icon: Users,         phase: 5 },
-  { key: "exampaper",  label: "Exam Paper",           icon: FileText,      phase: 6 },
+  { key: "notes",       label: "Notes",              icon: BookOpen,       group: "study" },
+  { key: "questions",   label: "Questions",           icon: HelpCircle,    group: "study" },
+  { key: "summary",     label: "Quick Revision",      icon: Zap,           group: "ai" },
+  { key: "formulas",    label: "Formulas",            icon: Sigma,         group: "ai" },
+  { key: "mindmap",     label: "Concept Map",         icon: Network,       group: "ai" },
+  { key: "mistakes",    label: "Ye Galti Mat Karo",   icon: AlertTriangle, group: "ai" },
+  { key: "flashcards",  label: "Flash Cards",         icon: Layers,        group: "ai" },
+  { key: "chat",        label: "Doubt Chat",          icon: MessageCircle, group: "ai" },
+  { key: "simulations", label: "Simulations",         icon: Beaker,        group: "sim" },
+  { key: "discussion",  label: "Discussion",          icon: Users,         group: "community" },
+  { key: "exampaper",  label: "Exam Paper",           icon: FileText,      group: "exam" },
 ];
 
 function formatDate(ts: any): string {
@@ -563,10 +563,10 @@ export default function ChapterPage() {
 
             <div className="h-px bg-gray-100 dark:bg-gray-800 mb-3" />
 
-            {/* Phase 1 sections */}
+            {/* Study sections */}
             <div className="mb-1">
               <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-3 mb-1.5">Study</p>
-              {SIDEBAR_ITEMS.filter(s => s.phase === 1).map(item => (
+              {SIDEBAR_ITEMS.filter(s => s.group === "study").map(item => (
                 <button key={item.key} onClick={() => switchSection(item.key)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-0.5 ${
                     activeSection === item.key
@@ -586,13 +586,12 @@ export default function ChapterPage() {
 
             <div className="h-px bg-gray-100 dark:bg-gray-800 my-3" />
 
-            {/* Phase 2 sections */}
+            {/* AI Tools sections */}
             <div className="mb-1">
               <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-3 mb-1.5">
-                AI Enrichment
-                <span className="ml-1.5 text-xs text-green-500 font-semibold normal-case">Phase 2</span>
+                AI Tools
               </p>
-              {SIDEBAR_ITEMS.filter(s => s.phase === 2).map(item => {
+              {SIDEBAR_ITEMS.filter(s => s.group === "ai").map(item => {
                 const isReady = !!chapter[item.key as keyof Chapter];
                 const isCurrentlyGenerating = generatingSection === item.key;
                 return (
@@ -617,13 +616,12 @@ export default function ChapterPage() {
 
             <div className="h-px bg-gray-100 dark:bg-gray-800 my-3" />
 
-            {/* Phase 3 — Simulations */}
+            {/* Simulations */}
             <div>
               <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-3 mb-1.5">
                 Simulations
-                <span className="ml-1.5 text-xs text-blue-500 font-semibold normal-case">Phase 3</span>
               </p>
-              {SIDEBAR_ITEMS.filter(s => s.phase === 3).map(item => {
+              {SIDEBAR_ITEMS.filter(s => s.group === "sim").map(item => {
                 const isReady = simCount > 0;
                 const isCurrentlyGenerating = generatingSection === item.key;
                 return (
@@ -653,13 +651,12 @@ export default function ChapterPage() {
 
             <div className="h-px bg-gray-100 dark:bg-gray-800 my-3" />
 
-            {/* Phase 5 — Community */}
+            {/* Community */}
             <div>
               <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-3 mb-1.5">
                 Community
-                <span className="ml-1.5 text-xs text-purple-500 font-semibold normal-case">Phase 5</span>
               </p>
-              {SIDEBAR_ITEMS.filter(s => s.phase === 5).map(item => (
+              {SIDEBAR_ITEMS.filter(s => s.group === "community").map(item => (
                 <button key={item.key} onClick={() => switchSection(item.key)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-0.5 ${
                     activeSection === item.key
@@ -668,7 +665,6 @@ export default function ChapterPage() {
                   }`}>
                   <item.icon className="w-4 h-4 flex-shrink-0" />
                   <span className="flex-1 text-left">{item.label}</span>
-                  <span className="text-xs text-purple-400 dark:text-purple-500 font-medium">New</span>
                 </button>
               ))}
             </div>
@@ -680,7 +676,7 @@ export default function ChapterPage() {
               <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-3 mb-1.5">
                 Exam Tools
               </p>
-              {SIDEBAR_ITEMS.filter(s => s.phase === 6).map(item => {
+              {SIDEBAR_ITEMS.filter(s => s.group === "exam").map(item => {
                 const isReady = !!(chapter as any).examPaper;
                 return (
                   <button key={item.key} onClick={() => switchSection(item.key)}
@@ -713,11 +709,11 @@ export default function ChapterPage() {
             <button key={item.key} onClick={() => switchSection(item.key)}
               className={`flex flex-col items-center py-2 px-3 text-xs font-medium transition-colors flex-shrink-0 ${
                 activeSection === item.key
-                  ? item.phase === 3 ? "text-blue-600" : "text-green-600"
+                  ? item.group === "sim" ? "text-blue-600" : "text-green-600"
                   : "text-gray-400"
               }`}>
               {generatingSection === item.key
-                ? <Loader2 className={`w-5 h-5 mb-0.5 animate-spin ${item.phase === 3 ? "text-blue-500" : "text-green-500"}`} />
+                ? <Loader2 className={`w-5 h-5 mb-0.5 animate-spin ${item.group === "sim" ? "text-blue-500" : "text-green-500"}`} />
                 : <item.icon className="w-5 h-5 mb-0.5" />
               }
               <span className="truncate" style={{ maxWidth: "60px" }}>{item.label}</span>
