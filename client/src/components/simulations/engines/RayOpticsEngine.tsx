@@ -210,7 +210,7 @@ function renderSphericalMirror(
   concave: boolean, fPx: number, uPx: number
 ) {
   bg(ctx);
-  principalAxis();
+  principalAxis(ctx);
   const POLE = CX + 130;
   const fAbs = Math.abs(fPx);
 
@@ -555,7 +555,7 @@ function renderLens(
   converging: boolean, fPx: number, uPx: number
 ) {
   bg(ctx);
-  principalAxis();
+  principalAxis(ctx);
   const LX = CX;
   const fAbs = Math.abs(fPx);
   const lh = 165;
@@ -615,7 +615,7 @@ function renderLensMaker(
   ctx: CanvasRenderingContext2D,
   n: number, R1: number, R2: number
 ) {
-  bg(ctx); principalAxis();
+  bg(ctx); principalAxis(ctx);
   const LX = CX + 30;
   const lh = 165;
   lensShape(ctx, LX, lh, true, "#3b82f6");
@@ -643,7 +643,7 @@ function renderLensMaker(
 }
 
 function renderLensPower(ctx: CanvasRenderingContext2D, fCm: number) {
-  bg(ctx); principalAxis();
+  bg(ctx); principalAxis(ctx);
   const LX = CX;
   if (fCm === 0) return;
   const converging = fCm > 0;
@@ -806,7 +806,7 @@ function renderScattering(ctx: CanvasRenderingContext2D, blue: boolean, t: numbe
 }
 
 function renderSimpleMicroscope(ctx: CanvasRenderingContext2D, fPx: number, uPx: number) {
-  bg(ctx); principalAxis();
+  bg(ctx); principalAxis(ctx);
   const LX = CX + 60;
   const fAbs = Math.abs(fPx);
   const uAbs = Math.min(uPx, fAbs - 3);
