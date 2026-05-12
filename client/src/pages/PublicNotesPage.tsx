@@ -4,10 +4,15 @@ import {
   Globe, Search, BookOpen, X, ChevronDown, ChevronUp,
   Loader2, Filter, ArrowLeft, Eye, Atom, FlaskConical,
   Calculator, Leaf, Users, Calendar, HelpCircle, Zap,
-  Sigma, Network, Layers, AlertTriangle,
+  Sigma, Network, Layers, AlertTriangle, Heart, Coins,
+  CheckCircle2,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
-import { getAllPublicNotes, type PublicNote, type PublishableSection } from "../lib/firestore";
+import {
+  getAllPublicNotes, togglePublicNoteLike, sendCoinTip, getUserCoins,
+  type PublicNote, type PublishableSection,
+} from "../lib/firestore";
+import { useAuth } from "../contexts/AuthContext";
 import QuestionsView from "../components/QuestionsView";
 import SummaryView from "../components/SummaryView";
 import FormulaSheet from "../components/FormulaSheet";
@@ -38,6 +43,8 @@ const SUBJECT_COLORS: Record<string, string> = {
   Mathematics: "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400",
   Biology:     "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400",
 };
+
+const TIP_AMOUNTS = [1, 5, 10, 20, 50];
 
 interface SectionTab {
   key: PublishableSection;
@@ -120,9 +127,154 @@ function formatDate(ts: any): string {
   } catch { return ""; }
 }
 
-// ─── Notes Reader (inline, no component import needed) ────────────────────────
+// ─── Tip Modal ────────────────────────────────────────────────────────────────
 
-function NotesReader({ note, onClose }: { note: PublicNote; onClose: () => void }) {
+function TipModal({
+  note, myCoins, fromUid, onClose, onSuccess,
+}: {
+  note: PublicNote;
+  myCoins: number;
+  fromUid: string;
+  onClose: () => void;
+  onSuccess: (amount: number) => void;
+}) {
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
+  const [sending, setSending] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+
+  const recipientLabel = note.publisherUsername
+    ? `@${note.publisherUsername}`
+    : note.publisherName;
+
+  const handleSend = async () => {
+    if (!selectedAmount) return;
+    setSending(true);
+    setError("");
+    try {
+      await sendCoinTip(fromUid, note.userId, note.id, selectedAmount);
+      setSuccess(true);
+      onSuccess(selectedAmount);
+      setTimeout(onClose, 2200);
+    } catch (err: any) {
+      setError(err.message || "Kuch galat ho gaya. Dobara try karo.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-xs shadow-2xl overflow-hidden">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100 dark:border-gray-800">
+          <div>
+            <h3 className="font-bold text-gray-900 dark:text-white text-base">Coins Bhejo</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              {recipientLabel} ko support karo
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Body */}
+        {success ? (
+          <div className="p-8 text-center">
+            <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
+              <CheckCircle2 className="w-8 h-8 text-amber-500" />
+            </div>
+            <h4 className="font-bold text-gray-900 dark:text-white mb-1">Bhej diya!</h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {selectedAmount} coins {recipientLabel} ko successfully bheje gaye!
+            </p>
+          </div>
+        ) : (
+          <div className="p-5 space-y-4">
+
+            {/* Balance display */}
+            <div className="flex items-center justify-between bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/40 rounded-xl px-4 py-3">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Aapke paas</span>
+              <div className="flex items-center gap-1.5">
+                <Coins className="w-4 h-4 text-amber-500" />
+                <span className="font-bold text-amber-600 dark:text-amber-400">{myCoins} coins</span>
+              </div>
+            </div>
+
+            {/* Amount picker */}
+            <div>
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                Amount choose karo
+              </p>
+              <div className="grid grid-cols-5 gap-1.5">
+                {TIP_AMOUNTS.map(amt => {
+                  const canAfford = myCoins >= amt;
+                  const selected = selectedAmount === amt;
+                  return (
+                    <button
+                      key={amt}
+                      onClick={() => canAfford && setSelectedAmount(amt)}
+                      disabled={!canAfford}
+                      className={`py-2.5 rounded-xl text-sm font-bold transition-all ${
+                        selected
+                          ? "bg-amber-500 text-white shadow-md scale-105"
+                          : canAfford
+                            ? "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-600 dark:hover:text-amber-400"
+                            : "bg-gray-50 dark:bg-gray-800/50 text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                      }`}
+                    >
+                      {amt}
+                    </button>
+                  );
+                })}
+              </div>
+              {myCoins === 0 && (
+                <p className="text-xs text-red-500 dark:text-red-400 mt-2 text-center">
+                  Aapke paas coins nahi hain abhi.
+                </p>
+              )}
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div className="text-xs text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
+                {error}
+              </div>
+            )}
+
+            {/* Send button */}
+            <button
+              onClick={handleSend}
+              disabled={!selectedAmount || sending}
+              className="w-full py-3 rounded-xl font-semibold text-sm transition-all bg-amber-500 hover:bg-amber-600 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {sending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <Coins className="w-4 h-4" />
+                  {selectedAmount ? `${selectedAmount} Coins Bhejo` : "Amount choose karo"}
+                </>
+              )}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Notes Reader ─────────────────────────────────────────────────────────────
+
+function NotesReader({ note }: { note: PublicNote }) {
   const [expandedTopics, setExpandedTopics] = useState<Set<number>>(new Set([0]));
   const notes = note.notes;
   const toggle = (i: number) => setExpandedTopics(prev => {
@@ -222,20 +374,29 @@ function NotesReader({ note, onClose }: { note: PublicNote; onClose: () => void 
   );
 }
 
-// ─── Generic Content Modal ────────────────────────────────────────────────────
+// ─── Content Modal ────────────────────────────────────────────────────────────
 
-function ContentModal({ note, sectionKey, onClose }: {
+function ContentModal({
+  note, sectionKey, isLiked, likeCount, isOwnNote, myCoins, currentUserId,
+  onClose, onLike, onTip,
+}: {
   note: PublicNote;
   sectionKey: PublishableSection;
+  isLiked: boolean;
+  likeCount: number;
+  isOwnNote: boolean;
+  myCoins: number;
+  currentUserId: string;
   onClose: () => void;
+  onLike: () => void;
+  onTip: () => void;
 }) {
   const tab = SECTION_TABS.find(t => t.key === sectionKey)!;
-  const Icon = SUBJECT_ICONS[note.subject] || BookOpen;
 
   function renderBody() {
     switch (sectionKey) {
       case "notes":
-        return <NotesReader note={note} onClose={onClose} />;
+        return <NotesReader note={note} />;
 
       case "questions":
         if (!note.questions) return <EmptyContent />;
@@ -337,6 +498,8 @@ function ContentModal({ note, sectionKey, onClose }: {
                 {note.medium === "hindi" ? "Hindi Medium" : "English Medium"}
               </span>
             </div>
+
+            {/* Publisher */}
             <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 mt-1.5">
               <Users className="w-3 h-3 flex-shrink-0" />
               <span>By</span>
@@ -353,8 +516,48 @@ function ContentModal({ note, sectionKey, onClose }: {
               )}
               <span>· {formatDate(note.publishedAt)}</span>
             </div>
+
+            {/* Like + Tip actions */}
+            <div className="flex items-center gap-2 mt-3">
+              {/* Like button — hidden for own notes (just show count) */}
+              {isOwnNote ? (
+                likeCount > 0 ? (
+                  <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-1.5">
+                    <Heart className="w-3.5 h-3.5 fill-red-400 text-red-400" />
+                    <span>{likeCount} {likeCount === 1 ? "like" : "likes"}</span>
+                  </div>
+                ) : null
+              ) : (
+                <button
+                  onClick={onLike}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    isLiked
+                      ? "bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 border border-red-200 dark:border-red-800/40"
+                      : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-400 border border-transparent"
+                  }`}
+                >
+                  <Heart className={`w-3.5 h-3.5 transition-all ${isLiked ? "fill-current" : ""}`} />
+                  <span>{likeCount > 0 ? likeCount : "Like"}</span>
+                </button>
+              )}
+
+              {/* Tip button — only for other people's notes */}
+              {!isOwnNote && (
+                <button
+                  onClick={onTip}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200 dark:border-amber-800/40 transition-colors"
+                >
+                  <Coins className="w-3.5 h-3.5" />
+                  Coins Bhejo
+                </button>
+              )}
+            </div>
           </div>
-          <button onClick={onClose} className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+
+          <button
+            onClick={onClose}
+            className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -399,12 +602,19 @@ function FilterSelect({ label, value, onChange, options, allLabel }: {
   );
 }
 
-// ─── Section card ────────────────────────────────────────────────────────────
+// ─── Section Card ─────────────────────────────────────────────────────────────
 
-function SectionCard({ note, sectionKey, onOpen }: {
+function SectionCard({
+  note, sectionKey, isLiked, likeCount, isOwnNote,
+  onOpen, onLike,
+}: {
   note: PublicNote;
   sectionKey: PublishableSection;
+  isLiked: boolean;
+  likeCount: number;
+  isOwnNote: boolean;
   onOpen: () => void;
+  onLike: () => void;
 }) {
   const SubjectIcon = SUBJECT_ICONS[note.subject] || BookOpen;
   const colorClass = SUBJECT_COLORS[note.subject] || "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
@@ -442,7 +652,7 @@ function SectionCard({ note, sectionKey, onOpen }: {
   return (
     <div
       onClick={onOpen}
-      className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 cursor-pointer hover:border-green-300 dark:hover:border-green-700 hover:shadow-md transition-all group"
+      className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 cursor-pointer hover:border-green-300 dark:hover:border-green-700 hover:shadow-md transition-all group flex flex-col"
     >
       <div className="flex items-start justify-between mb-3">
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${colorClass}`}>
@@ -466,7 +676,7 @@ function SectionCard({ note, sectionKey, onOpen }: {
 
       <div className="text-xs text-gray-400 dark:text-gray-500 mb-2">{sectionDetail()}</div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 min-w-0">
           <Users className="w-3 h-3 flex-shrink-0" />
           {note.publisherUsername ? (
@@ -486,9 +696,31 @@ function SectionCard({ note, sectionKey, onOpen }: {
         </div>
       </div>
 
-      <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 mt-1.5">
-        <Calendar className="w-3 h-3" />
-        {formatDate(note.publishedAt)}
+      {/* Bottom row: date + like button */}
+      <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50 dark:border-gray-800/60">
+        <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
+          <Calendar className="w-3 h-3" />
+          {formatDate(note.publishedAt)}
+        </div>
+
+        {/* Like button */}
+        <button
+          onClick={e => {
+            e.stopPropagation();
+            if (!isOwnNote) onLike();
+          }}
+          title={isOwnNote ? "Apni khud ki notes ko like nahi kar sakte" : isLiked ? "Unlike" : "Like"}
+          className={`flex items-center gap-1 text-xs font-medium transition-colors px-2 py-1 rounded-lg ${
+            isLiked
+              ? "text-red-500 dark:text-red-400"
+              : isOwnNote
+                ? "text-gray-300 dark:text-gray-700 cursor-default"
+                : "text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400"
+          }`}
+        >
+          <Heart className={`w-3.5 h-3.5 transition-all ${isLiked ? "fill-current" : ""}`} />
+          {likeCount > 0 && <span>{likeCount}</span>}
+        </button>
       </div>
     </div>
   );
@@ -498,6 +730,8 @@ function SectionCard({ note, sectionKey, onOpen }: {
 
 export default function PublicNotesPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
   const [allNotes, setAllNotes] = useState<PublicNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<PublishableSection>("notes");
@@ -509,12 +743,67 @@ export default function PublicNotesPage() {
   const [filterSubject, setFilterSubject] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
+  // Like state
+  const [likedNotes, setLikedNotes] = useState<Record<string, boolean>>({});
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
+
+  // Coin / tip state
+  const [tipTarget, setTipTarget] = useState<PublicNote | null>(null);
+  const [myCoins, setMyCoins] = useState(0);
+
+  // Load notes
   useEffect(() => {
     getAllPublicNotes(300)
       .then(setAllNotes)
       .catch(e => console.error("Failed to load public notes:", e))
       .finally(() => setLoading(false));
   }, []);
+
+  // Initialize like state from loaded notes
+  useEffect(() => {
+    if (!user || allNotes.length === 0) return;
+    const liked: Record<string, boolean> = {};
+    const counts: Record<string, number> = {};
+    allNotes.forEach(n => {
+      liked[n.id] = (n.likes || []).includes(user.uid);
+      counts[n.id] = n.likeCount ?? (n.likes?.length ?? 0);
+    });
+    setLikedNotes(liked);
+    setLikeCounts(counts);
+  }, [allNotes, user]);
+
+  // Load user's coin balance
+  useEffect(() => {
+    if (!user) return;
+    getUserCoins(user.uid).then(setMyCoins).catch(() => {});
+  }, [user]);
+
+  // Handle like toggle
+  const handleLike = async (noteId: string, noteOwnerId: string) => {
+    if (!user || noteOwnerId === user.uid) return;
+    const wasLiked = likedNotes[noteId] || false;
+    const prevCount = likeCounts[noteId] || 0;
+    // Optimistic update
+    setLikedNotes(prev => ({ ...prev, [noteId]: !wasLiked }));
+    setLikeCounts(prev => ({ ...prev, [noteId]: wasLiked ? Math.max(0, prevCount - 1) : prevCount + 1 }));
+    try {
+      await togglePublicNoteLike(noteId, user.uid);
+    } catch {
+      // Revert on failure
+      setLikedNotes(prev => ({ ...prev, [noteId]: wasLiked }));
+      setLikeCounts(prev => ({ ...prev, [noteId]: prevCount }));
+    }
+  };
+
+  // Sync like state into selectedNote after like
+  const handleLikeForNote = (noteId: string, noteOwnerId: string) => {
+    handleLike(noteId, noteOwnerId);
+  };
+
+  // After a tip is sent, deduct from local coin balance
+  const handleTipSuccess = (amount: number) => {
+    setMyCoins(prev => Math.max(0, prev - amount));
+  };
 
   const currentTab = SECTION_TABS.find(t => t.key === activeTab)!;
 
@@ -622,10 +911,10 @@ export default function PublicNotesPage() {
               )}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <FilterSelect label="Board"   value={filterBoard}   onChange={setFilterBoard}   options={BOARDS}                       allLabel="All Boards"   />
-              <FilterSelect label="Class"   value={filterClass}   onChange={setFilterClass}   options={["9","10","11","12"]}          allLabel="All Classes"  />
-              <FilterSelect label="Medium"  value={filterMedium}  onChange={setFilterMedium}  options={["hindi","english"]}           allLabel="All Mediums"  />
-              <FilterSelect label="Subject" value={filterSubject} onChange={setFilterSubject} options={PUBLIC_SUBJECTS}               allLabel="All Subjects" />
+              <FilterSelect label="Board"   value={filterBoard}   onChange={setFilterBoard}   options={BOARDS}              allLabel="All Boards"   />
+              <FilterSelect label="Class"   value={filterClass}   onChange={setFilterClass}   options={["9","10","11","12"]} allLabel="All Classes"  />
+              <FilterSelect label="Medium"  value={filterMedium}  onChange={setFilterMedium}  options={["hindi","english"]}  allLabel="All Mediums"  />
+              <FilterSelect label="Subject" value={filterSubject} onChange={setFilterSubject} options={PUBLIC_SUBJECTS}       allLabel="All Subjects" />
             </div>
           </div>
         )}
@@ -715,7 +1004,11 @@ export default function PublicNotesPage() {
                 key={`${note.id}-${activeTab}`}
                 note={note}
                 sectionKey={activeTab}
+                isLiked={likedNotes[note.id] || false}
+                likeCount={likeCounts[note.id] || 0}
+                isOwnNote={user?.uid === note.userId}
                 onOpen={() => setSelectedNote({ note, section: activeTab })}
+                onLike={() => handleLikeForNote(note.id, note.userId)}
               />
             ))}
           </div>
@@ -727,7 +1020,25 @@ export default function PublicNotesPage() {
         <ContentModal
           note={selectedNote.note}
           sectionKey={selectedNote.section}
+          isLiked={likedNotes[selectedNote.note.id] || false}
+          likeCount={likeCounts[selectedNote.note.id] || 0}
+          isOwnNote={user?.uid === selectedNote.note.userId}
+          myCoins={myCoins}
+          currentUserId={user?.uid || ""}
           onClose={() => setSelectedNote(null)}
+          onLike={() => handleLikeForNote(selectedNote.note.id, selectedNote.note.userId)}
+          onTip={() => setTipTarget(selectedNote.note)}
+        />
+      )}
+
+      {/* Tip modal */}
+      {tipTarget && user && (
+        <TipModal
+          note={tipTarget}
+          myCoins={myCoins}
+          fromUid={user.uid}
+          onClose={() => setTipTarget(null)}
+          onSuccess={handleTipSuccess}
         />
       )}
     </div>

@@ -1296,6 +1296,8 @@ export interface PublicNote {
   mistakes?: any[];
   publishedAt: any;
   viewCount: number;
+  likes?: string[];
+  likeCount?: number;
 }
 
 export async function publishNote(
@@ -1335,4 +1337,66 @@ export async function getAllPublicNotes(pageSize = 300): Promise<PublicNote[]> {
   );
   const snap = await getDocs(q);
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as PublicNote));
+}
+
+export async function getUserCoins(uid: string): Promise<number> {
+  const snap = await getDoc(doc(db, "users", uid));
+  if (!snap.exists()) return 0;
+  return snap.data().coins ?? 0;
+}
+
+export async function togglePublicNoteLike(
+  chapterId: string,
+  uid: string
+): Promise<{ liked: boolean; likeCount: number }> {
+  const ref = doc(db, "publicNotes", chapterId);
+  return await runTransaction(db, async (transaction) => {
+    const snap = await transaction.get(ref);
+    if (!snap.exists()) throw new Error("Note not found");
+    const data = snap.data();
+    const likes: string[] = data.likes || [];
+    const alreadyLiked = likes.includes(uid);
+    const newLikes = alreadyLiked
+      ? likes.filter((id: string) => id !== uid)
+      : [...likes, uid];
+    const newCount = newLikes.length;
+    transaction.update(ref, { likes: newLikes, likeCount: newCount });
+    return { liked: !alreadyLiked, likeCount: newCount };
+  });
+}
+
+export async function sendCoinTip(
+  fromUid: string,
+  toUid: string,
+  chapterId: string,
+  amount: number
+): Promise<void> {
+  if (fromUid === toUid) throw new Error("Aap khud ko tip nahi de sakte.");
+  if (amount <= 0) throw new Error("Amount must be positive");
+
+  const fromRef = doc(db, "users", fromUid);
+  const toRef = doc(db, "users", toUid);
+
+  await runTransaction(db, async (transaction) => {
+    const fromSnap = await transaction.get(fromRef);
+    if (!fromSnap.exists()) throw new Error("Sender not found");
+    const fromCoins: number = fromSnap.data().coins ?? 0;
+    if (fromCoins < amount) throw new Error("Aapke paas itne coins nahi hain.");
+
+    const toSnap = await transaction.get(toRef);
+    if (!toSnap.exists()) throw new Error("Recipient not found");
+    const toCoins: number = toSnap.data().coins ?? 0;
+
+    transaction.update(fromRef, { coins: fromCoins - amount });
+    transaction.update(toRef, { coins: toCoins + amount });
+
+    const tipRef = doc(collection(db, "publicNotes", chapterId, "tips"));
+    transaction.set(tipRef, {
+      fromUid,
+      toUid,
+      amount,
+      chapterId,
+      createdAt: serverTimestamp(),
+    });
+  });
 }
