@@ -12,6 +12,7 @@ import {
   subscribeToSocialUser,
   searchUsersByPrefix,
   getDiscoverUsers,
+  getPlatformStats,
   sendFriendRequest,
   cancelFriendRequest,
   acceptFriendRequest,
@@ -381,11 +382,18 @@ function DiscoverTab({
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [lastDoc, setLastDoc] = useState<any>(null);
+  const [realUserCount, setRealUserCount] = useState(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const PAGE_SIZE = 20;
+  const FEED_CAP = 300;
   const blockedUids = myProfile?.blockedUsers || [];
+
+  // Load platform stats once
+  useEffect(() => {
+    getPlatformStats().then(s => setRealUserCount(s.realUserCount)).catch(() => {});
+  }, []);
 
   // Filter helper: hides (1) yourself, (2) users YOU blocked, (3) users who blocked YOU
   const notBlockRelated = (u: SocialUser) =>
@@ -469,7 +477,21 @@ function DiscoverTab({
   }, [query, currentUid]);
 
   const isSearching = query.trim().length > 0;
-  const displayUsers = isSearching ? (searchResults ?? []) : feedUsers;
+
+  // Real users first, demo users after; cap at FEED_CAP
+  const sortedFeed = [
+    ...feedUsers.filter(u => !u.isDemo),
+    ...feedUsers.filter(u => u.isDemo),
+  ].slice(0, FEED_CAP);
+
+  const displayUsers = isSearching ? (searchResults ?? []) : sortedFeed;
+  const atCap = !isSearching && feedUsers.length >= FEED_CAP;
+
+  // Friendly "3.1K+" display using realUserCount + 3000 demo base
+  const totalStudents = 3000 + realUserCount;
+  const studentCountLabel = totalStudents >= 1000
+    ? `${(totalStudents / 1000).toFixed(1)}K+`
+    : `${totalStudents}+`;
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
@@ -501,13 +523,18 @@ function DiscoverTab({
       </div>
 
       {/* Section label */}
-      <div className="px-4 py-2 bg-gray-50/70 dark:bg-gray-800/30 border-b border-gray-50 dark:border-gray-800">
+      <div className="px-4 py-2 bg-gray-50/70 dark:bg-gray-800/30 border-b border-gray-50 dark:border-gray-800 flex items-center justify-between">
         <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">
           {isSearching
             ? loadingSearch ? "Searching…" : `Results for "${query}"`
             : "All Students"
           }
         </p>
+        {!isSearching && (
+          <span className="text-[11px] font-semibold text-green-600 dark:text-green-400">
+            {studentCountLabel} students
+          </span>
+        )}
       </div>
 
       {/* User list */}
@@ -572,8 +599,8 @@ function DiscoverTab({
         )}
       </div>
 
-      {/* Load more (only in feed mode) */}
-      {!isSearching && !loadingFeed && hasMore && (
+      {/* Load more (only in feed mode, below cap) */}
+      {!isSearching && !loadingFeed && hasMore && !atCap && (
         <div className="px-4 py-3 border-t border-gray-50 dark:border-gray-800">
           <button
             onClick={loadMore}
@@ -588,8 +615,20 @@ function DiscoverTab({
         </div>
       )}
 
-      {/* End of feed indicator */}
-      {!isSearching && !loadingFeed && feedUsers.length > 0 && !hasMore && (
+      {/* 300-cap banner: at cap → show how many more exist */}
+      {!isSearching && !loadingFeed && atCap && (
+        <div className="px-4 py-4 border-t border-gray-50 dark:border-gray-800 text-center">
+          <p className="text-xs font-semibold text-green-600 dark:text-green-400">
+            {studentCountLabel} students on Topper 2.0
+          </p>
+          <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-0.5">
+            Use search to find a specific student
+          </p>
+        </div>
+      )}
+
+      {/* End of feed indicator (below cap, no more pages) */}
+      {!isSearching && !loadingFeed && feedUsers.length > 0 && !hasMore && !atCap && (
         <div className="px-4 py-3 border-t border-gray-50 dark:border-gray-800 text-center">
           <p className="text-xs text-gray-300 dark:text-gray-700">You've seen all students · {feedUsers.length} total</p>
         </div>

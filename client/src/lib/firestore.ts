@@ -2,7 +2,7 @@ import { db } from "./firebase";
 import {
   collection, doc, setDoc, getDoc, getDocs,
   deleteDoc, query, where, serverTimestamp, updateDoc, arrayUnion, arrayRemove,
-  onSnapshot, writeBatch, runTransaction,
+  onSnapshot, writeBatch, runTransaction, increment,
   orderBy, startAfter, limit, type DocumentSnapshot,
 } from "firebase/firestore";
 
@@ -952,6 +952,7 @@ export interface SocialUser {
   district?: string;
   socialLinks?: SocialLinks;
   isAnonymous?: boolean;
+  isDemo?: boolean;
   coins?: number;
   blockedUsers?: string[];
   blockedBy?: string[];
@@ -986,8 +987,13 @@ export async function setupUserProfile(
       friendRequestsReceived: [],
       blockedUsers: [],
       coins: 600,
+      isDemo: false,
+      createdAt: serverTimestamp(),
     }, { merge: true });
   });
+  // Increment real user counter (fire-and-forget — non-blocking)
+  setDoc(doc(db, "app_stats", "main"), { realUserCount: increment(1) }, { merge: true })
+    .catch(() => {});
 }
 
 export async function getUserById(uid: string): Promise<SocialUser | null> {
@@ -1194,6 +1200,7 @@ function docToSocialUser(d: DocumentSnapshot): SocialUser | null {
     district: data.profile?.district || "",
     socialLinks: data.socialLinks || {},
     isAnonymous: false,
+    isDemo: data.isDemo === true,
     coins: data.coins ?? 600,
     blockedUsers: data.blockedUsers || [],
     blockedBy: data.blockedBy || [],
@@ -1229,6 +1236,16 @@ export async function searchUsersByPrefix(prefix: string): Promise<SocialUser[]>
   );
   const snap = await getDocs(q);
   return snap.docs.map(docToSocialUser).filter(Boolean) as SocialUser[];
+}
+
+export async function getPlatformStats(): Promise<{ realUserCount: number }> {
+  try {
+    const snap = await getDoc(doc(db, "app_stats", "main"));
+    if (!snap.exists()) return { realUserCount: 0 };
+    return { realUserCount: snap.data().realUserCount || 0 };
+  } catch {
+    return { realUserCount: 0 };
+  }
 }
 
 // ─── Block / Unblock ──────────────────────────────────────────────────────────

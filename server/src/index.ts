@@ -10,6 +10,7 @@ import ncertRouter from "./routes/ncert";
 import chatRouter from "./routes/chat";
 import simulationsRouter from "./routes/simulations";
 import pushRouter from "./routes/push";
+import adminRouter from "./routes/admin";
 import { MODEL, checkModelHealth, runStartupHealthCheck } from "./services/nvidia";
 
 const app = express();
@@ -59,6 +60,7 @@ app.use("/api/ncert", ncertRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/simulations", simulationsRouter);
 app.use("/api/push", pushRouter);
+app.use("/api/admin", adminRouter);
 
 // ─── Global Error Handler ───────────────────────────────────────────────────
 // CORS headers are already set by the middleware above, so all error
