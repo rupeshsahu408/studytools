@@ -11,6 +11,7 @@ interface TopHeaderProps {
   backTo?: string;
   backLabel?: string;
   rightSlot?: React.ReactNode;
+  className?: string;
 }
 
 export default function TopHeader({
@@ -19,6 +20,7 @@ export default function TopHeader({
   backTo = "/dashboard",
   backLabel = "Back",
   rightSlot,
+  className = "",
 }: TopHeaderProps) {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
@@ -37,7 +39,7 @@ export default function TopHeader({
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 h-12">
+    <header className={`fixed top-0 left-0 right-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 h-12 ${className}`}>
       <div className="flex items-center h-full px-4 gap-2">
 
         {showBack ? (
