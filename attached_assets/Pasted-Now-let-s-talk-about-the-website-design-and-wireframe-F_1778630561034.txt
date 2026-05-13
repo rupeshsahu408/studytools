@@ -1,0 +1,60 @@
+Now let’s talk about the website design and wireframe.
+
+First, properly understand my website. Our website is specially built 100% for mobile users. But right now, the interface, UI/UX, buttons, and wireframes all look very scattered and cluttered, and they are not displaying properly on mobile devices.
+
+Also, the same buttons are being repeated again and again in different places, which should not happen. A button should appear only once in a proper and meaningful location.
+
+So what we need to do is completely redesign the website for mobile users.https://studyai.plyndrox.app/dashboard
+https://studyai.plyndrox.app/
+https://studyai.plyndrox.app/profile
+https://studyai.plyndrox.app/public-notes
+https://studyai.plyndrox.app/discover
+https://studyai.plyndrox.app/community
+https://studyai.plyndrox.app/progress
+https://studyai.plyndrox.app/settings
+https://studyai.plyndrox.app/chapter/cNCXPiay9WJYYNTs1pAB etc
+
+Your task is:
+
+First, create proper mobile-friendly designs/wireframes for every page in Canvas.
+After designing everything properly, convert those designs into code and implement them.
+
+Do you understand what I am trying to say?
+
+This platform is completely focused on mobile users.
+
+And one very important thing:
+While redesigning, do NOT remove any existing features, links, or buttons accidentally. Every feature that currently exists must still remain available after the redesign.
+
+The goal is:
+
+Same exact functionality
+Better mobile-friendly UI/UX
+Cleaner wireframes
+Better interface structure
+Proper spacing and organization
+No clutter or repeated buttons
+
+So basically:
+
+First deeply redesign the UI in Canvas.
+Make the entire experience mobile-first.
+Then convert the design into code.
+Implement it carefully.
+
+There is absolutely no hurry.
+Take your time peacefully and carefully. Even if something normally takes one hour, give it ten hours if needed. Build it with patience and attention.
+
+This is more like a mobile app experience inside the website, specially designed for mobile users.
+
+So first, confirm what you understood from everything I said before starting anything.
+
+And yes:
+
+Design deeply
+Think deeply
+Build properly
+Create polished wireframes in Canvas first
+Then implement them carefully into code
+
+I trust you completely with this.

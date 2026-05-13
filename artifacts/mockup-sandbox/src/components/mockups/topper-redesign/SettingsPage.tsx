@@ -1,174 +1,107 @@
-import React, { useState } from 'react';
-import { 
-  ArrowLeft, UserCircle, Key, AtSign, ChevronRight, Moon, 
-  Languages, Bell, Target, EyeOff, Shield, Info, Star, LogOut, Trash2
-} from 'lucide-react';
-import './_group.css';
+import "./_group.css";
+import { ArrowLeft, Camera, User, Globe, Instagram, Twitter, EyeOff, UserX, ChevronRight, Check, Shield } from "lucide-react";
+import { useState } from "react";
 
-const ToggleSwitch = ({ isOn, onToggle }: { isOn: boolean; onToggle: () => void }) => (
-  <button 
-    onClick={onToggle}
-    className={`w-12 h-6 rounded-full flex items-center px-1 transition-colors ${isOn ? 'bg-[#4CBB17]' : 'bg-[#253D2C]'}`}
-  >
-    <div className={`w-4 h-4 rounded-full bg-white transition-transform ${isOn ? 'translate-x-6' : 'translate-x-0'}`} />
-  </button>
-);
-
-const SectionHeader = ({ title }: { title: string }) => (
-  <div className="text-[#6b7280] text-xs font-semibold tracking-wider px-4 mb-2 mt-6">
-    {title}
-  </div>
-);
-
-export default function SettingsPage() {
-  const [darkMode, setDarkMode] = useState(true);
-  const [pushNotifs, setPushNotifs] = useState(true);
-  const [dailyGoal, setDailyGoal] = useState(true);
+export function SettingsPage() {
   const [anonymous, setAnonymous] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   return (
-    <div className="w-[390px] h-[844px] bg-[#121a12] text-white font-sans overflow-hidden flex flex-col relative shrink-0">
-      {/* Top Header */}
-      <div className="h-[56px] shrink-0 border-b border-[#253D2C] flex items-center px-4 bg-[#121a12] z-10">
-        <button className="w-10 h-10 flex items-center justify-center -ml-2 rounded-full active:bg-[#1a2619]">
-          <ArrowLeft className="w-6 h-6 text-white" />
+    <div className="phone-frame">
+      <div className="top-header">
+        <button style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: "var(--t2-muted)", fontSize: 13, padding: 0 }}>
+          <ArrowLeft size={16} /> Back
         </button>
-        <h1 className="text-lg font-semibold ml-2">Settings</h1>
+        <span style={{ fontWeight: 700, fontSize: 15, color: "var(--t2-text)" }}>Settings</span>
+        <div style={{ width: 50 }} />
       </div>
 
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto pb-10">
-        
-        {/* Account Section */}
-        <SectionHeader title="ACCOUNT" />
-        <div className="bg-[#1a2619] rounded-2xl mx-4 overflow-hidden border border-[#253D2C]">
-          <button className="w-full flex items-center justify-between p-4 border-b border-[#253D2C] active:bg-[#121a12]">
-            <div className="flex items-center gap-3">
-              <UserCircle className="w-5 h-5 text-[#9ca3af]" />
-              <span className="text-[15px]">Edit Profile</span>
-            </div>
-            <ChevronRight className="w-5 h-5 text-[#6b7280]" />
-          </button>
-          
-          <button className="w-full flex items-center justify-between p-4 border-b border-[#253D2C] active:bg-[#121a12]">
-            <div className="flex items-center gap-3">
-              <Key className="w-5 h-5 text-[#9ca3af]" />
-              <span className="text-[15px]">Change Password</span>
-            </div>
-            <ChevronRight className="w-5 h-5 text-[#6b7280]" />
-          </button>
+      <div className="content-scroll no-nav" style={{ padding: "16px 16px" }}>
 
-          <button className="w-full flex items-center justify-between p-4 opacity-70">
-            <div className="flex items-center gap-3">
-              <AtSign className="w-5 h-5 text-[#9ca3af]" />
-              <span className="text-[15px]">Username: @ravi_topper</span>
+        {/* Profile Photo */}
+        <div style={{ background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 18, padding: "16px", marginBottom: 12 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: "var(--t2-muted)", letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 14 }}>Profile Photo</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ position: "relative" }}>
+              <div style={{ width: 64, height: 64, borderRadius: "50%", background: "linear-gradient(135deg,#2E6F40,#4CBB17)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ fontSize: 24, fontWeight: 800, color: "#fff" }}>R</span>
+              </div>
+              <div style={{ position: "absolute", bottom: 0, right: 0, width: 22, height: 22, borderRadius: "50%", background: "var(--t2-green)", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid var(--t2-bg)" }}>
+                <Camera size={11} color="#fff" />
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] uppercase bg-[#253D2C] text-[#9ca3af] px-2 py-0.5 rounded-sm">Permanent</span>
-              <ChevronRight className="w-5 h-5 text-[#253D2C]" />
+            <div>
+              <button style={{ background: "var(--t2-green)", border: "none", borderRadius: 10, padding: "8px 16px", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                <Camera size={13} /> Change Photo
+              </button>
+              <p style={{ fontSize: 11, color: "var(--t2-muted)", marginTop: 5 }}>JPG, PNG · Max 5 MB</p>
             </div>
-          </button>
-        </div>
-
-        {/* Appearance Section */}
-        <SectionHeader title="APPEARANCE" />
-        <div className="bg-[#1a2619] rounded-2xl mx-4 overflow-hidden border border-[#253D2C]">
-          <div className="w-full flex items-center justify-between p-4 border-b border-[#253D2C]">
-            <div className="flex items-center gap-3">
-              <Moon className="w-5 h-5 text-[#9ca3af]" />
-              <span className="text-[15px]">Dark Mode</span>
-            </div>
-            <ToggleSwitch isOn={darkMode} onToggle={() => setDarkMode(!darkMode)} />
-          </div>
-
-          <button className="w-full flex items-center justify-between p-4 active:bg-[#121a12]">
-            <div className="flex items-center gap-3">
-              <Languages className="w-5 h-5 text-[#9ca3af]" />
-              <span className="text-[15px]">Language</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[13px] text-[#9ca3af]">Hindi + English</span>
-              <ChevronRight className="w-5 h-5 text-[#6b7280]" />
-            </div>
-          </button>
-        </div>
-
-        {/* Notifications Section */}
-        <SectionHeader title="NOTIFICATIONS" />
-        <div className="bg-[#1a2619] rounded-2xl mx-4 overflow-hidden border border-[#253D2C]">
-          <div className="w-full flex items-center justify-between p-4 border-b border-[#253D2C]">
-            <div className="flex items-center gap-3">
-              <Bell className="w-5 h-5 text-[#9ca3af]" />
-              <span className="text-[15px]">Push Notifications</span>
-            </div>
-            <ToggleSwitch isOn={pushNotifs} onToggle={() => setPushNotifs(!pushNotifs)} />
-          </div>
-
-          <div className="w-full flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <Target className="w-5 h-5 text-[#9ca3af]" />
-              <span className="text-[15px]">Daily Goal Reminder</span>
-            </div>
-            <ToggleSwitch isOn={dailyGoal} onToggle={() => setDailyGoal(!dailyGoal)} />
           </div>
         </div>
 
-        {/* Privacy Section */}
-        <SectionHeader title="PRIVACY" />
-        <div className="bg-[#1a2619] rounded-2xl mx-4 overflow-hidden border border-[#253D2C]">
-          <div className="w-full flex items-center justify-between p-4 border-b border-[#253D2C]">
-            <div className="flex items-center gap-3">
-              <EyeOff className="w-5 h-5 text-[#9ca3af]" />
-              <span className="text-[15px]">Anonymous Mode</span>
-            </div>
-            <ToggleSwitch isOn={anonymous} onToggle={() => setAnonymous(!anonymous)} />
+        {/* Bio */}
+        <div style={{ background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 18, padding: "16px", marginBottom: 12 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: "var(--t2-muted)", letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 10 }}>Bio</p>
+          <textarea placeholder="Write something about yourself… (Hindi ya English mein)" rows={3} style={{ width: "100%", background: "var(--t2-bg)", border: "1px solid var(--t2-border)", borderRadius: 12, padding: "10px 12px", color: "var(--t2-text)", fontSize: 13, outline: "none", resize: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+          <p style={{ fontSize: 11, color: "var(--t2-muted)", marginTop: 6, textAlign: "right" }}>0 / 120</p>
+        </div>
+
+        {/* Website */}
+        <div style={{ background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 18, padding: "16px", marginBottom: 12 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: "var(--t2-muted)", letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 10 }}>Website / Link</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--t2-bg)", border: "1px solid var(--t2-border)", borderRadius: 12, padding: "10px 12px" }}>
+            <Globe size={14} color="var(--t2-muted)" />
+            <input placeholder="https://your-website.com" style={{ flex: 1, background: "none", border: "none", color: "var(--t2-text)", fontSize: 13, outline: "none" }} />
           </div>
-
-          <button className="w-full flex items-center justify-between p-4 active:bg-[#121a12]">
-            <div className="flex items-center gap-3">
-              <Shield className="w-5 h-5 text-[#9ca3af]" />
-              <span className="text-[15px]">Blocked Users</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#253D2C] flex items-center justify-center text-[12px] font-medium text-white">2</span>
-              <ChevronRight className="w-5 h-5 text-[#6b7280]" />
-            </div>
-          </button>
         </div>
 
-        {/* About Section */}
-        <SectionHeader title="ABOUT" />
-        <div className="bg-[#1a2619] rounded-2xl mx-4 overflow-hidden border border-[#253D2C]">
-          <button className="w-full flex items-center justify-between p-4 border-b border-[#253D2C] active:bg-[#121a12]">
-            <div className="flex items-center gap-3">
-              <Info className="w-5 h-5 text-[#9ca3af]" />
-              <span className="text-[15px]">App Version</span>
-            </div>
-            <span className="text-[13px] text-[#9ca3af]">v2.1.0</span>
-          </button>
-
-          <button className="w-full flex items-center justify-between p-4 active:bg-[#121a12]">
-            <div className="flex items-center gap-3">
-              <Star className="w-5 h-5 text-[#9ca3af]" />
-              <span className="text-[15px]">Rate Topper 2.0</span>
-            </div>
-            <ChevronRight className="w-5 h-5 text-[#6b7280]" />
-          </button>
+        {/* Social Links */}
+        <div style={{ background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 18, padding: "16px", marginBottom: 12 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: "var(--t2-muted)", letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 12 }}>Social Links</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {[
+              { label: "Instagram", prefix: "@", placeholder: "yourhandle", color: "#e1306c" },
+              { label: "Twitter / X", prefix: "@", placeholder: "yourhandle", color: "#1da1f2" },
+              { label: "Facebook", prefix: "fb/", placeholder: "yourprofile", color: "#1877f2" },
+              { label: "Reddit", prefix: "u/", placeholder: "yourprofile", color: "#ff4500" },
+            ].map(s => (
+              <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--t2-bg)", border: "1px solid var(--t2-border)", borderRadius: 12, padding: "10px 12px" }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: s.color, width: 80, flexShrink: 0 }}>{s.label}</span>
+                <span style={{ fontSize: 12, color: s.color, opacity: 0.6 }}>{s.prefix}</span>
+                <input placeholder={s.placeholder} style={{ flex: 1, background: "none", border: "none", color: "var(--t2-text)", fontSize: 13, outline: "none" }} />
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Danger Zone */}
-        <SectionHeader title="ACCOUNT" />
-        <div className="bg-[#1a2619] rounded-2xl mx-4 mb-8 overflow-hidden border border-[#253D2C]">
-          <button className="w-full flex items-center gap-3 p-4 border-b border-[#253D2C] active:bg-[#121a12]">
-            <LogOut className="w-5 h-5 text-red-500" />
-            <span className="text-[15px] text-red-500">Logout</span>
-          </button>
-
-          <button className="w-full flex items-center gap-3 p-4 active:bg-[#121a12]">
-            <Trash2 className="w-5 h-5 text-red-500" />
-            <span className="text-[15px] text-red-500">Delete Account</span>
-          </button>
+        {/* Privacy — Anonymous mode */}
+        <div style={{ background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 18, padding: "16px", marginBottom: 12 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: "var(--t2-muted)", letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 14 }}>Privacy</p>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+            <button onClick={() => setAnonymous(v => !v)} style={{ width: 44, height: 24, borderRadius: 99, background: anonymous ? "var(--t2-green)" : "var(--t2-border)", border: "none", cursor: "pointer", position: "relative", flexShrink: 0, transition: "background 0.2s", marginTop: 2 }}>
+              <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#fff", position: "absolute", top: 3, left: anonymous ? 23 : 3, transition: "left 0.2s" }} />
+            </button>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: "var(--t2-text)" }}>Anonymous Mode</p>
+              <p style={{ fontSize: 11, color: "var(--t2-muted)", lineHeight: 1.5, marginTop: 3 }}>Others see "Anonymous" instead of your name. You still get all features — discussions, badges, chat.</p>
+            </div>
+          </div>
         </div>
+
+        {/* Blocked Users */}
+        <div style={{ background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 18, padding: "14px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
+          <Shield size={16} color="var(--t2-muted)" />
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "var(--t2-text)" }}>Blocked Users</p>
+            <p style={{ fontSize: 11, color: "var(--t2-muted)" }}>No blocked users</p>
+          </div>
+          <ChevronRight size={14} color="var(--t2-muted2)" />
+        </div>
+
+        {/* Save button */}
+        <button onClick={() => setSaved(true)} style={{ width: "100%", background: saved ? "rgba(76,187,23,0.15)" : "var(--t2-green)", border: saved ? "1.5px solid var(--t2-green)" : "none", borderRadius: 14, padding: "15px", color: saved ? "var(--t2-green-lt)" : "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          {saved ? <><Check size={16} /> Settings Saved!</> : "Save Settings"}
+        </button>
       </div>
     </div>
   );

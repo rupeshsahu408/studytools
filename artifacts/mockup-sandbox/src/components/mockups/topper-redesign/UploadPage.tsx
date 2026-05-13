@@ -1,121 +1,129 @@
-import React from "react";
-import { ArrowLeft, BookOpen, UploadCloud, Link, Book, FileText, ChevronRight } from "lucide-react";
 import "./_group.css";
+import { ArrowLeft, Upload, Link2, FileText, ChevronRight, BookOpen, Atom, FlaskConical, Calculator, Leaf, CheckCircle, X } from "lucide-react";
+import { useState } from "react";
 
-export default function UploadPage() {
+const SUBJECTS = ["Physics", "Chemistry", "Mathematics", "Biology"];
+const CLASSES = ["11", "12"];
+const NCERT_CHAPTERS = [
+  "Chapter 1: Electric Charges and Fields",
+  "Chapter 2: Electrostatic Potential",
+  "Chapter 3: Current Electricity",
+  "Chapter 4: Moving Charges and Magnetism",
+  "Chapter 5: Magnetism and Matter",
+];
+
+export function UploadPage() {
+  const [tab, setTab] = useState<"upload"|"browse">("upload");
+  const [subject, setSubject] = useState("Physics");
+  const [classNum, setClassNum] = useState("12");
+  const [fileName, setFileName] = useState("");
+  const [selectedChapter, setSelectedChapter] = useState<string|null>(null);
+
   return (
-    <div className="w-[390px] h-[844px] bg-[#121a12] text-white flex flex-col font-sans overflow-hidden relative">
-      {/* Top Header */}
-      <div className="h-[56px] flex-shrink-0 flex items-center px-4 border-b border-[#253D2C] bg-[#121a12] z-10 sticky top-0">
-        <button className="w-10 h-10 flex items-center justify-center -ml-2 text-white/80 hover:text-white rounded-full">
-          <ArrowLeft size={22} />
+    <div className="phone-frame">
+      {/* Header */}
+      <div className="top-header">
+        <button style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: "var(--t2-muted)", fontSize: 13, padding: 0 }}>
+          <ArrowLeft size={16} /> Back
         </button>
-        <h1 className="text-[17px] font-semibold ml-2 text-white">Nayi Chapter Add Karo</h1>
+        <span style={{ fontWeight: 700, fontSize: 15, color: "var(--t2-text)" }}>Add Chapter</span>
+        <div style={{ width: 60 }} />
       </div>
 
-      {/* Step Indicator */}
-      <div className="h-1 w-full bg-[#1a2619]">
-        <div className="h-full bg-[#4CBB17] w-1/2"></div>
-      </div>
-      <div className="px-4 py-2 flex justify-end">
-        <span className="text-xs text-[#9ca3af] font-medium">Step 1 of 2</span>
-      </div>
+      <div className="content-scroll no-nav" style={{ padding: "16px 16px" }}>
 
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto px-4 pb-20 pt-2 space-y-5">
-        
-        {/* Intro Card */}
-        <div className="bg-[#2E6F40]/10 border border-[#2E6F40]/30 rounded-2xl p-4 flex items-start gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#2E6F40]/20 flex items-center justify-center flex-shrink-0">
-            <Book className="text-[#4CBB17]" size={20} />
-          </div>
-          <div>
-            <h2 className="text-[15px] font-medium text-white mb-1">Chapter ka content choose karo</h2>
-            <p className="text-[13px] text-[#9ca3af]">PDF, URL, ya NCERT directly browse kar sakte ho</p>
-          </div>
-        </div>
-
-        {/* Option 1 — Upload PDF */}
-        <div className="bg-[#1a2619] border border-[#253D2C] rounded-2xl p-5 flex flex-col items-center text-center">
-          <div className="w-14 h-14 rounded-full bg-[#2E6F40]/20 flex items-center justify-center mb-3">
-            <UploadCloud className="text-[#4CBB17]" size={28} />
-          </div>
-          <h3 className="text-[17px] font-semibold text-white mb-1">PDF Upload Karo</h3>
-          <p className="text-[13px] text-[#9ca3af] mb-4">Max 50MB · Hindi/English PDF support</p>
-          <button className="w-full py-3 px-4 border border-[#4CBB17]/50 text-[#4CBB17] font-medium rounded-xl hover:bg-[#4CBB17]/10 transition-colors flex items-center justify-center gap-2">
-            <FileText size={18} />
-            Choose File
-          </button>
-        </div>
-
-        {/* Option 2 — URL se */}
-        <div className="bg-[#1a2619] border border-[#253D2C] rounded-2xl p-5">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-              <Link className="text-blue-400" size={20} />
-            </div>
-            <div>
-              <h3 className="text-[16px] font-semibold text-white">PDF URL Dalo</h3>
-            </div>
-          </div>
-          
-          <div className="flex gap-2">
-            <input 
-              type="url" 
-              placeholder="https://example.com/chapter.pdf" 
-              className="flex-1 bg-[#121a12] border border-[#253D2C] rounded-xl px-3 py-3 text-[14px] text-white focus:outline-none focus:border-[#4CBB17] placeholder:text-[#6b7280]"
-            />
-            <button className="bg-[#2E6F40] text-white px-4 py-3 rounded-xl font-medium">
-              Continue
+        {/* Tab switcher */}
+        <div style={{ display: "flex", background: "var(--t2-card)", borderRadius: 12, padding: 3, marginBottom: 20 }}>
+          {(["upload","browse"] as const).map(t => (
+            <button key={t} onClick={() => setTab(t)} style={{ flex: 1, padding: "8px", borderRadius: 10, background: tab === t ? "var(--t2-green)" : "none", border: "none", color: tab === t ? "#fff" : "var(--t2-muted)", fontSize: 13, fontWeight: tab === t ? 700 : 500, cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+              {t === "upload" ? <Upload size={13} /> : <BookOpen size={13} />}
+              {t === "upload" ? "Upload PDF" : "NCERT Library"}
             </button>
+          ))}
+        </div>
+
+        {/* Subject selector */}
+        <div style={{ marginBottom: 14 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: "var(--t2-muted)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>Subject</p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+            {SUBJECTS.map(s => (
+              <button key={s} onClick={() => setSubject(s)} style={{ padding: "10px 12px", borderRadius: 12, background: subject === s ? "var(--t2-green-dim)" : "var(--t2-card)", border: subject === s ? "1.5px solid var(--t2-green)" : "1px solid var(--t2-border)", color: subject === s ? "var(--t2-green-lt)" : "var(--t2-muted)", fontSize: 13, fontWeight: subject === s ? 700 : 500, cursor: "pointer", textAlign: "left" }}>
+                {s}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Option 3 — NCERT Browse */}
-        <div className="bg-[#1a2619] border border-[#4CBB17]/50 rounded-2xl p-5 relative overflow-hidden">
-          <div className="absolute top-0 right-0 px-3 py-1 bg-[#4CBB17]/20 text-[#4CBB17] text-[10px] font-bold rounded-bl-xl uppercase tracking-wider">
-            Recommended
+        {/* Class selector */}
+        <div style={{ marginBottom: 20 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: "var(--t2-muted)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>Class</p>
+          <div style={{ display: "flex", gap: 6 }}>
+            {CLASSES.map(c => (
+              <button key={c} onClick={() => setClassNum(c)} style={{ flex: 1, padding: "10px", borderRadius: 12, background: classNum === c ? "var(--t2-green-dim)" : "var(--t2-card)", border: classNum === c ? "1.5px solid var(--t2-green)" : "1px solid var(--t2-border)", color: classNum === c ? "var(--t2-green-lt)" : "var(--t2-muted)", fontSize: 14, fontWeight: classNum === c ? 700 : 500, cursor: "pointer" }}>
+                Class {c}
+              </button>
+            ))}
           </div>
-          
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
-              <BookOpen className="text-purple-400" size={20} />
-            </div>
-            <div>
-              <h3 className="text-[16px] font-semibold text-white mb-0.5">NCERT se Select Karo</h3>
-              <p className="text-[12px] text-[#9ca3af]">Direct NCERT chapters — no upload needed</p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <select className="bg-[#121a12] border border-[#253D2C] rounded-xl px-3 py-3 text-[14px] text-white focus:outline-none focus:border-[#4CBB17] appearance-none">
-              <option value="" disabled selected>Class Select</option>
-              <option value="11">Class 11</option>
-              <option value="12">Class 12</option>
-            </select>
-            
-            <select className="bg-[#121a12] border border-[#253D2C] rounded-xl px-3 py-3 text-[14px] text-white focus:outline-none focus:border-[#4CBB17] appearance-none">
-              <option value="" disabled selected>Subject</option>
-              <option value="physics">Physics</option>
-              <option value="chemistry">Chemistry</option>
-              <option value="math">Mathematics</option>
-              <option value="biology">Biology</option>
-            </select>
-          </div>
-          
-          <button className="w-full bg-[#4CBB17] text-[#121a12] font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-[#4CBB17]/90 transition-colors">
-            Browse NCERT
-            <ChevronRight size={18} />
-          </button>
         </div>
 
-      </div>
+        {tab === "upload" ? (
+          <>
+            {/* Chapter name input */}
+            <div style={{ marginBottom: 14 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: "var(--t2-muted)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>Chapter Name</p>
+              <input placeholder="e.g. Electromagnetic Induction" style={{ width: "100%", background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 12, padding: "12px 14px", color: "var(--t2-text)", fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+            </div>
 
-      {/* Footer Note */}
-      <div className="px-6 py-4 bg-[#121a12] border-t border-[#253D2C] mt-auto">
-        <p className="text-[12px] text-[#9ca3af] text-center flex items-center justify-center gap-1.5">
-          <span>📌</span> Sirf 5 chapters save kar sakte ho (1 used)
-        </p>
+            {/* Drop zone */}
+            <div style={{ background: "var(--t2-card)", border: "1.5px dashed var(--t2-border2)", borderRadius: 16, padding: "28px 16px", textAlign: "center", marginBottom: 20 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: "var(--t2-green-dim)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+                <Upload size={22} color="var(--t2-green-lt)" />
+              </div>
+              {fileName ? (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  <FileText size={16} color="var(--t2-green-lt)" />
+                  <span style={{ fontSize: 13, color: "var(--t2-text)", fontWeight: 600 }}>{fileName}</span>
+                  <button onClick={() => setFileName("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--t2-muted)" }}>
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: "var(--t2-text)", marginBottom: 4 }}>Tap to select PDF</p>
+                  <p style={{ fontSize: 12, color: "var(--t2-muted)" }}>or drag and drop · Max 20 MB</p>
+                </>
+              )}
+            </div>
+
+            <button style={{ width: "100%", background: "var(--t2-green)", border: "none", borderRadius: 14, padding: "15px", color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
+              Upload & Generate
+            </button>
+          </>
+        ) : (
+          <>
+            {/* NCERT Chapter list */}
+            <p style={{ fontSize: 11, fontWeight: 700, color: "var(--t2-muted)", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.06em" }}>{subject} · Class {classNum}</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
+              {NCERT_CHAPTERS.map((ch, i) => (
+                <button key={i} onClick={() => setSelectedChapter(ch)} style={{ display: "flex", alignItems: "center", gap: 12, background: selectedChapter === ch ? "var(--t2-green-dim)" : "var(--t2-card)", border: selectedChapter === ch ? "1.5px solid var(--t2-green)" : "1px solid var(--t2-border)", borderRadius: 14, padding: "14px 14px", cursor: "pointer", textAlign: "left" }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 9, background: selectedChapter === ch ? "var(--t2-green)" : "var(--t2-border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {selectedChapter === ch ? <CheckCircle size={15} color="#fff" /> : <BookOpen size={15} color="var(--t2-muted)" />}
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: selectedChapter === ch ? 700 : 500, color: selectedChapter === ch ? "var(--t2-green-lt)" : "var(--t2-text)", flex: 1 }}>{ch}</span>
+                </button>
+              ))}
+            </div>
+            <button style={{ width: "100%", background: selectedChapter ? "var(--t2-green)" : "var(--t2-border)", border: "none", borderRadius: 14, padding: "15px", color: selectedChapter ? "#fff" : "var(--t2-muted)", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
+              {selectedChapter ? "Use This Chapter" : "Select a Chapter"}
+            </button>
+          </>
+        )}
+
+        {/* Limit note */}
+        <div style={{ marginTop: 14, padding: "10px 12px", background: "var(--t2-green-dim)", borderRadius: 12, display: "flex", alignItems: "center", gap: 8 }}>
+          <BookOpen size={14} color="var(--t2-green-lt)" />
+          <p style={{ fontSize: 11, color: "var(--t2-muted)" }}>3 / 5 chapters used. You can add 2 more chapters.</p>
+        </div>
       </div>
     </div>
   );

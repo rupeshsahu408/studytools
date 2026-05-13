@@ -1,265 +1,171 @@
-import React, { useState } from 'react';
-import { 
-  ArrowLeft, 
-  Share2, 
-  Book, 
-  HelpCircle, 
-  FileText, 
-  Layers, 
-  Sigma, 
-  GitMerge, 
-  FlaskConical, 
-  AlertTriangle, 
-  MessageCircle,
-  MoreVertical,
-  ChevronDown,
-  ChevronUp,
-  Download,
-  RefreshCw,
-  Maximize2,
-  Minimize2
-} from 'lucide-react';
-import './_group.css';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import "./_group.css";
+import { useState } from "react";
+import { ArrowLeft, Share2, BookOpen, HelpCircle, Zap, Sigma, GitFork, AlertTriangle, Layers, Brain, MessageCircle, FileText, ChevronDown, Download, RotateCcw, Atom, Play } from "lucide-react";
 
-export default function ChapterPage() {
-  const [activeTab, setActiveTab] = useState('Notes');
-  const [infoExpanded, setInfoExpanded] = useState(true);
-  const [expandedSections, setExpandedSections] = useState<string[]>(['sec1', 'sec2']);
+const TABS = [
+  { id: "notes", label: "Notes", icon: BookOpen },
+  { id: "questions", label: "Questions", icon: HelpCircle },
+  { id: "flashcards", label: "Flash Cards", icon: Layers },
+  { id: "formulas", label: "Formulas", icon: Sigma },
+  { id: "mindmap", label: "Mind Map", icon: GitFork },
+  { id: "mistakes", label: "Ye Galti", icon: AlertTriangle },
+  { id: "simulations", label: "Simulations", icon: Atom },
+  { id: "chat", label: "Doubt Chat", icon: MessageCircle },
+  { id: "summary", label: "Summary", icon: FileText },
+  { id: "exam", label: "Exam Paper", icon: Brain },
+];
 
-  const tabs = [
-    { id: 'Notes', icon: Book, label: 'Notes' },
-    { id: 'Questions', icon: HelpCircle, label: 'Questions' },
-    { id: 'Summary', icon: FileText, label: 'Summary' },
-    { id: 'Flashcards', icon: Layers, label: 'Flashcards' },
-    { id: 'Formulas', icon: Sigma, label: 'Formulas' },
-    { id: 'Mind Map', icon: GitMerge, label: 'Mind Map' },
-    { id: 'Simulations', icon: FlaskConical, label: 'Simulations' },
-    { id: 'Mistakes', icon: AlertTriangle, label: 'Mistakes' },
-    { id: 'Doubt Chat', icon: MessageCircle, label: 'Doubt Chat' },
-  ];
+const NOTE_SECTIONS = [
+  { title: "Chapter Overview", words: 320, expanded: true },
+  { title: "Electric Flux", words: 540, expanded: false },
+  { title: "Gauss's Law", words: 680, expanded: false },
+  { title: "Applications of Gauss's Law", words: 890, expanded: false },
+];
 
-  const toggleSection = (id: string) => {
-    setExpandedSections(prev => 
-      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
-    );
-  };
-
+function NotesContent() {
   return (
-    <div className="w-[390px] h-[844px] bg-[#121a12] text-white flex flex-col font-sans overflow-hidden mx-auto relative shadow-2xl rounded-3xl border border-[#253D2C]">
-      {/* Top Header */}
-      <header className="flex-none h-[56px] px-4 flex items-center justify-between bg-[#121a12] border-b border-[#253D2C] z-10">
-        <button className="p-2 -ml-2 text-white hover:bg-[#1a2619] rounded-full transition-colors">
-          <ArrowLeft className="w-6 h-6" />
-        </button>
-        <h1 className="text-base font-semibold truncate px-2">Ch.4 — Moving Charges</h1>
-        <button className="p-2 -mr-2 text-white hover:bg-[#1a2619] rounded-full transition-colors">
-          <Share2 className="w-5 h-5" />
-        </button>
-      </header>
+    <div style={{ padding: "0 16px" }}>
+      {/* Notes meta row */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, paddingTop: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ background: "var(--t2-green-dim)", padding: "3px 10px", borderRadius: 99, fontSize: 11, color: "var(--t2-green-lt)", fontWeight: 700 }}>Detailed</div>
+          <span style={{ fontSize: 11, color: "var(--t2-muted)" }}>· 4,594 words</span>
+        </div>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button style={{ width: 32, height: 32, background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+            <Download size={14} color="var(--t2-muted)" />
+          </button>
+          <button style={{ width: 32, height: 32, background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+            <RotateCcw size={14} color="var(--t2-muted)" />
+          </button>
+        </div>
+      </div>
 
-      {/* Main Scrollable Area */}
-      <main className="flex-1 overflow-y-auto flex flex-col pb-8 custom-scrollbar">
-        {/* Chapter Info Bar */}
-        <div className="px-4 py-4 border-b border-[#253D2C] bg-[#1a2619]">
-          <div className="flex justify-between items-start mb-3">
-            <span className="bg-blue-900/40 text-blue-400 text-xs font-medium px-2.5 py-1 rounded-full border border-blue-800/50">
-              Physics · Class 12
-            </span>
-            <button 
-              onClick={() => setInfoExpanded(!infoExpanded)}
-              className="text-[#9ca3af] hover:text-white transition-colors p-1"
-            >
-              {infoExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-            </button>
+      {NOTE_SECTIONS.map((s, i) => (
+        <div key={i} style={{ background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 14, marginBottom: 8, overflow: "hidden" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 14px" }}>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: s.expanded ? "var(--t2-green-lt)" : "var(--t2-text)" }}>{s.title}</p>
+              <p style={{ fontSize: 11, color: "var(--t2-muted)", marginTop: 2 }}>{s.words} words</p>
+            </div>
+            <ChevronDown size={16} color="var(--t2-muted2)" style={{ transform: s.expanded ? "rotate(180deg)" : "none" }} />
           </div>
-          
-          {infoExpanded && (
-            <div className="flex items-center gap-4">
-              <div className="relative w-12 h-12 flex items-center justify-center">
-                <svg className="w-12 h-12 transform -rotate-90">
-                  <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-[#253D2C]" />
-                  <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="transparent" strokeDasharray="125.6" strokeDashoffset="43.96" className="text-[#4CBB17]" strokeLinecap="round" />
-                </svg>
-                <span className="absolute text-[10px] font-bold text-white">65%</span>
-              </div>
-              <div className="flex flex-col">
-                <h2 className="text-sm font-semibold text-white">Moving Charges and Magnetism</h2>
-                <p className="text-xs text-[#9ca3af] mt-0.5">65% Complete · 2/5 sections done</p>
+          {s.expanded && (
+            <div style={{ padding: "0 14px 14px" }}>
+              <p style={{ fontSize: 13, color: "var(--t2-muted)", lineHeight: 1.7 }}>
+                विद्युत चुम्बकीय प्रेरण वह घटना है जिसमें किसी चालक में EMF (विद्युत वाहक बल) उत्पन्न होती है जब उससे संबद्ध चुम्बकीय फ्लक्स में परिवर्तन होता है।
+              </p>
+              <div style={{ marginTop: 10, padding: "10px 12px", background: "var(--t2-bg)", borderRadius: 10, borderLeft: "3px solid var(--t2-green)" }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "var(--t2-green-lt)", marginBottom: 4 }}>Key Formula</p>
+                <p style={{ fontSize: 13, color: "var(--t2-text)", fontFamily: "monospace" }}>ε = -dΦ/dt</p>
               </div>
             </div>
           )}
         </div>
+      ))}
+    </div>
+  );
+}
 
-        {/* Scrollable Tab Bar */}
-        <div className="w-full overflow-x-auto no-scrollbar border-b border-[#253D2C] bg-[#1a2619] flex-none">
-          <div className="flex px-2">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-none flex items-center gap-2 px-4 py-3 border-b-2 transition-colors min-w-max ${
-                  activeTab === tab.id
-                    ? 'border-[#4CBB17] text-[#4CBB17]'
-                    : 'border-transparent text-[#9ca3af]'
-                }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                <span className="text-sm font-medium">{tab.label}</span>
-              </button>
+function QuestionsContent() {
+  return (
+    <div style={{ padding: "14px 16px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+        {["MCQ", "1 Mark", "2 Marks", "5 Marks", "Assertion", "Case Study", "True/False", "Fill Blank"].map((type) => (
+          <div key={type} style={{ background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 12, padding: "12px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--t2-text)" }}>{type}</span>
+            <span style={{ fontSize: 11, color: "var(--t2-green-lt)", fontWeight: 700 }}>→</span>
+          </div>
+        ))}
+      </div>
+      <button style={{ width: "100%", background: "var(--t2-green)", border: "none", borderRadius: 14, padding: "14px", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+        Generate All Questions
+      </button>
+    </div>
+  );
+}
+
+export function ChapterPage() {
+  const [activeTab, setActiveTab] = useState("notes");
+
+  return (
+    <div className="phone-frame">
+      {/* Header */}
+      <div style={{ background: "var(--t2-bg)", borderBottom: "1px solid var(--t2-border)", padding: "12px 16px", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <button style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: "var(--t2-muted)", fontSize: 13, padding: 0 }}>
+            <ArrowLeft size={16} /> Back
+          </button>
+          <button style={{ width: 32, height: 32, background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+            <Share2 size={14} color="var(--t2-muted)" />
+          </button>
+        </div>
+        {/* Chapter info */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: "#3b82f633", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Atom size={20} color="#3b82f6" />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", gap: 5, marginBottom: 2 }}>
+              <span style={{ fontSize: 11, color: "#3b82f6", fontWeight: 700 }}>Physics</span>
+              <span style={{ fontSize: 11, color: "var(--t2-muted)" }}>· Class 12</span>
+            </div>
+            <p style={{ fontSize: 14, fontWeight: 800, color: "var(--t2-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Electric Charges and Fields</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Horizontal Tab Scroll */}
+      <div style={{ borderBottom: "1px solid var(--t2-border)", background: "var(--t2-bg)", flexShrink: 0, overflowX: "auto", display: "flex", gap: 4, padding: "0 12px" }} className="no-scrollbar">
+        {TABS.map(({ id, label, icon: Icon }) => {
+          const active = activeTab === id;
+          return (
+            <button key={id} onClick={() => setActiveTab(id)} style={{ display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap", padding: "10px 10px", background: "none", border: "none", borderBottom: active ? "2px solid var(--t2-green-lt)" : "2px solid transparent", color: active ? "var(--t2-green-lt)" : "var(--t2-muted)", fontSize: 12, fontWeight: active ? 700 : 500, cursor: "pointer", flexShrink: 0 }}>
+              <Icon size={13} />
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Content area */}
+      <div className="content-scroll no-nav">
+        {activeTab === "notes" && <NotesContent />}
+        {activeTab === "questions" && <QuestionsContent />}
+        {activeTab === "simulations" && (
+          <div style={{ padding: "20px 16px", textAlign: "center" }}>
+            <div style={{ width: 56, height: 56, borderRadius: 16, background: "#3b82f633", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+              <Play size={26} color="#3b82f6" />
+            </div>
+            <p style={{ fontSize: 15, fontWeight: 700, color: "var(--t2-text)", marginBottom: 6 }}>Interactive Simulations</p>
+            <p style={{ fontSize: 12, color: "var(--t2-muted)", marginBottom: 16 }}>AI has selected 3 simulations for this chapter</p>
+            {["Electric Field Visualizer", "Coulomb's Law Simulator", "Gauss's Law Demo"].map((sim, i) => (
+              <div key={i} style={{ background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 14, padding: "14px 14px", marginBottom: 8, display: "flex", alignItems: "center", gap: 12, textAlign: "left" }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#3b82f633", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Atom size={16} color="#3b82f6" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: "var(--t2-text)" }}>{sim}</p>
+                  <p style={{ fontSize: 11, color: "var(--t2-muted)" }}>Interactive · Tap to launch</p>
+                </div>
+                <Play size={15} color="var(--t2-green-lt)" />
+              </div>
             ))}
           </div>
-        </div>
-
-        {/* Content Area */}
-        <div className="p-4 flex-1">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex flex-col">
-              <h2 className="text-lg font-bold text-white">Chapter Notes</h2>
-              <span className="text-xs font-medium text-[#9ca3af] bg-[#1a2619] px-2 py-0.5 rounded mt-1 w-fit border border-[#253D2C]">
-                4,594 words · Detailed
-              </span>
+        )}
+        {!["notes","questions","simulations"].includes(activeTab) && (
+          <div style={{ padding: "40px 16px", textAlign: "center" }}>
+            <div style={{ width: 52, height: 52, borderRadius: 14, background: "var(--t2-card)", border: "1px solid var(--t2-border)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+              {(() => { const T = TABS.find(t => t.id === activeTab); return T ? <T.icon size={22} color="var(--t2-green-lt)" /> : null; })()}
             </div>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#1a2619] border border-[#253D2C] text-[#9ca3af] hover:text-white transition-colors">
-                  <MoreVertical className="w-5 h-5" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-[#1a2619] border-[#253D2C] text-white">
-                <DropdownMenuItem className="focus:bg-[#253D2C] focus:text-white cursor-pointer">
-                  <Download className="w-4 h-4 mr-2" /> Export PDF
-                </DropdownMenuItem>
-                <DropdownMenuItem className="focus:bg-[#253D2C] focus:text-white cursor-pointer">
-                  <RefreshCw className="w-4 h-4 mr-2" /> Regenerate
-                </DropdownMenuItem>
-                <DropdownMenuItem className="focus:bg-[#253D2C] focus:text-white cursor-pointer" onClick={() => setExpandedSections(['sec1', 'sec2', 'sec3'])}>
-                  <Maximize2 className="w-4 h-4 mr-2" /> Expand All
-                </DropdownMenuItem>
-                <DropdownMenuItem className="focus:bg-[#253D2C] focus:text-white cursor-pointer" onClick={() => setExpandedSections([])}>
-                  <Minimize2 className="w-4 h-4 mr-2" /> Collapse All
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <p style={{ fontSize: 14, fontWeight: 700, color: "var(--t2-text)", marginBottom: 6 }}>{TABS.find(t => t.id === activeTab)?.label}</p>
+            <p style={{ fontSize: 12, color: "var(--t2-muted)", marginBottom: 20 }}>Tap generate to create this content with AI</p>
+            <button style={{ background: "var(--t2-green)", border: "none", borderRadius: 14, padding: "13px 28px", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+              Generate with AI
+            </button>
           </div>
-
-          <div className="space-y-4">
-            {/* Section 1 */}
-            <div className="bg-[#1a2619] border border-[#253D2C] rounded-2xl overflow-hidden">
-              <button 
-                className="w-full flex items-center justify-between p-4 text-left focus:outline-none"
-                onClick={() => toggleSection('sec1')}
-              >
-                <h3 className="font-semibold text-[15px] pr-4">1. Magnetic Force (चुंबकीय बल)</h3>
-                {expandedSections.includes('sec1') ? 
-                  <ChevronUp className="w-5 h-5 text-[#9ca3af] flex-shrink-0" /> : 
-                  <ChevronDown className="w-5 h-5 text-[#9ca3af] flex-shrink-0" />
-                }
-              </button>
-              
-              {expandedSections.includes('sec1') && (
-                <div className="px-4 pb-4 pt-1 border-t border-[#253D2C]/50">
-                  <p className="text-sm text-[#9ca3af] mb-3 leading-relaxed">
-                    When a charge <span className="text-white">q</span> moves with velocity <span className="text-white">v</span> in a magnetic field <span className="text-white">B</span>, it experiences a force known as the Lorentz force.
-                  </p>
-                  <ul className="space-y-2">
-                    <li className="flex gap-2 text-sm text-[#9ca3af]">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#4CBB17] mt-1.5 flex-shrink-0" />
-                      <span>Formula: <span className="text-white font-mono">F = q(v × B)</span></span>
-                    </li>
-                    <li className="flex gap-2 text-sm text-[#9ca3af]">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#4CBB17] mt-1.5 flex-shrink-0" />
-                      <span>Direction is given by Fleming's Left Hand Rule (फ्लेमिंग का वामहस्त नियम).</span>
-                    </li>
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            {/* Section 2 */}
-            <div className="bg-[#1a2619] border border-[#253D2C] rounded-2xl overflow-hidden">
-              <button 
-                className="w-full flex items-center justify-between p-4 text-left focus:outline-none"
-                onClick={() => toggleSection('sec2')}
-              >
-                <h3 className="font-semibold text-[15px] pr-4">2. Motion in a Magnetic Field</h3>
-                {expandedSections.includes('sec2') ? 
-                  <ChevronUp className="w-5 h-5 text-[#9ca3af] flex-shrink-0" /> : 
-                  <ChevronDown className="w-5 h-5 text-[#9ca3af] flex-shrink-0" />
-                }
-              </button>
-              
-              {expandedSections.includes('sec2') && (
-                <div className="px-4 pb-4 pt-1 border-t border-[#253D2C]/50">
-                  <p className="text-sm text-[#9ca3af] mb-3 leading-relaxed">
-                    A charged particle moving perpendicular to a uniform magnetic field traces a circular path. The magnetic force provides the necessary centripetal force.
-                  </p>
-                  <ul className="space-y-2">
-                    <li className="flex gap-2 text-sm text-[#9ca3af]">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#4CBB17] mt-1.5 flex-shrink-0" />
-                      <span>Radius of path: <span className="text-white font-mono">r = mv/qB</span></span>
-                    </li>
-                    <li className="flex gap-2 text-sm text-[#9ca3af]">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#4CBB17] mt-1.5 flex-shrink-0" />
-                      <span>Time period (T) is independent of velocity and radius.</span>
-                    </li>
-                  </ul>
-                  <div className="mt-4 bg-[#121a12] p-3 rounded-xl border border-[#253D2C]">
-                    <div className="text-xs text-[#6b7280] mb-1 uppercase font-semibold tracking-wider">Bihar Board PYQ 2022</div>
-                    <p className="text-sm text-[#e5e7eb]">What is the trajectory of an electron projected parallel to a magnetic field?</p>
-                    <p className="text-sm text-[#4CBB17] mt-1 font-medium">Ans: Straight line (सीधी रेखा)</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Section 3 */}
-            <div className="bg-[#1a2619] border border-[#253D2C] rounded-2xl overflow-hidden">
-              <button 
-                className="w-full flex items-center justify-between p-4 text-left focus:outline-none"
-                onClick={() => toggleSection('sec3')}
-              >
-                <h3 className="font-semibold text-[15px] pr-4">3. Biot-Savart Law (बायो-सावर्ट नियम)</h3>
-                {expandedSections.includes('sec3') ? 
-                  <ChevronUp className="w-5 h-5 text-[#9ca3af] flex-shrink-0" /> : 
-                  <ChevronDown className="w-5 h-5 text-[#9ca3af] flex-shrink-0" />
-                }
-              </button>
-              
-              {expandedSections.includes('sec3') && (
-                <div className="px-4 pb-4 pt-1 border-t border-[#253D2C]/50">
-                  <p className="text-sm text-[#9ca3af] mb-3 leading-relaxed">
-                    Gives the magnetic field produced by a small current element <span className="text-white">dl</span> carrying current <span className="text-white">I</span>.
-                  </p>
-                </div>
-              )}
-            </div>
-            
-            <div className="h-6"></div> {/* Bottom spacing */}
-          </div>
-        </div>
-      </main>
-
-      <style>{`
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #253D2C;
-          border-radius: 4px;
-        }
-      `}</style>
+        )}
+      </div>
     </div>
   );
 }

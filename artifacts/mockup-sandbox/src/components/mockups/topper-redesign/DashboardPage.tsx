@@ -1,225 +1,136 @@
-import React from 'react';
-import { 
-  Home, 
-  BarChart2, 
-  Users, 
-  User, 
-  Moon, 
-  Flame, 
-  Target, 
-  Percent, 
-  Globe, 
-  Plus, 
-  Atom, 
-  ArrowRight,
-  Calculator,
-  Leaf
-} from 'lucide-react';
-import './_group.css';
+import "./_group.css";
+import { Home, Upload, Users, BarChart2, UserCircle, Bell, Flame, Target, TrendingUp, ChevronRight, Plus, Globe, Atom, FlaskConical, Calculator, Leaf, BookOpen } from "lucide-react";
 
-export default function DashboardPage() {
+const NAV = [
+  { icon: Home, label: "Home", active: true },
+  { icon: Upload, label: "Upload", active: false },
+  { icon: Users, label: "Community", active: false },
+  { icon: BarChart2, label: "Progress", active: false },
+  { icon: UserCircle, label: "Profile", active: false },
+];
+
+const CHAPTERS = [
+  { subject: "Physics", classNum: "12", name: "Electromagnetic Induction", progress: 75, color: "#3b82f6", icon: Atom },
+  { subject: "Chemistry", classNum: "11", name: "Chemical Bonding", progress: 40, color: "#a855f7", icon: FlaskConical },
+  { subject: "Mathematics", classNum: "12", name: "Integrals", progress: 20, color: "#f97316", icon: Calculator },
+];
+
+function SubjectIcon({ color, Icon }: { color: string; Icon: any }) {
   return (
-    <div className="w-[390px] h-[844px] bg-[#121a12] text-white flex flex-col relative overflow-hidden font-sans border border-[#253D2C]">
-      {/* Top Header */}
-      <header className="h-[56px] flex-none bg-[#121a12] border-b border-[#253D2C] flex items-center justify-between px-4 sticky top-0 z-10">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#2E6F40] rounded-lg flex items-center justify-center font-bold text-white">
-            T2
-          </div>
-          <span className="font-semibold text-white">Topper 2.0</span>
-        </div>
-        <button className="w-10 h-10 flex items-center justify-center text-[#9ca3af] hover:text-white rounded-full">
-          <Moon size={20} />
-        </button>
-      </header>
+    <div style={{ background: color + "22", borderRadius: 14, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <Icon size={20} color={color} />
+    </div>
+  );
+}
 
-      {/* Scrollable Content */}
-      <main className="flex-1 overflow-y-auto pb-[80px] no-scrollbar">
-        {/* Greeting Section */}
-        <section className="px-4 pt-5 pb-6">
-          <h1 className="text-2xl font-bold mb-1">Namaste, Ravi! 👋</h1>
-          <p className="text-[#9ca3af] text-sm mb-4">Class 12 · Bihar Board · Science</p>
-          <div className="inline-block border border-[#2E6F40] text-[#4CBB17] text-xs font-medium px-3 py-1 rounded-full">
-            1/5 chapters used
+export function DashboardPage() {
+  return (
+    <div className="phone-frame">
+      <div className="top-header">
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 30, height: 30, background: "var(--t2-green)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ color: "#fff", fontWeight: 800, fontSize: 11 }}>T2</span>
           </div>
-        </section>
+          <span style={{ fontWeight: 800, fontSize: 17, color: "var(--t2-text)" }}>Topper 2.0</span>
+        </div>
+        <button style={{ width: 36, height: 36, borderRadius: 10, background: "var(--t2-green-dim)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", cursor: "pointer" }}>
+          <Bell size={16} color="var(--t2-green-lt)" />
+          <span style={{ position: "absolute", top: 7, right: 7, width: 6, height: 6, background: "#ef4444", borderRadius: "50%" }} />
+        </button>
+      </div>
+
+      <div className="content-scroll" style={{ padding: "0 16px" }}>
+        {/* Greeting */}
+        <div style={{ paddingTop: 18, marginBottom: 18 }}>
+          <p style={{ color: "var(--t2-muted)", fontSize: 13 }}>Namaste 👋</p>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: "var(--t2-text)", lineHeight: 1.2, margin: "2px 0 4px" }}>Rahul Singh</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--t2-green-lt)" }} />
+            <p style={{ fontSize: 12, color: "var(--t2-muted)" }}>3 / 5 chapters used · Class 12</p>
+          </div>
+        </div>
 
         {/* Stats Strip */}
-        <section className="px-4 mb-8">
-          <div className="flex gap-3 h-[90px]">
-            {/* Streak */}
-            <div className="flex-1 bg-[#1a2619] rounded-2xl border border-[#253D2C] p-3 flex flex-col justify-between">
-              <div className="w-7 h-7 rounded-full bg-orange-500/20 flex items-center justify-center">
-                <Flame size={16} className="text-orange-500" />
-              </div>
-              <div>
-                <div className="text-white font-bold">7 days</div>
-                <div className="text-[#6b7280] text-xs">Streak</div>
-              </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 24 }}>
+          <div style={{ background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 16, padding: "12px 10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 6 }}>
+              <Flame size={13} color="#f97316" />
+              <span style={{ fontSize: 10, color: "var(--t2-muted)", fontWeight: 600 }}>Streak</span>
             </div>
-            
-            {/* Target */}
-            <div className="flex-1 bg-[#1a2619] rounded-2xl border border-[#253D2C] p-3 flex flex-col justify-between relative overflow-hidden">
-              <div className="w-7 h-7 rounded-full bg-[#2E6F40]/20 flex items-center justify-center">
-                <Target size={16} className="text-[#4CBB17]" />
-              </div>
-              <div>
-                <div className="text-white font-bold">3/10 Q</div>
-                <div className="text-[#6b7280] text-xs">Aaj Ka Target</div>
-              </div>
-              <div className="absolute bottom-0 left-0 h-1 bg-[#2E6F40] w-[30%]" />
+            <div style={{ fontSize: 24, fontWeight: 900, color: "#f97316", lineHeight: 1 }}>7</div>
+            <div style={{ fontSize: 10, color: "var(--t2-muted)", marginTop: 2 }}>days</div>
+          </div>
+          <div style={{ background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 16, padding: "12px 10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 6 }}>
+              <Target size={13} color="var(--t2-green-lt)" />
+              <span style={{ fontSize: 10, color: "var(--t2-muted)", fontWeight: 600 }}>Today</span>
             </div>
-
-            {/* Accuracy */}
-            <div className="flex-1 bg-[#1a2619] rounded-2xl border border-[#253D2C] p-3 flex flex-col justify-between relative overflow-hidden">
-              <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center">
-                <Percent size={16} className="text-blue-400" />
-              </div>
-              <div>
-                <div className="text-white font-bold">72%</div>
-                <div className="text-[#6b7280] text-xs">Accuracy</div>
-              </div>
-              <div className="absolute bottom-0 left-0 h-1 bg-blue-500 w-[72%]" />
+            <div style={{ fontSize: 18, fontWeight: 900, color: "var(--t2-green-lt)", lineHeight: 1 }}>4<span style={{ fontSize: 11, color: "var(--t2-muted)", fontWeight: 500 }}>/10</span></div>
+            <div style={{ height: 3, background: "var(--t2-border)", borderRadius: 99, marginTop: 6, overflow: "hidden" }}>
+              <div style={{ width: "40%", height: "100%", background: "var(--t2-green-lt)", borderRadius: 99 }} />
             </div>
           </div>
-        </section>
+          <div style={{ background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 16, padding: "12px 10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 6 }}>
+              <TrendingUp size={13} color="#a855f7" />
+              <span style={{ fontSize: 10, color: "var(--t2-muted)", fontWeight: 600 }}>Accuracy</span>
+            </div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: "#a855f7", lineHeight: 1 }}>78<span style={{ fontSize: 11, color: "var(--t2-muted)", fontWeight: 500 }}>%</span></div>
+            <div style={{ fontSize: 10, color: "var(--t2-muted)", marginTop: 2 }}>correct</div>
+          </div>
+        </div>
 
         {/* Chapter Library */}
-        <section className="px-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[#9ca3af] text-xs font-bold tracking-wider">CHAPTER LIBRARY</h2>
-            <button className="flex items-center gap-1.5 text-[#2E6F40] hover:text-[#4CBB17] transition-colors">
-              <Globe size={14} />
-              <span className="text-sm font-medium">Community Notes</span>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--t2-muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Chapter Library</span>
+            <button style={{ display: "flex", alignItems: "center", gap: 4, background: "var(--t2-green)", border: "none", borderRadius: 10, padding: "6px 12px", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+              <Plus size={12} /> Add
             </button>
           </div>
 
-          <div className="space-y-4">
-            {/* Add Chapter Button */}
-            <button className="w-full h-14 rounded-2xl border-2 border-dashed border-[#2E6F40]/50 bg-[#2E6F40]/10 flex items-center justify-center gap-2 text-[#4CBB17] hover:bg-[#2E6F40]/20 transition-colors">
-              <Plus size={20} />
-              <span className="font-medium">Nayi Chapter Add Karo</span>
-            </button>
-
-            {/* Chapter Card 1 */}
-            <div className="bg-[#1a2619] rounded-2xl border border-[#253D2C] p-4 flex flex-col gap-4">
-              <div className="flex items-start justify-between">
-                <div className="flex gap-3 items-center">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                    <Atom size={20} className="text-blue-400" />
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {CHAPTERS.map((ch, i) => (
+              <div key={i} style={{ background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 18, padding: "14px 14px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                  <SubjectIcon color={ch.color} Icon={ch.icon} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: "var(--t2-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ch.name}</p>
+                    <p style={{ fontSize: 11, color: "var(--t2-muted)", marginTop: 2 }}>{ch.subject} · Class {ch.classNum}</p>
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-white truncate max-w-[180px]">Electric Charges & Fields</h3>
-                      <span className="bg-[#2E6F40]/20 text-[#4CBB17] text-[10px] px-2 py-0.5 rounded-full font-medium">Class 12</span>
-                    </div>
-                    <p className="text-[#6b7280] text-xs">Physics • Last studied 2d ago</p>
+                  <ChevronRight size={15} color="var(--t2-muted2)" />
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ flex: 1, height: 3, background: "var(--t2-border)", borderRadius: 99, overflow: "hidden" }}>
+                    <div style={{ width: `${ch.progress}%`, height: "100%", background: ch.color, borderRadius: 99 }} />
                   </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: ch.color }}>{ch.progress}%</span>
                 </div>
               </div>
-              
-              <div className="space-y-2">
-                <div className="flex gap-1 h-1.5 w-full">
-                  <div className="flex-1 bg-[#4CBB17] rounded-l-full"></div>
-                  <div className="flex-1 bg-[#4CBB17]"></div>
-                  <div className="flex-1 bg-[#253D2C]"></div>
-                  <div className="flex-1 bg-[#253D2C]"></div>
-                  <div className="flex-1 bg-[#253D2C] rounded-r-full"></div>
-                </div>
-                <div className="flex justify-between text-[10px] text-[#6b7280]">
-                  <span>Notes</span>
-                  <span>Qns</span>
-                  <span>Cards</span>
-                  <span>Sims</span>
-                  <span>Chat</span>
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-1">
-                <button className="text-[#4CBB17] text-sm font-medium flex items-center gap-1 hover:text-[#2E6F40]">
-                  Continue <ArrowRight size={16} />
-                </button>
-              </div>
-            </div>
-
-            {/* Chapter Card 2 */}
-            <div className="bg-[#1a2619] rounded-2xl border border-[#253D2C] p-4 flex flex-col gap-4">
-              <div className="flex items-start justify-between">
-                <div className="flex gap-3 items-center">
-                  <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                    <Calculator size={20} className="text-purple-400" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-white truncate max-w-[180px]">Calculus Integration</h3>
-                      <span className="bg-[#2E6F40]/20 text-[#4CBB17] text-[10px] px-2 py-0.5 rounded-full font-medium">Class 12</span>
-                    </div>
-                    <p className="text-[#6b7280] text-xs">Mathematics • Just added</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex gap-1 h-1.5 w-full">
-                  <div className="flex-1 bg-[#4CBB17] rounded-l-full"></div>
-                  <div className="flex-1 bg-[#253D2C]"></div>
-                  <div className="flex-1 bg-[#253D2C]"></div>
-                  <div className="flex-1 bg-[#253D2C]"></div>
-                  <div className="flex-1 bg-[#253D2C] rounded-r-full"></div>
-                </div>
-                <div className="flex justify-between text-[10px] text-[#6b7280]">
-                  <span>Notes</span>
-                  <span>Qns</span>
-                  <span>Cards</span>
-                  <span>Sims</span>
-                  <span>Chat</span>
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-1">
-                <button className="text-[#4CBB17] text-sm font-medium flex items-center gap-1 hover:text-[#2E6F40]">
-                  Start <ArrowRight size={16} />
-                </button>
-              </div>
-            </div>
-
+            ))}
           </div>
-        </section>
-      </main>
+        </div>
 
-      {/* Bottom Navigation */}
-      <nav className="h-[64px] flex-none bg-[#1a2619] border-t border-[#253D2C] flex items-center justify-between px-6 absolute bottom-0 w-full z-10 pb-safe">
-        <button className="flex flex-col items-center justify-center gap-1 w-12 h-full relative">
-          <div className="absolute top-1 w-1 h-1 bg-[#4CBB17] rounded-full"></div>
-          <Home size={24} className="text-[#4CBB17] mt-1" />
-          <span className="text-[10px] font-medium text-[#4CBB17]">Home</span>
-        </button>
-        <button className="flex flex-col items-center justify-center gap-1 w-12 h-full">
-          <BarChart2 size={24} className="text-[#6b7280]" />
-          <span className="text-[10px] font-medium text-[#6b7280]">Progress</span>
-        </button>
-        <button className="flex flex-col items-center justify-center gap-1 w-12 h-full">
-          <Users size={24} className="text-[#6b7280]" />
-          <span className="text-[10px] font-medium text-[#6b7280]">Community</span>
-        </button>
-        <button className="flex flex-col items-center justify-center gap-1 w-12 h-full">
-          <User size={24} className="text-[#6b7280]" />
-          <span className="text-[10px] font-medium text-[#6b7280]">Profile</span>
-        </button>
-      </nav>
+        {/* Community Notes shortcut — single occurrence */}
+        <div style={{ background: "var(--t2-green-dim)", border: "1px solid var(--t2-border)", borderRadius: 16, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
+          <Globe size={20} color="var(--t2-green-lt)" />
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "var(--t2-text)" }}>Community Notes</p>
+            <p style={{ fontSize: 11, color: "var(--t2-muted)" }}>Browse notes from other toppers</p>
+          </div>
+          <ChevronRight size={15} color="var(--t2-muted2)" />
+        </div>
+      </div>
 
-      <style dangerouslySetInnerHTML={{__html: `
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .pb-safe {
-          padding-bottom: env(safe-area-inset-bottom);
-        }
-      `}} />
+      {/* Bottom Nav */}
+      <div className="bottom-nav">
+        {NAV.map(({ icon: Icon, label, active }) => (
+          <button key={label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, background: "none", border: "none", cursor: "pointer", padding: "6px 8px", flex: 1 }}>
+            <Icon size={21} color={active ? "var(--t2-green-lt)" : "var(--t2-muted2)"} />
+            <span style={{ fontSize: 10, fontWeight: active ? 700 : 500, color: active ? "var(--t2-green-lt)" : "var(--t2-muted2)" }}>{label}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

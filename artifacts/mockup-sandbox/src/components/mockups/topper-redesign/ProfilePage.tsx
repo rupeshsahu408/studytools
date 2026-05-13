@@ -1,189 +1,135 @@
-import React, { useState } from 'react';
-import { 
-  User, Settings, Pencil, Home, BarChart2, Users, 
-  Flame, Calendar, Brain, Award, CalendarDays, CheckCircle2,
-  ChevronRight
-} from 'lucide-react';
-import './_group.css';
+import "./_group.css";
+import { Home, Upload, Users, BarChart2, UserCircle, Settings, Award, Flame, Calendar, Brain, CheckCircle, Star, Zap, BookOpen, HelpCircle, Layers, Beaker, Target, Trophy } from "lucide-react";
 
-export default function ProfilePage() {
-  const [anonymousMode, setAnonymousMode] = useState(false);
+const BADGES = [
+  { id: "first_chapter", label: "First Chapter", icon: BookOpen, earned: true },
+  { id: "first_notes", label: "Notes Read", icon: CheckCircle, earned: true },
+  { id: "q_10", label: "10 Questions", icon: HelpCircle, earned: true },
+  { id: "q_50", label: "50 Questions", icon: HelpCircle, earned: false },
+  { id: "q_100", label: "100 Answered", icon: Award, earned: false },
+  { id: "q_250", label: "250 Pro", icon: Trophy, earned: false },
+  { id: "streak_3", label: "3-Day Streak", icon: Flame, earned: true },
+  { id: "streak_7", label: "7-Day Streak", icon: Flame, earned: false },
+  { id: "streak_30", label: "30-Day Legend", icon: Star, earned: false },
+  { id: "flashcard_pro", label: "Flash Master", icon: Layers, earned: false },
+  { id: "sim_explorer", label: "Sim Explorer", icon: Beaker, earned: false },
+  { id: "all_sections", label: "Complete All", icon: Zap, earned: false },
+];
 
+const NAV = [
+  { icon: Home, label: "Home", active: false },
+  { icon: Upload, label: "Upload", active: false },
+  { icon: Users, label: "Community", active: false },
+  { icon: BarChart2, label: "Progress", active: false },
+  { icon: UserCircle, label: "Profile", active: true },
+];
+
+export function ProfilePage() {
   return (
-    <div className="w-[390px] h-[844px] bg-[#121a12] text-white relative overflow-hidden flex flex-col font-sans">
-      {/* Top Header */}
-      <div className="h-[56px] w-full bg-[#121a12] border-b border-[#253D2C] flex items-center justify-between px-4 shrink-0 relative z-10">
-        <div className="flex-1"></div>
-        <h1 className="text-lg font-semibold flex-1 text-center">Profile</h1>
-        <div className="flex-1 flex justify-end items-center gap-4 text-[#9ca3af]">
-          <Pencil size={20} />
-          <Settings size={20} />
+    <div className="phone-frame">
+      <div className="top-header">
+        <span style={{ fontWeight: 800, fontSize: 16, color: "var(--t2-text)" }}>My Profile</span>
+        <button style={{ width: 34, height: 34, borderRadius: 10, background: "var(--t2-card)", border: "1px solid var(--t2-border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+          <Settings size={15} color="var(--t2-muted)" />
+        </button>
+      </div>
+
+      <div className="content-scroll" style={{ padding: "0 16px" }}>
+
+        {/* Profile card */}
+        <div style={{ paddingTop: 20, marginBottom: 20, textAlign: "center" }}>
+          <div style={{ position: "relative", display: "inline-block", marginBottom: 12 }}>
+            <div style={{ width: 78, height: 78, borderRadius: "50%", background: "linear-gradient(135deg,#2E6F40,#4CBB17)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }}>
+              <span style={{ fontSize: 30, fontWeight: 800, color: "#fff" }}>R</span>
+            </div>
+            <div style={{ position: "absolute", bottom: 2, right: 2, width: 20, height: 20, borderRadius: "50%", background: "var(--t2-green-lt)", border: "2px solid var(--t2-bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <CheckCircle size={11} color="#fff" />
+            </div>
+          </div>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--t2-text)", marginBottom: 2 }}>Rahul Singh</h2>
+          <p style={{ fontSize: 12, color: "var(--t2-muted)", marginBottom: 6 }}>@rahulsingh · Class 12 · Patna, Bihar</p>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "var(--t2-green-dim)", padding: "4px 10px", borderRadius: 99 }}>
+            <Flame size={12} color="#f97316" />
+            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--t2-green-lt)" }}>7-day streak</span>
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 20 }}>
+          {[
+            { label: "Questions", value: "47", sub: "answered" },
+            { label: "Accuracy", value: "78%", sub: "correct" },
+            { label: "Badges", value: "4/12", sub: "earned" },
+          ].map(stat => (
+            <div key={stat.label} style={{ background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 14, padding: "12px 8px", textAlign: "center" }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: "var(--t2-text)" }}>{stat.value}</div>
+              <div style={{ fontSize: 10, color: "var(--t2-muted)", marginTop: 1 }}>{stat.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Exam countdown */}
+        <div style={{ background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 16, padding: "14px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ width: 42, height: 42, borderRadius: 12, background: "rgba(239,68,68,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Calendar size={20} color="#ef4444" />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 11, color: "var(--t2-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Bihar Board Exam</p>
+            <p style={{ fontSize: 16, fontWeight: 800, color: "#ef4444" }}>127 days left</p>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <p style={{ fontSize: 10, color: "var(--t2-muted)" }}>Target</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "var(--t2-text)" }}>80%+</p>
+          </div>
+        </div>
+
+        {/* Daily goal */}
+        <div style={{ background: "var(--t2-card)", border: "1px solid var(--t2-border)", borderRadius: 16, padding: "14px 16px", marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <Target size={15} color="var(--t2-green-lt)" />
+              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--t2-text)" }}>Aaj Ka Target</span>
+            </div>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--t2-green-lt)" }}>4 / 10 done</span>
+          </div>
+          <div style={{ height: 6, background: "var(--t2-border)", borderRadius: 99, overflow: "hidden" }}>
+            <div style={{ width: "40%", height: "100%", background: "var(--t2-green)", borderRadius: 99 }} />
+          </div>
+        </div>
+
+        {/* Badges */}
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: "var(--t2-muted)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>Badges (4/12 earned)</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
+            {BADGES.map(b => (
+              <div key={b.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 52, height: 52, borderRadius: 14, background: b.earned ? "var(--t2-green-dim)" : "var(--t2-card)", border: b.earned ? "1.5px solid var(--t2-green)" : "1px solid var(--t2-border)", display: "flex", alignItems: "center", justifyContent: "center", opacity: b.earned ? 1 : 0.4 }}>
+                  <b.icon size={22} color={b.earned ? "var(--t2-green-lt)" : "var(--t2-muted2)"} />
+                </div>
+                <span style={{ fontSize: 9, color: b.earned ? "var(--t2-green-lt)" : "var(--t2-muted2)", textAlign: "center", fontWeight: b.earned ? 700 : 400, lineHeight: 1.2 }}>{b.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Weak Area AI */}
+        <div style={{ background: "var(--t2-green-dim)", border: "1px solid var(--t2-border)", borderRadius: 16, padding: "14px 16px", marginBottom: 4, display: "flex", alignItems: "center", gap: 12 }}>
+          <Brain size={20} color="var(--t2-green-lt)" />
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "var(--t2-text)" }}>Weak Area Analysis</p>
+            <p style={{ fontSize: 11, color: "var(--t2-muted)" }}>AI identifies your trouble spots</p>
+          </div>
+          <span style={{ fontSize: 12, color: "var(--t2-green-lt)", fontWeight: 700 }}>→</span>
         </div>
       </div>
 
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto pb-[80px] scrollbar-hide">
-        <div className="p-4 flex flex-col gap-4">
-          
-          {/* Profile Card */}
-          <div className="bg-[#1a2619] border border-[#253D2C] rounded-2xl p-5 flex flex-col gap-4">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="w-12 h-12 rounded-full bg-[#2E6F40] flex items-center justify-center text-lg font-bold text-white border-2 border-[#4CBB17]">
-                  RK
-                </div>
-                <div className="absolute -bottom-1 -right-1 bg-white rounded-full">
-                  <CheckCircle2 size={16} className="text-[#4CBB17] fill-white" />
-                </div>
-              </div>
-              <div className="flex-1">
-                <h2 className="text-xl font-bold">Ravi Kumar</h2>
-                <p className="text-[#9ca3af] text-sm">@ravi_topper</p>
-              </div>
-            </div>
-            
-            <div className="text-[#9ca3af] text-sm">
-              <p>Class 12 • ABC School • Patna, Bihar</p>
-            </div>
-
-            <div className="h-[1px] w-full bg-[#253D2C] my-1"></div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Anonymous Mode</span>
-              <button 
-                onClick={() => setAnonymousMode(!anonymousMode)}
-                className={`w-11 h-6 rounded-full flex items-center px-1 transition-colors ${anonymousMode ? 'bg-[#4CBB17]' : 'bg-[#253D2C]'}`}
-              >
-                <div className={`w-4 h-4 rounded-full bg-white transition-transform ${anonymousMode ? 'translate-x-5' : 'translate-x-0'}`} />
-              </button>
-            </div>
-          </div>
-
-          {/* Streak & Exam Countdown */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-[#1a2619] border border-[#253D2C] rounded-2xl p-4 flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <Flame size={20} className="text-orange-500" />
-                <span className="font-semibold">7 Days</span>
-              </div>
-              <div className="flex gap-1 mt-1">
-                {[1, 2, 3, 4, 5, 6, 7].map(day => (
-                  <div key={day} className={`w-3 h-3 rounded-sm ${day <= 7 ? 'bg-orange-500' : 'bg-[#253D2C]'}`} />
-                ))}
-              </div>
-              <span className="text-xs text-[#9ca3af] mt-1">Current Streak</span>
-            </div>
-
-            <div className="bg-[#1a2619] border border-[#253D2C] rounded-2xl p-4 flex flex-col justify-center items-center gap-2 text-center">
-              <Calendar size={20} className="text-[#4CBB17]" />
-              <div className="bg-[#2E6F40] bg-opacity-30 text-[#4CBB17] text-xs font-bold px-2 py-1 rounded">
-                62 days to
-              </div>
-              <span className="text-sm font-semibold">Bihar Board</span>
-            </div>
-          </div>
-
-          {/* Daily Goal */}
-          <div className="bg-[#1a2619] border border-[#253D2C] rounded-2xl p-4">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="font-semibold text-sm">Aaj Ka Target</h3>
-              <span className="text-xs text-[#9ca3af] font-medium">3/10 questions</span>
-            </div>
-            <div className="w-full bg-[#121a12] rounded-full h-2">
-              <div className="bg-[#4CBB17] h-2 rounded-full" style={{ width: '30%' }}></div>
-            </div>
-          </div>
-
-          {/* AI Weak Areas Button */}
-          <button className="w-full min-h-[44px] bg-transparent border border-[#2E6F40] text-[#4CBB17] rounded-xl flex items-center justify-center gap-2 py-3 font-semibold">
-            <Brain size={18} />
-            AI se Weak Areas Analyze Karo
+      <div className="bottom-nav">
+        {NAV.map(({ icon: Icon, label, active }) => (
+          <button key={label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, background: "none", border: "none", cursor: "pointer", padding: "6px 8px", flex: 1 }}>
+            <Icon size={21} color={active ? "var(--t2-green-lt)" : "var(--t2-muted2)"} />
+            <span style={{ fontSize: 10, fontWeight: active ? 700 : 500, color: active ? "var(--t2-green-lt)" : "var(--t2-muted2)" }}>{label}</span>
           </button>
-
-          {/* Badges Section */}
-          <div className="bg-[#1a2619] border border-[#253D2C] rounded-2xl p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-sm">Achievements</h3>
-              <div className="text-xs text-[#4CBB17] flex items-center gap-1">
-                View All <ChevronRight size={14} />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-4 gap-y-4 gap-x-2">
-              {[
-                { label: "1st Chap", unlocked: true },
-                { label: "1st Note", unlocked: true },
-                { label: "10 Q", unlocked: true },
-                { label: "50 Q", unlocked: false },
-                { label: "100 Q", unlocked: false },
-                { label: "250 Q", unlocked: false },
-                { label: "3 Day", unlocked: true },
-                { label: "7 Day", unlocked: true },
-                { label: "30 Day", unlocked: false },
-                { label: "Flash Pro", unlocked: false },
-                { label: "Sim Expl", unlocked: false },
-                { label: "All Sec", unlocked: false },
-              ].map((badge, i) => (
-                <div key={i} className="flex flex-col items-center gap-1.5">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${badge.unlocked ? 'bg-[#2E6F40] bg-opacity-20 border-[#4CBB17] text-[#4CBB17]' : 'bg-[#121a12] border-[#253D2C] text-[#6b7280]'}`}>
-                    <Award size={20} />
-                  </div>
-                  <span className={`text-[10px] text-center leading-tight ${badge.unlocked ? 'text-white' : 'text-[#6b7280]'}`}>
-                    {badge.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Revision Planner */}
-          <div className="bg-[#1a2619] border border-[#2E6F40] rounded-2xl p-4 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#2E6F40] rounded-full filter blur-[50px] opacity-20 transform translate-x-1/2 -translate-y-1/2"></div>
-            
-            <div className="flex items-center gap-3 mb-3 relative z-10">
-              <div className="w-10 h-10 rounded-full bg-[#2E6F40] bg-opacity-30 flex items-center justify-center text-[#4CBB17]">
-                <CalendarDays size={20} />
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm text-white">Auto Revision Plan</h3>
-                <p className="text-xs text-[#9ca3af]">Your personalized study schedule</p>
-              </div>
-            </div>
-
-            <div className="bg-[#121a12] rounded-xl p-3 flex flex-col gap-2 relative z-10 border border-[#253D2C]">
-              <div className="flex items-center gap-3 text-xs">
-                <span className="text-[#4CBB17] font-medium w-12">Week 1</span>
-                <span className="text-[#9ca3af]">Electrostatics & Ray Optics</span>
-              </div>
-              <div className="flex items-center gap-3 text-xs">
-                <span className="text-[#6b7280] font-medium w-12">Week 2</span>
-                <span className="text-[#6b7280]">Current Electricity & Magnetism</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Bottom Navigation */}
-      <div className="h-[64px] w-full bg-[#1a2619] border-t border-[#253D2C] flex items-center justify-around px-2 shrink-0 absolute bottom-0 left-0 z-20">
-        <div className="flex flex-col items-center justify-center gap-1 w-16 h-full text-[#6b7280]">
-          <Home size={24} />
-          <span className="text-[10px] font-medium">Home</span>
-        </div>
-        <div className="flex flex-col items-center justify-center gap-1 w-16 h-full text-[#6b7280]">
-          <BarChart2 size={24} />
-          <span className="text-[10px] font-medium">Progress</span>
-        </div>
-        <div className="flex flex-col items-center justify-center gap-1 w-16 h-full text-[#6b7280]">
-          <Users size={24} />
-          <span className="text-[10px] font-medium">Community</span>
-        </div>
-        <div className="flex flex-col items-center justify-center gap-1 w-16 h-full text-[#4CBB17] relative">
-          <div className="absolute top-1 w-1 h-1 bg-[#4CBB17] rounded-full"></div>
-          <User size={24} className="mt-1" />
-          <span className="text-[10px] font-medium">Profile</span>
-        </div>
+        ))}
       </div>
     </div>
   );
