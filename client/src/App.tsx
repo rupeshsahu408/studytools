@@ -18,6 +18,8 @@ import PublicProfilePage from "./pages/PublicProfilePage";
 import DiscoverPage from "./pages/DiscoverPage";
 import SettingsPage from "./pages/SettingsPage";
 import PublicNotesPage from "./pages/PublicNotesPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import TermsPage from "./pages/TermsPage";
 
 function Spinner() {
   return (
@@ -71,6 +73,8 @@ function AppRoutes() {
       <Route path="/public-notes" element={<ProtectedRoute><PublicNotesPage /></ProtectedRoute>} />
       <Route path="/u/:username" element={<ProtectedRoute><PublicProfilePage /></ProtectedRoute>} />
       <Route path="/share/:token" element={<SharePage />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

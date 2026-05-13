@@ -316,7 +316,6 @@ export default function LandingPage() {
               <ul className="space-y-2.5 text-sm mb-6">
                 <li><a href="/privacy-policy" className="hover:text-green-400 transition-colors">Privacy Policy</a></li>
                 <li><a href="/terms" className="hover:text-green-400 transition-colors">Terms &amp; Conditions</a></li>
-                <li><a href="/refund-policy" className="hover:text-green-400 transition-colors">Refund Policy</a></li>
               </ul>
 
               <h4 className="text-white font-semibold text-sm mb-3 uppercase tracking-wider">Contact</h4>
