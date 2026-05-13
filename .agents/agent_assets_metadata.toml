@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "4NFqyJqICdoqKh4daPyaI"
+uri = "file://client/public/logo.png"
+type = "image"
+title = "topper app logo icon"

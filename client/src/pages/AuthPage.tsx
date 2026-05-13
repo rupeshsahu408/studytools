@@ -130,9 +130,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
         {/* Logo + heading */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">T2</span>
-            </div>
+            <img src="/logo.png" className="w-8 h-8 rounded-lg object-cover" alt="Topper 2.0" />
             <span className="font-bold text-lg dark:text-white">Topper 2.0</span>
           </Link>
           <h1 className="text-2xl font-bold dark:text-white">

@@ -290,9 +290,7 @@ export default function UsernameSetupPage() {
           {/* Brand */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 bg-green-600 rounded-xl flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-white" />
-              </div>
+              <img src="/logo.png" className="w-9 h-9 rounded-xl object-cover" alt="Topper 2.0" />
               <span className="text-lg font-bold text-gray-900 dark:text-white">Topper 2.0</span>
             </div>
             <h1 className="text-2xl font-black text-gray-900 dark:text-white leading-tight">
@@ -441,9 +439,7 @@ export default function UsernameSetupPage() {
         {/* Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-9 h-9 bg-green-600 rounded-xl flex items-center justify-center">
-              <GraduationCap className="w-5 h-5 text-white" />
-            </div>
+            <img src="/logo.png" className="w-9 h-9 rounded-xl object-cover" alt="Topper 2.0" />
             <span className="text-lg font-bold text-gray-900 dark:text-white">Topper 2.0</span>
           </div>
 

@@ -29,9 +29,7 @@ export default function Navbar() {
     <nav className="fixed top-0 w-full z-40 bg-gray-50/95 dark:bg-gray-950/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 h-14">
       <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
         <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2.5">
-          <div className="w-7 h-7 bg-green-600 rounded-lg flex items-center justify-center shadow-sm">
-            <span className="text-white font-bold text-xs">T2</span>
-          </div>
+          <img src="/logo.png" className="w-7 h-7 rounded-lg object-cover shadow-sm" alt="Topper 2.0" />
           <span className="font-bold text-base text-gray-900 dark:text-white">Topper 2.0</span>
         </Link>
 

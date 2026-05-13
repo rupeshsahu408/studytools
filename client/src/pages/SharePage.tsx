@@ -102,9 +102,7 @@ export default function SharePage() {
         <div className="max-w-4xl mx-auto px-4 w-full flex items-center justify-between gap-4">
 
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-7 h-7 bg-green-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xs">T2</span>
-            </div>
+            <img src="/logo.png" className="w-7 h-7 rounded-lg object-cover" alt="Topper 2.0" />
             <span className="font-bold text-gray-900 text-sm hidden sm:block">Topper 2.0</span>
           </Link>
 

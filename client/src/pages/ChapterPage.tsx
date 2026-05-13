@@ -591,9 +591,7 @@ export default function ChapterPage() {
         {/* Sidebar top: logo + back */}
         <div className="flex items-center justify-between px-4 h-14 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-green-600 rounded-md flex items-center justify-center shadow-sm flex-shrink-0">
-              <span className="text-white font-bold text-[10px]">T2</span>
-            </div>
+            <img src="/logo.png" className="w-6 h-6 rounded-md object-cover shadow-sm flex-shrink-0" alt="Topper 2.0" />
             <span className="text-sm font-bold text-gray-900 dark:text-white">Topper 2.0</span>
           </div>
           <button

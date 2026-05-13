@@ -52,9 +52,7 @@ export default function LandingPage() {
       <nav className="fixed top-0 w-full z-50 bg-gray-50/90 dark:bg-gray-950/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 h-16">
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center shadow-sm">
-              <span className="text-white font-bold text-sm">T2</span>
-            </div>
+            <img src="/logo.png" className="w-8 h-8 rounded-lg object-cover shadow-sm" alt="Topper 2.0" />
             <span className="font-bold text-lg text-gray-900 dark:text-white">Topper 2.0</span>
           </div>
           <div className="flex items-center gap-3">
