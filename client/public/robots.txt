@@ -7,6 +7,7 @@ Allow: /discover
 Allow: /community
 Allow: /privacy-policy
 Allow: /terms
+Allow: /blog
 
 # Block authenticated-only pages (no value to crawlers)
 Disallow: /dashboard
@@ -17,7 +18,7 @@ Disallow: /progress
 Disallow: /settings
 Disallow: /setup
 
-Sitemap: https://topper2.plyndrox.app/sitemap.xml
+Sitemap: https://studyai.plyndrox.app/sitemap.xml
 
 # Crawl-delay for politeness
 Crawl-delay: 1

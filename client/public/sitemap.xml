@@ -6,29 +6,37 @@
 
   <!-- ── Primary / Landing ───────────────────────────────────── -->
   <url>
-    <loc>https://topper2.plyndrox.app/</loc>
+    <loc>https://studyai.plyndrox.app/</loc>
     <lastmod>2025-05-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
+  <!-- ── Blog ─────────────────────────────────────────────────── -->
+  <url>
+    <loc>https://studyai.plyndrox.app/blog</loc>
+    <lastmod>2025-05-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
   <!-- ── Public / Indexable pages ────────────────────────────── -->
   <url>
-    <loc>https://topper2.plyndrox.app/public-notes</loc>
+    <loc>https://studyai.plyndrox.app/public-notes</loc>
     <lastmod>2025-05-13</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://topper2.plyndrox.app/discover</loc>
+    <loc>https://studyai.plyndrox.app/discover</loc>
     <lastmod>2025-05-13</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://topper2.plyndrox.app/community</loc>
+    <loc>https://studyai.plyndrox.app/community</loc>
     <lastmod>2025-05-13</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
@@ -36,14 +44,14 @@
 
   <!-- ── Auth pages ───────────────────────────────────────────── -->
   <url>
-    <loc>https://topper2.plyndrox.app/signup</loc>
+    <loc>https://studyai.plyndrox.app/signup</loc>
     <lastmod>2025-05-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://topper2.plyndrox.app/login</loc>
+    <loc>https://studyai.plyndrox.app/login</loc>
     <lastmod>2025-05-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
@@ -51,14 +59,14 @@
 
   <!-- ── Legal ────────────────────────────────────────────────── -->
   <url>
-    <loc>https://topper2.plyndrox.app/privacy-policy</loc>
+    <loc>https://studyai.plyndrox.app/privacy-policy</loc>
     <lastmod>2025-05-13</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
 
   <url>
-    <loc>https://topper2.plyndrox.app/terms</loc>
+    <loc>https://studyai.plyndrox.app/terms</loc>
     <lastmod>2025-05-13</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>

@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 
 const SITE_NAME = "Topper 2.0";
-const BASE_URL = "https://topper2.plyndrox.app";
+const BASE_URL = "https://studyai.plyndrox.app";
 const DEFAULT_IMAGE = `${BASE_URL}/og-image.png`;
 const DEFAULT_DESCRIPTION =
   "India's #1 AI study platform for Bihar Board Class 11 & 12. Get AI-generated notes, question banks, flashcards, simulations & doubt chat for NCERT Physics, Chemistry, Math and Biology.";

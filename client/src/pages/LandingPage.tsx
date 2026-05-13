@@ -129,8 +129,8 @@ export default function LandingPage() {
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
     "name": "Topper 2.0",
-    "url": "https://topper2.plyndrox.app/",
-    "logo": "https://topper2.plyndrox.app/logo.png",
+    "url": "https://studyai.plyndrox.app/",
+    "logo": "https://studyai.plyndrox.app/logo.png",
     "description": "AI-powered study platform for Bihar Board Class 11 & 12 NCERT students providing notes, question banks, flashcards, simulations and doubt chat.",
     "address": {
       "@type": "PostalAddress",
@@ -389,7 +389,7 @@ export default function LandingPage() {
               <h4 className="text-white font-semibold text-sm mb-4 uppercase tracking-wider">Company</h4>
               <ul className="space-y-2.5 text-sm">
                 <li><a href="https://plyndrox.app" target="_blank" rel="noopener noreferrer" className="hover:text-green-400 transition-colors">About</a></li>
-                <li><a href="https://plyndrox.app/blog" target="_blank" rel="noopener noreferrer" className="hover:text-green-400 transition-colors">Blog</a></li>
+                <li><a href="https://studyai.plyndrox.app/blog" target="_blank" rel="noopener noreferrer" className="hover:text-green-400 transition-colors">Blog</a></li>
                 <li>
                   <a href="mailto:hello@plyndrox.app" className="hover:text-green-400 transition-colors flex items-center gap-1.5">
                     Contact Us

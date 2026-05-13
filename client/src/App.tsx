@@ -20,6 +20,7 @@ import SettingsPage from "./pages/SettingsPage";
 import PublicNotesPage from "./pages/PublicNotesPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsPage from "./pages/TermsPage";
+import BlogPage from "./pages/BlogPage";
 
 function Spinner() {
   return (
@@ -75,6 +76,7 @@ function AppRoutes() {
       <Route path="/share/:token" element={<SharePage />} />
       <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
       <Route path="/terms" element={<TermsPage />} />
+      <Route path="/blog" element={<BlogPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

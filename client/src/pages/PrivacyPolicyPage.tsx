@@ -44,7 +44,7 @@ export default function PrivacyPolicyPage() {
             </p>
             <p>
               This Privacy Policy explains what personal information we collect when you use Topper 2.0 (available at{" "}
-              <a href="https://topper2.plyndrox.app" className="text-green-400 hover:underline">topper2.plyndrox.app</a>),
+              <a href="https://studyai.plyndrox.app" className="text-green-400 hover:underline">studyai.plyndrox.app</a>),
               how we use it, and the choices you have. By creating an account or using our service, you agree to the
               practices described below.
             </p>
