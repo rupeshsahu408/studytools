@@ -242,16 +242,6 @@ function FounderProfileView({ currentUid, onBack }: { currentUid: string | null;
           </div>
         </div>
 
-        {/* Mission card */}
-        <div className="bg-gradient-to-br from-[#1a2619] to-[#253D2C] border border-green-900/40 rounded-2xl p-5 mb-6">
-          <h3 className="text-sm font-bold text-amber-300 mb-3 flex items-center gap-2">
-            🎯 Mission
-          </h3>
-          <p className="text-sm text-green-100/70 leading-relaxed">
-            Bihar Board ke Class 11 & 12 ke students ke liye world-class AI-powered study tools banana — bilkul free mein. Notes, Questions, Flash Cards, Simulations, aur bahut kuch. <span className="text-green-400 font-semibold">Topper 2.0</span> is mission ka naam hai.
-          </p>
-        </div>
-
         {/* Platform badge */}
         <div className="flex items-center gap-3 bg-gradient-to-br from-[#1a2619] to-[#253D2C] border border-green-900/40 rounded-2xl p-4">
           <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
