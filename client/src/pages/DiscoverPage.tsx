@@ -167,35 +167,26 @@ function FounderCard({ currentUid }: { currentUid: string }) {
           </div>
         </div>
 
-        {/* Bio */}
-        <p className="text-xs text-green-100/70 leading-relaxed mt-3 line-clamp-3">{FOUNDER_BIO}</p>
-
-        {/* Social links + follow count */}
-        <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/10">
-          <div className="flex items-center gap-2">
-            <a
-              href={FOUNDER_INSTAGRAM}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-[11px] font-semibold text-white bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 px-2.5 py-1 rounded-full hover:opacity-90 transition-opacity"
-            >
-              <IconInstagram className="w-3 h-3" />
-              Instagram
-            </a>
-            <a
-              href={FOUNDER_TWITTER}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-[11px] font-semibold text-white bg-black px-2.5 py-1 rounded-full hover:opacity-80 transition-opacity border border-white/20"
-            >
-              <IconTwitterX className="w-3 h-3" />
-              X
-            </a>
-          </div>
-          <div className="text-right">
-            <p className="text-lg font-black text-white leading-none">{followCount.toLocaleString()}</p>
-            <p className="text-[10px] text-green-400/60 font-medium mt-0.5">followers</p>
-          </div>
+        {/* Social links */}
+        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/10">
+          <a
+            href={FOUNDER_INSTAGRAM}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-[11px] font-semibold text-white bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 px-2.5 py-1 rounded-full hover:opacity-90 transition-opacity"
+          >
+            <IconInstagram className="w-3 h-3" />
+            Instagram
+          </a>
+          <a
+            href={FOUNDER_TWITTER}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-[11px] font-semibold text-white bg-black px-2.5 py-1 rounded-full hover:opacity-80 transition-opacity border border-white/20"
+          >
+            <IconTwitterX className="w-3 h-3" />
+            X
+          </a>
         </div>
       </div>
     </div>
