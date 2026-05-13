@@ -1,0 +1,54 @@
+index-DSIvtFLy.js:11 [2026-05-13T06:19:01.586Z]  @firebase/firestore: Firestore (12.13.0): RestConnection RPC 'BatchGetDocuments' 0x71d3721a failed with error:  {"code":"permission-denied","name":"FirebaseError"} url:  https://firestore.googleapis.com/v1/projects/topper-46a9f/databases/(default)/documents:batchGet?key=AIzaSyDDlLW--M7ZIU-PwXr82rfyLQeGWysaVLo request: {"documents":["projects/topper-46a9f/databases/(default)/documents/founder_followers/V5ccw6vBxkbFDiLxQCYCHWschlF2"]}
+si	@	index-DSIvtFLy.js:11
+warn	@	index-DSIvtFLy.js:11
+cd	@	index-DSIvtFLy.js:19
+(anonymous)	@	index-DSIvtFLy.js:22
+Promise.then		
+Wo	@	index-DSIvtFLy.js:22
+jo	@	index-DSIvtFLy.js:22
+(anonymous)	@	index-DSIvtFLy.js:22
+Promise.then		
+jo	@	index-DSIvtFLy.js:22
+(anonymous)	@	index-DSIvtFLy.js:25
+lookup	@	index-DSIvtFLy.js:25
+get	@	index-DSIvtFLy.js:26
+get	@	index-DSIvtFLy.js:26
+(anonymous)	@	index-DSIvtFLy.js:34
+(anonymous)	@	index-DSIvtFLy.js:26
+ec	@	index-DSIvtFLy.js:25
+(anonymous)	@	index-DSIvtFLy.js:25
+(anonymous)	@	index-DSIvtFLy.js:22
+(anonymous)	@	index-DSIvtFLy.js:22
+(anonymous)	@	index-DSIvtFLy.js:25
+(anonymous)	@	index-DSIvtFLy.js:25
+Promise.then		
+Tc	@	index-DSIvtFLy.js:25
+enqueue	@	index-DSIvtFLy.js:25
+enqueueAndForget	@	index-DSIvtFLy.js:25
+handleDelayElapsed	@	index-DSIvtFLy.js:22
+(anonymous)	@	index-DSIvtFLy.js:22
+setTimeout		
+start	@	index-DSIvtFLy.js:22
+createAndSchedule	@	index-DSIvtFLy.js:22
+enqueueAfterDelay	@	index-DSIvtFLy.js:25
+p_	@	index-DSIvtFLy.js:22
+Yu	@	index-DSIvtFLy.js:25
+Xu	@	index-DSIvtFLy.js:25
+(anonymous)	@	index-DSIvtFLy.js:25
+await in (anonymous)		
+(anonymous)	@	index-DSIvtFLy.js:25
+(anonymous)	@	index-DSIvtFLy.js:25
+Promise.then		
+Tc	@	index-DSIvtFLy.js:25
+enqueue	@	index-DSIvtFLy.js:25
+enqueueAndForget	@	index-DSIvtFLy.js:25
+xy	@	index-DSIvtFLy.js:25
+ax	@	index-DSIvtFLy.js:26
+TT	@	index-DSIvtFLy.js:34
+onClick	@	index-DSIvtFLy.js:1051
+zd	@	index-DSIvtFLy.js:8
+(anonymous)	@	index-DSIvtFLy.js:8
+gn	@	index-DSIvtFLy.js:8
+Gd	@	index-DSIvtFLy.js:8
+jp	@	index-DSIvtFLy.js:9
+kp	@	index-DSIvtFLy.js:9
