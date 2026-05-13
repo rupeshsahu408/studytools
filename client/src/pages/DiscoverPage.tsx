@@ -323,29 +323,50 @@ function UserCard({
   const loading = actionUid === user.uid;
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors group">
-      <Link to={`/u/${user.username}`} className="flex-shrink-0">
+    <div className="flex items-start gap-3 px-4 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors group">
+      <Link to={`/u/${user.username}`} className="flex-shrink-0 mt-0.5">
         <Avatar user={user} />
       </Link>
       <div className="flex-1 min-w-0">
         <Link to={`/u/${user.username}`} className="block">
-          <div className="flex items-center gap-1.5">
+          {/* Name row */}
+          <div className="flex items-center gap-1.5 flex-wrap">
             <p className="text-sm font-semibold text-gray-900 dark:text-white leading-snug truncate group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">
               {user.displayName}
             </p>
             {user.username && <BlueTick size={13} />}
+            {user.class && (
+              <span className="text-[10px] font-semibold bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-1.5 py-0.5 rounded-full border border-green-100 dark:border-green-900/40 leading-none flex-shrink-0">
+                Class {user.class}
+              </span>
+            )}
           </div>
-          <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
-            @{user.username}
-            {(user.streak || 0) > 0 && <span className="ml-1.5">· 🔥 {user.streak}</span>}
-            {(user.badges?.length || 0) > 0 && <span className="ml-1.5">· 🏅 {user.badges!.length}</span>}
-          </p>
+
+          {/* Username + stats row */}
+          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+            <span className="text-xs text-gray-400 dark:text-gray-500">@{user.username}</span>
+            {(user.streak || 0) > 0 && (
+              <span className="text-xs text-gray-400 dark:text-gray-500">· 🔥 {user.streak}</span>
+            )}
+            {(user.badges?.length || 0) > 0 && (
+              <span className="text-xs text-gray-400 dark:text-gray-500">· 🏅 {user.badges!.length}</span>
+            )}
+            {user.district && (
+              <span className="text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-0.5">
+                · <MapPin className="w-2.5 h-2.5 inline" /> {user.district}
+              </span>
+            )}
+          </div>
+
+          {/* Bio — 2 lines so more personality shows */}
           {user.bio && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5 max-w-[200px]">{user.bio}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 leading-relaxed">
+              {user.bio}
+            </p>
           )}
         </Link>
       </div>
-      <div className="flex-shrink-0">
+      <div className="flex-shrink-0 mt-1">
         <FriendButton
           relation={relation}
           uid={user.uid}
