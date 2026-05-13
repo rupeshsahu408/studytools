@@ -3,7 +3,17 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft, Flame, Trophy, BookOpen, Users, UserPlus, UserCheck,
   UserMinus, Loader2, MapPin, GraduationCap, Clock, UserX, EyeOff,
+  UserCheck2,
 } from "lucide-react";
+
+// ─── Founder constants (single source of truth) ───────────────────────────────
+const FOUNDER_USERNAME = "rupesh_gupta";
+const FOUNDER_NAME = "Rupesh Gupta";
+const FOUNDER_LOCATION = "India";
+const FOUNDER_BIO = "Founder of Topper 2.0 — Bihar Board ke students ke liye AI-powered study platform bana raha hoon. Bihar se hoon, Bihar ke liye kaam kar raha hoon. Class 11 & 12 ke har student tak quality education pahunchana mera mission hai. 🚀";
+const FOUNDER_INSTAGRAM = "https://www.instagram.com/rupesh_gupta___/";
+const FOUNDER_TWITTER = "https://x.com/rupesh__gupta_";
+const FOUNDER_AVATAR = "/founder-avatar.png";
 
 // ─── Social Media Brand Icons ─────────────────────────────────────────────────
 
@@ -56,9 +66,211 @@ import {
   sendFriendRequest, cancelFriendRequest,
   acceptFriendRequest, declineFriendRequest,
   removeFriend, blockUser, unblockUser,
+  getFounderFollowCount, hasFollowedFounder, followFounder,
   type SocialUser,
 } from "../lib/firestore";
 import BlueTick from "../components/BlueTick";
+
+// ─── Social icon helpers for founder profile ──────────────────────────────────
+
+function FIconInstagram({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+    </svg>
+  );
+}
+
+function FIconTwitterX({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.736-8.84L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+    </svg>
+  );
+}
+
+// ─── Premium Founder Profile View ─────────────────────────────────────────────
+
+function FounderProfileView({ currentUid, onBack }: { currentUid: string | null; onBack: () => void }) {
+  const [followed, setFollowed] = useState(false);
+  const [followCount, setFollowCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [following, setFollowing] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    Promise.all([
+      getFounderFollowCount(),
+      currentUid ? hasFollowedFounder(currentUid) : Promise.resolve(false),
+    ]).then(([count, hasFollowed]) => {
+      if (!mounted) return;
+      setFollowCount(count);
+      setFollowed(hasFollowed);
+      setLoading(false);
+    }).catch(() => { if (mounted) setLoading(false); });
+    return () => { mounted = false; };
+  }, [currentUid]);
+
+  const handleFollow = async () => {
+    if (!currentUid || following || followed) return;
+    setFollowing(true);
+    try {
+      await followFounder(currentUid);
+      setFollowed(true);
+      setFollowCount(prev => prev + 1);
+    } catch (e) { console.error(e); }
+    finally { setFollowing(false); }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#121a12]">
+
+      {/* Premium dark banner */}
+      <div className="relative h-52 bg-gradient-to-br from-[#1a2619] via-[#253D2C] to-[#121a12] overflow-hidden">
+        {/* Decorative glows */}
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ background: "radial-gradient(circle at 70% 40%, rgba(76,187,23,0.15) 0%, transparent 60%)" }} />
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ background: "radial-gradient(circle at 20% 80%, rgba(251,191,36,0.08) 0%, transparent 50%)" }} />
+        {/* Decorative grid lines */}
+        <div className="absolute inset-0 opacity-5" style={{
+          backgroundImage: "linear-gradient(#4CBB17 1px, transparent 1px), linear-gradient(90deg, #4CBB17 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }} />
+        {/* Back button */}
+        <button
+          onClick={onBack}
+          className="absolute top-4 left-4 flex items-center gap-1.5 text-sm text-green-300/70 hover:text-white transition-colors bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded-xl"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back
+        </button>
+        {/* Founder badge */}
+        <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-amber-400/15 border border-amber-400/30 text-amber-300 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+          ★ FOUNDER
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto px-4 pb-24">
+
+        {/* Avatar — overlaps banner */}
+        <div className="flex items-end justify-between -mt-16 mb-5">
+          <div className="relative">
+            <div className="w-28 h-28 rounded-full ring-4 ring-amber-400 ring-offset-4 ring-offset-[#121a12] overflow-hidden shadow-2xl">
+              <img
+                src={FOUNDER_AVATAR}
+                alt={FOUNDER_NAME}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center shadow-lg text-base">
+              👑
+            </div>
+          </div>
+
+          {/* Follow button */}
+          <div className="pb-2">
+            {loading ? (
+              <div className="w-24 h-9 bg-white/10 rounded-xl animate-pulse" />
+            ) : followed ? (
+              <span className="flex items-center gap-2 text-sm font-bold text-amber-300 bg-amber-400/10 border border-amber-400/30 px-4 py-2 rounded-xl">
+                <UserCheck2 className="w-4 h-4" /> Following
+              </span>
+            ) : (
+              <button
+                onClick={handleFollow}
+                disabled={following}
+                className="flex items-center gap-2 text-sm font-bold bg-amber-400 hover:bg-amber-300 disabled:opacity-60 text-gray-900 px-5 py-2 rounded-xl transition-colors shadow-lg"
+              >
+                {following ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+                Follow
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Name + handle */}
+        <div className="mb-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-2xl font-black text-white">{FOUNDER_NAME}</h1>
+            <div className="w-6 h-6 bg-amber-400 rounded-full flex items-center justify-center flex-shrink-0" title="Verified Founder">
+              <svg viewBox="0 0 12 12" fill="white" className="w-3.5 h-3.5">
+                <path d="M5.285 0.684a.8.8 0 0 1 1.43 0l1.04 2.107 2.325.338a.8.8 0 0 1 .443 1.364L8.78 6.178l.397 2.314a.8.8 0 0 1-1.16.843L6 8.27l-2.017 1.06a.8.8 0 0 1-1.16-.843l.397-2.314-1.743-1.685a.8.8 0 0 1 .443-1.364l2.325-.338L5.285.684z"/>
+              </svg>
+            </div>
+          </div>
+          <p className="text-green-400 text-sm font-medium mt-0.5">@{FOUNDER_USERNAME}</p>
+          <div className="flex items-center gap-1.5 mt-1.5">
+            <MapPin className="w-3.5 h-3.5 text-green-500/60" />
+            <span className="text-sm text-green-400/60">{FOUNDER_LOCATION}</span>
+          </div>
+        </div>
+
+        {/* Bio */}
+        <p className="text-sm text-green-100/70 leading-relaxed mb-5 bg-white/5 rounded-2xl px-4 py-3 border border-white/10">
+          {FOUNDER_BIO}
+        </p>
+
+        {/* Social links */}
+        <div className="flex flex-wrap gap-2.5 mb-6">
+          <a
+            href={FOUNDER_INSTAGRAM}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-sm font-semibold text-white bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 px-4 py-2 rounded-xl hover:opacity-90 transition-opacity shadow-md"
+          >
+            <FIconInstagram className="w-4 h-4" />
+            Instagram
+          </a>
+          <a
+            href={FOUNDER_TWITTER}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-sm font-semibold text-white bg-black border border-white/20 px-4 py-2 rounded-xl hover:opacity-80 transition-opacity shadow-md"
+          >
+            <FIconTwitterX className="w-4 h-4" />
+            X (Twitter)
+          </a>
+        </div>
+
+        {/* Follower count stat */}
+        <div className="grid grid-cols-1 mb-6">
+          <div className="bg-gradient-to-br from-[#1a2619] to-[#253D2C] border border-green-900/40 rounded-2xl p-5 text-center shadow-lg">
+            <div className="text-4xl font-black text-white mb-1">
+              {loading ? "—" : followCount.toLocaleString()}
+            </div>
+            <div className="text-sm text-green-400/70 font-medium">Students following</div>
+          </div>
+        </div>
+
+        {/* Mission card */}
+        <div className="bg-gradient-to-br from-[#1a2619] to-[#253D2C] border border-green-900/40 rounded-2xl p-5 mb-6">
+          <h3 className="text-sm font-bold text-amber-300 mb-3 flex items-center gap-2">
+            🎯 Mission
+          </h3>
+          <p className="text-sm text-green-100/70 leading-relaxed">
+            Bihar Board ke Class 11 & 12 ke students ke liye world-class AI-powered study tools banana — bilkul free mein. Notes, Questions, Flash Cards, Simulations, aur bahut kuch. <span className="text-green-400 font-semibold">Topper 2.0</span> is mission ka naam hai.
+          </p>
+        </div>
+
+        {/* Platform badge */}
+        <div className="flex items-center gap-3 bg-gradient-to-br from-[#1a2619] to-[#253D2C] border border-green-900/40 rounded-2xl p-4">
+          <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+            <span className="text-white font-black text-sm">T2</span>
+          </div>
+          <div>
+            <p className="text-sm font-bold text-white">Topper 2.0</p>
+            <p className="text-xs text-green-400/60">Bihar Board AI Study Platform</p>
+          </div>
+          <div className="ml-auto">
+            <span className="text-[10px] font-black text-amber-300 bg-amber-400/10 border border-amber-400/30 px-2 py-1 rounded-full uppercase tracking-widest">
+              Founder
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const AVATAR_GRADIENTS = [
   "from-violet-500 to-purple-600",
@@ -110,8 +322,9 @@ function ProfileAvatar({ user, size = "lg", anon = false }: { user: SocialUser; 
 
 type FriendStatus = "none" | "sent" | "received" | "friends" | "self";
 
-export default function PublicProfilePage() {
-  const { username } = useParams<{ username: string }>();
+// ─── Normal (non-founder) profile — all hooks always called ──────────────────
+
+function NormalProfilePage({ username }: { username: string }) {
   const { user } = useAuth();
   const { userData } = useProgress();
   const navigate = useNavigate();
@@ -577,4 +790,26 @@ export default function PublicProfilePage() {
       <BottomNav />
     </div>
   );
+}
+
+// ─── Router shell — no hooks here, just decides which view to render ──────────
+
+export default function PublicProfilePage() {
+  const { username } = useParams<{ username: string }>();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  if (username?.toLowerCase() === FOUNDER_USERNAME) {
+    return (
+      <>
+        <FounderProfileView
+          currentUid={user?.uid || null}
+          onBack={() => navigate(-1)}
+        />
+        <BottomNav />
+      </>
+    );
+  }
+
+  return <NormalProfilePage username={username || ""} />;
 }

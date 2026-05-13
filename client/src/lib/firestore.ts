@@ -1463,3 +1463,39 @@ export async function sendCoinTip(
     // The coin transfer itself is atomic and always safe.
   });
 }
+
+// ─── Founder Follow System ────────────────────────────────────────────────────
+
+const FOUNDER_STATS_DOC = "founder_stats/main";
+const FOUNDER_FOLLOWERS_COLLECTION = "founder_followers";
+
+export async function getFounderFollowCount(): Promise<number> {
+  try {
+    const snap = await getDoc(doc(db, FOUNDER_STATS_DOC));
+    if (!snap.exists()) return 0;
+    return snap.data().followCount || 0;
+  } catch { return 0; }
+}
+
+export async function hasFollowedFounder(userId: string): Promise<boolean> {
+  try {
+    const snap = await getDoc(doc(db, FOUNDER_FOLLOWERS_COLLECTION, userId));
+    return snap.exists();
+  } catch { return false; }
+}
+
+export async function followFounder(userId: string): Promise<void> {
+  const followerRef = doc(db, FOUNDER_FOLLOWERS_COLLECTION, userId);
+  const statsRef = doc(db, "founder_stats", "main");
+
+  await runTransaction(db, async (transaction) => {
+    const followerSnap = await transaction.get(followerRef);
+    if (followerSnap.exists()) return; // already followed — no-op
+
+    const statsSnap = await transaction.get(statsRef);
+    const currentCount: number = statsSnap.exists() ? (statsSnap.data().followCount || 0) : 0;
+
+    transaction.set(followerRef, { userId, followedAt: serverTimestamp() });
+    transaction.set(statsRef, { followCount: currentCount + 1 }, { merge: true });
+  });
+}

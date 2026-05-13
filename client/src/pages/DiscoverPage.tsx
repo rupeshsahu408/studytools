@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   Compass, Search, Loader2, UserPlus, UserCheck, UserMinus,
-  Users, Clock, Bell, UserX, ChevronDown, X,
+  Users, Clock, Bell, UserX, ChevronDown, X, MapPin, UserCheck2,
 } from "lucide-react";
 import BlueTick from "../components/BlueTick";
 import { useAuth } from "../contexts/AuthContext";
@@ -20,8 +20,186 @@ import {
   getFriends,
   getFriendRequests,
   getSentRequests,
+  getFounderFollowCount,
+  hasFollowedFounder,
+  followFounder,
   type SocialUser,
 } from "../lib/firestore";
+
+// ─── Founder Constants ────────────────────────────────────────────────────────
+
+const FOUNDER_USERNAME = "rupesh_gupta";
+const FOUNDER_NAME = "Rupesh Gupta";
+const FOUNDER_LOCATION = "India";
+const FOUNDER_BIO = "Founder of Topper 2.0 — Bihar Board ke students ke liye AI-powered study platform bana raha hoon. Bihar se hoon, Bihar ke liye kaam kar raha hoon. Class 11 & 12 ke har student tak quality education pahunchana mera mission hai. 🚀";
+const FOUNDER_INSTAGRAM = "https://www.instagram.com/rupesh_gupta___/";
+const FOUNDER_TWITTER = "https://x.com/rupesh__gupta_";
+const FOUNDER_AVATAR = "/founder-avatar.png";
+
+function IconInstagram({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+    </svg>
+  );
+}
+
+function IconTwitterX({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.736-8.84L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+    </svg>
+  );
+}
+
+// ─── Founder Card ─────────────────────────────────────────────────────────────
+
+function FounderCard({ currentUid }: { currentUid: string }) {
+  const [followed, setFollowed] = useState(false);
+  const [followCount, setFollowCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [following, setFollowing] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    Promise.all([
+      getFounderFollowCount(),
+      currentUid ? hasFollowedFounder(currentUid) : Promise.resolve(false),
+    ]).then(([count, hasFollowed]) => {
+      if (!mounted) return;
+      setFollowCount(count);
+      setFollowed(hasFollowed);
+      setLoading(false);
+    }).catch(() => { if (mounted) setLoading(false); });
+    return () => { mounted = false; };
+  }, [currentUid]);
+
+  const handleFollow = async () => {
+    if (!currentUid || following || followed) return;
+    setFollowing(true);
+    try {
+      await followFounder(currentUid);
+      setFollowed(true);
+      setFollowCount(prev => prev + 1);
+    } catch (e) {
+      console.error("Follow error:", e);
+    } finally {
+      setFollowing(false);
+    }
+  };
+
+  return (
+    <div className="mb-5 rounded-2xl overflow-hidden shadow-lg">
+      {/* Premium dark forest green gradient background */}
+      <div className="bg-gradient-to-br from-[#1a2619] via-[#253D2C] to-[#1a2619] px-5 pt-5 pb-4 relative overflow-hidden">
+        {/* Decorative radial glow */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none"
+          style={{ background: "radial-gradient(circle at 80% 20%, #4CBB17 0%, transparent 60%)" }} />
+
+        {/* Founder badge */}
+        <div className="flex items-center justify-between mb-4">
+          <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2.5 py-1 rounded-full">
+            ★ FOUNDER
+          </span>
+          <span className="text-[10px] text-green-400/60 font-medium">Topper 2.0</span>
+        </div>
+
+        {/* Avatar + Info row */}
+        <div className="flex items-start gap-4">
+          {/* Avatar with gold ring */}
+          <Link to={`/u/${FOUNDER_USERNAME}`} className="flex-shrink-0">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-full ring-2 ring-amber-400 ring-offset-2 ring-offset-[#1a2619] overflow-hidden shadow-xl">
+                <img
+                  src={FOUNDER_AVATAR}
+                  alt={FOUNDER_NAME}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              </div>
+              {/* Crown badge */}
+              <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-amber-400 rounded-full flex items-center justify-center shadow-md text-[10px]">
+                👑
+              </div>
+            </div>
+          </Link>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <Link to={`/u/${FOUNDER_USERNAME}`} className="block">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-base font-black text-white leading-tight">{FOUNDER_NAME}</span>
+                <span className="w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg viewBox="0 0 12 12" fill="white" className="w-2.5 h-2.5">
+                    <path d="M5.285 0.684a.8.8 0 0 1 1.43 0l1.04 2.107 2.325.338a.8.8 0 0 1 .443 1.364L8.78 6.178l.397 2.314a.8.8 0 0 1-1.16.843L6 8.27l-2.017 1.06a.8.8 0 0 1-1.16-.843l.397-2.314-1.743-1.685a.8.8 0 0 1 .443-1.364l2.325-.338L5.285.684z"/>
+                  </svg>
+                </span>
+              </div>
+              <p className="text-xs text-green-400/80 font-medium mt-0.5">@{FOUNDER_USERNAME}</p>
+            </Link>
+            <div className="flex items-center gap-1 mt-1">
+              <MapPin className="w-3 h-3 text-green-400/60 flex-shrink-0" />
+              <span className="text-xs text-green-400/60">{FOUNDER_LOCATION}</span>
+            </div>
+          </div>
+
+          {/* Follow button */}
+          <div className="flex-shrink-0 self-start">
+            {loading ? (
+              <div className="w-20 h-8 bg-white/10 rounded-xl animate-pulse" />
+            ) : followed ? (
+              <span className="flex items-center gap-1.5 text-xs font-bold text-amber-300 bg-amber-400/10 border border-amber-400/30 px-3 py-1.5 rounded-xl">
+                <UserCheck2 className="w-3.5 h-3.5" /> Following
+              </span>
+            ) : (
+              <button
+                onClick={handleFollow}
+                disabled={following}
+                className="flex items-center gap-1.5 text-xs font-bold bg-amber-400 hover:bg-amber-300 disabled:opacity-60 text-gray-900 px-3 py-1.5 rounded-xl transition-colors shadow-md"
+              >
+                {following ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserPlus className="w-3.5 h-3.5" />}
+                Follow
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Bio */}
+        <p className="text-xs text-green-100/70 leading-relaxed mt-3 line-clamp-3">{FOUNDER_BIO}</p>
+
+        {/* Social links + follow count */}
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/10">
+          <div className="flex items-center gap-2">
+            <a
+              href={FOUNDER_INSTAGRAM}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-[11px] font-semibold text-white bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 px-2.5 py-1 rounded-full hover:opacity-90 transition-opacity"
+            >
+              <IconInstagram className="w-3 h-3" />
+              Instagram
+            </a>
+            <a
+              href={FOUNDER_TWITTER}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-[11px] font-semibold text-white bg-black px-2.5 py-1 rounded-full hover:opacity-80 transition-opacity border border-white/20"
+            >
+              <IconTwitterX className="w-3 h-3" />
+              X
+            </a>
+          </div>
+          <div className="text-right">
+            <p className="text-lg font-black text-white leading-none">{followCount.toLocaleString()}</p>
+            <p className="text-[10px] text-green-400/60 font-medium mt-0.5">followers</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -730,15 +908,19 @@ export default function DiscoverPage() {
 
           {/* Tab content */}
           {tab === "discover" && (
-            <DiscoverTab
-              currentUid={user?.uid || ""}
-              myProfile={myProfile}
-              actionUid={actionUid}
-              onSend={handleSend}
-              onCancel={handleCancel}
-              onAccept={handleAccept}
-              onDecline={handleDecline}
-            />
+            <>
+              {/* Founder card always appears first */}
+              <FounderCard currentUid={user?.uid || ""} />
+              <DiscoverTab
+                currentUid={user?.uid || ""}
+                myProfile={myProfile}
+                actionUid={actionUid}
+                onSend={handleSend}
+                onCancel={handleCancel}
+                onAccept={handleAccept}
+                onDecline={handleDecline}
+              />
+            </>
           )}
 
           {tab === "requests" && (
