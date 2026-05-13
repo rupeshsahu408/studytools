@@ -16,7 +16,8 @@ import {
   shareChapterToClass, removeSharedChapter, markNotificationsRead, getNotifications,
   type LeaderboardEntry, type ClassRoom, type ClassMember, type SharedChapter, type NotificationItem,
 } from "../lib/firestore";
-import Navbar from "../components/Navbar";
+import TopHeader from "../components/TopHeader";
+import BottomNav from "../components/BottomNav";
 import DiscussionView from "../components/DiscussionView";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -768,8 +769,8 @@ export default function CommunityPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <Navbar />
-      <div className="pt-14 max-w-3xl mx-auto px-4 py-8">
+      <TopHeader title="Community" />
+      <div className="pt-12 pb-20 max-w-3xl mx-auto px-4 py-4">
 
         {/* Page header */}
         <div className="mb-6 flex items-start justify-between gap-4">
@@ -831,6 +832,7 @@ export default function CommunityPage() {
           )}
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 }

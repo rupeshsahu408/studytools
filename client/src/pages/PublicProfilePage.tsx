@@ -49,7 +49,8 @@ function IconGlobe({ className }: { className?: string }) {
 }
 import { useAuth } from "../contexts/AuthContext";
 import { useProgress, ALL_BADGES } from "../contexts/ProgressContext";
-import Navbar from "../components/Navbar";
+import TopHeader from "../components/TopHeader";
+import BottomNav from "../components/BottomNav";
 import {
   getUserByUsername, subscribeToSocialUser,
   sendFriendRequest, cancelFriendRequest,
@@ -219,8 +220,8 @@ export default function PublicProfilePage() {
   if (notFound) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-        <Navbar />
-        <div className="pt-14 flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <TopHeader showBack backTo="/dashboard" backLabel="Dashboard" />
+        <div className="pt-12 pb-20 flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
           <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
             <UserX className="w-10 h-10 text-gray-400" />
           </div>
@@ -247,8 +248,8 @@ export default function PublicProfilePage() {
   if (theyBlockedMe) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-        <Navbar />
-        <div className="pt-14 flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <TopHeader showBack backTo="/dashboard" backLabel="Dashboard" />
+        <div className="pt-12 pb-20 flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
           <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
             <UserX className="w-10 h-10 text-gray-400" />
           </div>
@@ -266,8 +267,8 @@ export default function PublicProfilePage() {
   if (iBlockedThem && !isViewingSelf) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-        <Navbar />
-        <div className="pt-14 flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <TopHeader showBack backTo="/dashboard" backLabel="Dashboard" />
+        <div className="pt-12 pb-20 flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
           <div className="w-20 h-20 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mb-4">
             <UserX className="w-10 h-10 text-red-400" />
           </div>
@@ -293,9 +294,9 @@ export default function PublicProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <Navbar />
+      <TopHeader showBack backTo="/dashboard" backLabel="Dashboard" />
 
-      <div className="pt-14">
+      <div className="pt-12 pb-20">
         {/* Banner */}
         <div className={`h-32 ${isAnonymousProfile ? "bg-gradient-to-br from-gray-400 to-gray-600 opacity-60" : `bg-gradient-to-br ${gradient} opacity-80`}`} />
 
@@ -573,6 +574,7 @@ export default function PublicProfilePage() {
           <div className="h-8" />
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 }

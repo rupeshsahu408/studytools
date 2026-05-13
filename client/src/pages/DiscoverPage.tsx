@@ -6,7 +6,8 @@ import {
 } from "lucide-react";
 import BlueTick from "../components/BlueTick";
 import { useAuth } from "../contexts/AuthContext";
-import Navbar from "../components/Navbar";
+import TopHeader from "../components/TopHeader";
+import BottomNav from "../components/BottomNav";
 import {
   subscribeToSocialUser,
   searchUsersByPrefix,
@@ -683,8 +684,8 @@ export default function DiscoverPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <Navbar />
-      <div className="pt-14">
+      <TopHeader title="Discover" />
+      <div className="pt-12 pb-20">
         <div className="max-w-xl mx-auto px-4 py-8">
 
           {/* Header */}
@@ -764,6 +765,7 @@ export default function DiscoverPage() {
 
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 }

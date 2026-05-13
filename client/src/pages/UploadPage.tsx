@@ -10,7 +10,8 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { api, uploadPDF, generateNotes, fetchNCERTChapters } from "../lib/api";
 import { saveChapter, updateChapterSection } from "../lib/firestore";
-import Navbar from "../components/Navbar";
+import TopHeader from "../components/TopHeader";
+import BottomNav from "../components/BottomNav";
 
 const SUBJECTS = ["Physics", "Chemistry", "Mathematics", "Biology"];
 const CLASSES = ["11", "12"];
@@ -509,8 +510,8 @@ export default function UploadPage() {
 
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-        <Navbar />
-        <div className="pt-14 max-w-2xl mx-auto px-4 py-10">
+        <TopHeader showBack backTo="/upload" backLabel="Back" />
+        <div className="pt-12 pb-20 max-w-2xl mx-auto px-4 py-6">
           <div>
             <button onClick={() => setStage("form")} className="text-sm text-gray-500 dark:text-gray-400 hover:text-green-600 mb-6 flex items-center gap-1">
               ← Back
@@ -603,8 +604,8 @@ export default function UploadPage() {
   // ── Form stage ──
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <Navbar />
-      <div className="pt-14 max-w-2xl mx-auto px-4 py-10">
+      <TopHeader title="Add Chapter" showBack backTo="/dashboard" backLabel="Library" />
+      <div className="pt-12 pb-20 max-w-2xl mx-auto px-4 py-6">
         <div>
           <button onClick={() => navigate("/dashboard")} className="text-sm text-gray-500 dark:text-gray-400 hover:text-green-600 mb-6 flex items-center gap-1">
             ← Back to Library
@@ -708,6 +709,7 @@ export default function UploadPage() {
           </div>
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 }

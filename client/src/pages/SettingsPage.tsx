@@ -6,7 +6,8 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "../contexts/AuthContext";
-import Navbar from "../components/Navbar";
+import TopHeader from "../components/TopHeader";
+import BottomNav from "../components/BottomNav";
 import {
   subscribeToSocialUser,
   updateSocialProfile,
@@ -180,9 +181,9 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <Navbar />
-      <div className="pt-14">
-        <div className="max-w-2xl mx-auto px-4 py-8">
+      <TopHeader title="Settings" showBack backTo="/profile" backLabel="Profile" />
+      <div className="pt-12 pb-20">
+        <div className="max-w-2xl mx-auto px-4 py-6">
 
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
@@ -476,6 +477,7 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 }

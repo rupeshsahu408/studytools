@@ -7,7 +7,8 @@ import {
   Sigma, Network, Layers, AlertTriangle, Heart, Coins,
   CheckCircle2,
 } from "lucide-react";
-import Navbar from "../components/Navbar";
+import TopHeader from "../components/TopHeader";
+import BottomNav from "../components/BottomNav";
 import {
   getAllPublicNotes, togglePublicNoteLike, sendCoinTip, getUserCoins,
   getUserLikedNotes, type PublicNote, type PublishableSection,
@@ -370,6 +371,7 @@ function NotesReader({ note }: { note: PublicNote }) {
           </ul>
         </div>
       )}
+      <BottomNav />
     </div>
   );
 }
@@ -859,8 +861,8 @@ export default function PublicNotesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <Navbar />
-      <div className="pt-14 max-w-6xl mx-auto px-4 py-8">
+      <TopHeader title="Community Library" />
+      <div className="pt-12 pb-20 max-w-6xl mx-auto px-4 py-4">
 
         {/* Header */}
         <div className="mb-6">
@@ -1047,6 +1049,7 @@ export default function PublicNotesPage() {
           onSuccess={handleTipSuccess}
         />
       )}
+      <BottomNav />
     </div>
   );
 }
