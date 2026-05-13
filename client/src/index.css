@@ -172,3 +172,38 @@ body {
     size: A4;
   }
 }
+
+/* ── Founder banner animations ─────────────────────────────────────────────── */
+
+@keyframes founder-float {
+  0%   { transform: translateY(0px) translateX(0px); }
+  25%  { transform: translateY(-6px) translateX(3px); }
+  50%  { transform: translateY(-10px) translateX(0px); }
+  75%  { transform: translateY(-5px) translateX(-3px); }
+  100% { transform: translateY(0px) translateX(0px); }
+}
+
+@keyframes founder-shimmer {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes founder-glow-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%       { opacity: 0.8; transform: scale(1.15); }
+}
+
+.founder-banner-text {
+  animation: founder-float 5s ease-in-out infinite;
+  background: linear-gradient(135deg, #fbbf24, #4ade80, #fbbf24, #86efac, #f59e0b);
+  background-size: 300% 300%;
+  animation: founder-float 5s ease-in-out infinite, founder-shimmer 4s ease infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.founder-glow-orb {
+  animation: founder-glow-pulse 3s ease-in-out infinite;
+}

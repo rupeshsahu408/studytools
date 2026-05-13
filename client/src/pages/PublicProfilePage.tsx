@@ -14,6 +14,12 @@ const FOUNDER_BIO = "Founder of Topper 2.0 — building an AI-powered study plat
 const FOUNDER_INSTAGRAM = "https://www.instagram.com/rupesh_gupta___/";
 const FOUNDER_TWITTER = "https://x.com/rupesh__gupta_";
 const FOUNDER_AVATAR = "/founder-avatar.png";
+const FAKE_FOLLOWER_BASE = 2200;
+
+function formatFollowerCount(n: number): string {
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+  return n.toString();
+}
 
 // ─── Social Media Brand Icons ─────────────────────────────────────────────────
 
@@ -137,6 +143,22 @@ function FounderProfileView({ currentUid, onBack }: { currentUid: string | null;
           backgroundImage: "linear-gradient(#4CBB17 1px, transparent 1px), linear-gradient(90deg, #4CBB17 1px, transparent 1px)",
           backgroundSize: "40px 40px",
         }} />
+
+        {/* Animated "Founder" text — centre of banner */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+          {/* Pulsing glow behind text */}
+          <div
+            className="founder-glow-orb absolute w-48 h-16 rounded-full"
+            style={{ background: "radial-gradient(ellipse, rgba(251,191,36,0.18) 0%, transparent 70%)" }}
+          />
+          <span
+            className="founder-banner-text font-black tracking-[0.18em] uppercase"
+            style={{ fontSize: "clamp(2rem, 8vw, 3.2rem)", letterSpacing: "0.2em" }}
+          >
+            Founder
+          </span>
+        </div>
+
         {/* Back button */}
         <button
           onClick={onBack}
@@ -236,7 +258,7 @@ function FounderProfileView({ currentUid, onBack }: { currentUid: string | null;
         <div className="grid grid-cols-1 mb-6">
           <div className="bg-gradient-to-br from-[#1a2619] to-[#253D2C] border border-green-900/40 rounded-2xl p-5 text-center shadow-lg">
             <div className="text-4xl font-black text-white mb-1">
-              {loading ? "—" : followCount.toLocaleString()}
+              {loading ? "—" : formatFollowerCount(FAKE_FOLLOWER_BASE + followCount)}
             </div>
             <div className="text-sm text-green-400/70 font-medium">Students following</div>
           </div>
