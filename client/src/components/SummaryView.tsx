@@ -284,7 +284,7 @@ export default function SummaryView({ summary, chapterName, subject, classNum = 
           
 
           <h1 className="text-[1.25rem] font-black text-white leading-tight mb-1">{chapterName}</h1>
-          <p className="text-sm text-green-200 mb-5">{subject} · Bihar Board</p>
+          <p className="text-sm text-green-200 mb-5">{subject} · NCERT</p>
 
           {/* Stats row */}
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -546,7 +546,7 @@ export default function SummaryView({ summary, chapterName, subject, classNum = 
       <div className="hidden print-only" style={{ display: "none" }}>
         <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "12px", marginTop: "24px", textAlign: "center" }}>
           <p style={{ fontSize: "10px", color: "#6b7280" }}>
-            Topper 2.0 · One-Shot Revision · {chapterName} · {subject} · Bihar Board
+            Topper 2.0 · One-Shot Revision · {chapterName} · {subject} · NCERT
           </p>
         </div>
       </div>

@@ -131,7 +131,7 @@ function buildPaperHTML(
   </div>
 
   <div class="header-box">
-    <div class="school-name">${escHtml(schoolName || "Bihar Board — Practice Examination")}</div>
+    <div class="school-name">${escHtml(schoolName || "Board Exam — Practice Examination")}</div>
     <div class="exam-title">ANNUAL EXAMINATION / वार्षिक परीक्षा</div>
     <div class="meta-row">
       <span><strong>Class / कक्षा :</strong> ${escHtml(classNum)}</span>
@@ -280,7 +280,7 @@ function buildAnswerKeyHTML(
 
 export default function ExamPaperView({ subject, classNum, chapterName, paper, generating, error, onGenerate, onReset }: Props) {
   const [showMCQAnswers, setShowMCQAnswers] = useState(false);
-  const [schoolName, setSchoolName] = useState("Bihar Board — Practice Examination");
+  const [schoolName, setSchoolName] = useState("Board Exam — Practice Examination");
   const [examDate, setExamDate] = useState(() => new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" }));
   const [duration, setDuration] = useState("3 Hours / 3 घंटे");
   const paperRef = useRef<HTMLDivElement>(null);

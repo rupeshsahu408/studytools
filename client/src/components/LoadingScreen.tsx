@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 const STUDY_TIPS = [
-  "Bihar Board toppers revise each chapter at least 3 times before the exam.",
+  "Top board exam scorers revise each chapter at least 3 times before the exam.",
   "Writing answers by hand improves memory retention by up to 60%.",
   "5-mark questions carry nearly 30% of total board exam marks.",
   "Practicing MCQs daily for 20 minutes improves accuracy significantly.",

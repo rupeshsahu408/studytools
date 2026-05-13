@@ -32,7 +32,7 @@ import {
 const FOUNDER_USERNAME = "rupesh_gupta";
 const FOUNDER_NAME = "Rupesh Gupta";
 const FOUNDER_LOCATION = "India";
-const FOUNDER_BIO = "Founder of Topper 2.0 — Bihar Board ke students ke liye AI-powered study platform bana raha hoon. Bihar se hoon, Bihar ke liye kaam kar raha hoon. Class 11 & 12 ke har student tak quality education pahunchana mera mission hai. 🚀";
+const FOUNDER_BIO = "Founder of Topper 2.0 — building an AI-powered study platform for Class 11 & 12 students across all NCERT boards. My mission is to make world-class education accessible to every student preparing for their board exams. 🚀";
 const FOUNDER_INSTAGRAM = "https://www.instagram.com/rupesh_gupta___/";
 const FOUNDER_TWITTER = "https://x.com/rupesh__gupta_";
 const FOUNDER_AVATAR = "/founder-avatar.png";
@@ -912,7 +912,7 @@ export default function DiscoverPage() {
             </div>
             <div>
               <h1 className="text-xl font-black text-gray-900 dark:text-white">Discover</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Find and connect with fellow Bihar Board students</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Find and connect with fellow board exam students</p>
             </div>
           </div>
 

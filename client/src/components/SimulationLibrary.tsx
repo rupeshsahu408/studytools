@@ -161,8 +161,8 @@ export default function SimulationLibrary({
         ch.simulations.some(s => s.id === activeSim.id)
       )?.title || "Electric Charges and Fields";
       const query = language === "hindi"
-        ? `इस simulation को हिंदी में समझाओ: "${activeSim.title}". यह concept है: ${activeSim.concept}. वर्तमान स्थिति: ${simContext}. इसे class 12 Bihar Board के छात्र के लिए सरल हिंदी में समझाओ, Bihar Board exam के लिए important points बताओ।`
-        : `Explain this simulation: "${activeSim.title}". Concept: ${activeSim.concept}. Current state: ${simContext}. Explain for Class 12 Bihar Board student with key exam points.`;
+        ? `इस simulation को सरल भाषा में समझाओ: "${activeSim.title}". यह concept है: ${activeSim.concept}. वर्तमान स्थिति: ${simContext}. इसे class 12 NCERT के छात्र के लिए समझाओ, board exam के लिए important points बताओ।`
+        : `Explain this simulation: "${activeSim.title}". Concept: ${activeSim.concept}. Current state: ${simContext}. Explain for a Class 12 NCERT student with key board exam points.`;
       const data = await sendChatMessage(
         [{ role: "user", content: query }],
         chapterText || activeSim.concept,
@@ -320,7 +320,7 @@ export default function SimulationLibrary({
             <span className="text-2xl">📚</span> Simulation Library
           </h2>
           <p className="text-sm text-gray-400 mt-0.5">
-            Pre-built chapter-wise interactive simulations — Class 12, Bihar Board / NCERT
+            Pre-built chapter-wise interactive simulations — Class 12, NCERT Curriculum
           </p>
         </div>
         {totalSims > 0 && (
@@ -520,7 +520,7 @@ export default function SimulationLibrary({
         <div className="text-center py-16 bg-gray-900/40 rounded-2xl border border-gray-800">
           <Search className="w-10 h-10 text-gray-600 mx-auto mb-3" />
           <p className="text-gray-400 font-semibold mb-1">No results for "{search}"</p>
-          <p className="text-sm text-gray-500">Try searching for a concept, topic, or Bihar Board keyword</p>
+          <p className="text-sm text-gray-500">Try searching for a concept, topic, or NCERT keyword</p>
           <button onClick={() => setSearch("")} className="mt-4 text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
             Clear search
           </button>

@@ -83,8 +83,8 @@ export default function SimulationsView({
     setExplain({ loading: true, text: "", error: "" });
     try {
       const query = language === "hindi"
-        ? `इस simulation को हिंदी में समझाओ: ${activeSim.title}. वर्तमान स्थिति: ${simContext}. इसे class 11-12 Bihar Board के छात्र के लिए आसान Hindi में explain करो।`
-        : `Explain what is happening in this simulation: ${activeSim.title}. Current state: ${simContext}. Explain for a Class 11-12 Bihar Board student in simple language.`;
+        ? `इस simulation को हिंदी में समझाओ: ${activeSim.title}. वर्तमान स्थिति: ${simContext}. इसे class 11-12 NCERT के छात्र के लिए आसान भाषा में explain करो।`
+        : `Explain what is happening in this simulation: ${activeSim.title}. Current state: ${simContext}. Explain for a Class 11-12 NCERT student in simple language.`;
 
       // Fetch full response (reliable non-streaming)
       const data = await sendChatMessage(

@@ -786,7 +786,7 @@ export default function DiscussionView({
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             {isGlobalRoom
-              ? "Ask doubts, share tips, and help fellow Bihar Board students."
+              ? "Ask doubts, share tips, and help fellow NCERT board students."
               : `Discuss concepts from ${chapterName}. Ask doubts or share tips with other students.`
             }
           </p>
@@ -828,7 +828,7 @@ export default function DiscussionView({
                 onKeyDown={e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) handlePost(); }}
                 placeholder={
                   isGlobalRoom
-                    ? "Ask a question or share something useful for Bihar Board students…"
+                    ? "Ask a question or share something useful for board exam students…"
                     : (language === "hindi"
                         ? `${chapterName} के बारे में कोई सवाल या tip share करो…`
                         : `Ask a question or share a tip about ${chapterName}…`)

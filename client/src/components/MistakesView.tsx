@@ -95,7 +95,7 @@ export default function MistakesView({ mistakes }: MistakesViewProps) {
         </h2>
       </div>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
-        Bihar Board के छात्र इस chapter में सबसे ज़्यादा यही गलतियाँ करते हैं — इन्हें जानो और marks बचाओ।
+        Students इस chapter में सबसे ज़्यादा यही गलतियाँ करते हैं — इन्हें जानो और marks बचाओ।
       </p>
 
       {/* Category filter */}

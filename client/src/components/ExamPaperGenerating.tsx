@@ -67,7 +67,7 @@ const STEPS = [
 // ─── Rotating tips ────────────────────────────────────────────────────────────
 
 const TIPS = [
-  { emoji: "💡", text: "Bihar Board mein har saal ek chapter se 15–20 MCQ aate hain!" },
+  { emoji: "💡", text: "Board exams mein har saal ek chapter se 15–20 MCQ aate hain!" },
   { emoji: "📝", text: "Is paper mein 100 MCQ + 20 Short + 6 Long — ekdum Board pattern!" },
   { emoji: "⏱️", text: "Aap dusre tabs dekh sakte hain — generation background mein chal rahi hai!" },
   { emoji: "🎯", text: "Practice papers se revision ki speed 3× ho jaati hai!" },
@@ -136,7 +136,7 @@ export default function ExamPaperGenerating() {
           Aapka Practice Paper Tayar Ho Raha Hai
         </h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          100 MCQ + 20 Short Answer + 6 Long Answer — Bihar Board pattern
+          100 MCQ + 20 Short Answer + 6 Long Answer — Board Exam Pattern
         </p>
       </div>
 

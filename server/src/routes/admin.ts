@@ -42,20 +42,20 @@ function bio(gender: "m"|"f", district: string, cls: string, idx: number): strin
   const sub = SUBJECTS[idx % SUBJECTS.length];
   if (gender === "m") {
     const opts = [
-      `Class ${cls} Bihar Board student from ${district}. ${sub} mein bahut interest hai. Topper 2.0 se roz padhta hoon. 📚`,
+      `Class ${cls} board exam student from ${district}. ${sub} mein bahut interest hai. Topper 2.0 se roz padhta hoon. 📚`,
       `${district} se hoon. Board exam ki full preparation kar raha hoon. Science love hai! 🔬`,
-      `Bihar Board ${cls}th mein padhta hoon. ${district} ka student. Future engineer banna chahta hoon. 🎯`,
-      `Hard work karta hoon roz. ${district} se hoon, Bihar Board Class ${cls}. Topper banana hai! 💪`,
-      `Science stream | Bihar Board | ${district}. ${sub} roz practice karta hoon. AI se study better! ⭐`,
+      `Board exam ${cls}th mein padhta hoon. ${district} ka student. Future engineer banna chahta hoon. 🎯`,
+      `Hard work karta hoon roz. ${district} se hoon, Class ${cls}. Topper banana hai! 💪`,
+      `Science stream | ${district}. ${sub} roz practice karta hoon. AI se study better! ⭐`,
     ];
     return opts[idx % opts.length];
   } else {
     const opts = [
-      `Class ${cls} Bihar Board student from ${district}. ${sub} mein bahut interest hai. Topper 2.0 use karti hoon. 📚`,
+      `Class ${cls} board exam student from ${district}. ${sub} mein bahut interest hai. Topper 2.0 use karti hoon. 📚`,
       `${district} se hoon. Board exam ki full preparation kar rahi hoon. Science lover! 🔬`,
-      `Bihar Board ${cls}th mein padhti hoon. ${district} ki student. Future doctor banna chahti hoon. 🎯`,
-      `Hard work karti hoon roz. ${district} se hoon, Bihar Board Class ${cls}. Topper banna chahti hoon! 💪`,
-      `Science stream | Bihar Board | ${district}. ${sub} roz practice karti hoon. AI se padhai easy! ⭐`,
+      `Board exam ${cls}th mein padhti hoon. ${district} ki student. Future doctor banna chahti hoon. 🎯`,
+      `Hard work karti hoon roz. ${district} se hoon, Class ${cls}. Topper banna chahti hoon! 💪`,
+      `Science stream | ${district}. ${sub} roz practice karti hoon. AI se padhai easy! ⭐`,
     ];
     return opts[idx % opts.length];
   }

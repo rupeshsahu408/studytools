@@ -128,7 +128,7 @@ function PublishModal({
   const available = getAvailableSections(chapter);
   const initial: Set<PublishableSection> = currentPublish ? new Set(currentPublish.publishedSections) : new Set(available);
   const [selected, setSelected] = useState<Set<PublishableSection>>(initial);
-  const [board, setBoard] = useState(currentPublish?.board || "Bihar Board");
+  const [board, setBoard] = useState(currentPublish?.board || "CBSE");
   const [confirmUnpublish, setConfirmUnpublish] = useState(false);
 
   const toggle = (key: PublishableSection) => {
@@ -498,7 +498,7 @@ export default function ChapterPage() {
           : <div className="text-gray-400 py-10 text-center text-sm">Notes not available.</div>;
       case "questions":
         if (isGenerating("questions")) return <SectionGenerating label="Question Bank" />;
-        if (!chapter.questions) return <SectionEmpty label="Question Bank" description="AI will generate a complete question bank — MCQs, 1-mark, 2-mark, 5-mark, Assertion-Reason, Case-Based, True/False, Fill in the Blanks, and Exam Important questions — all tailored to Bihar Board pattern." onGenerate={() => generateSection("questions")} generating={generatingSection === "questions"} />;
+        if (!chapter.questions) return <SectionEmpty label="Question Bank" description="AI will generate a complete question bank — MCQs, 1-mark, 2-mark, 5-mark, Assertion-Reason, Case-Based, True/False, Fill in the Blanks, and Exam Important questions — all tailored to your board exam pattern." onGenerate={() => generateSection("questions")} generating={generatingSection === "questions"} />;
         return <QuestionsView questions={chapter.questions} onQuestionAnswered={handleQuestionAnswered} onRetryBatch={handleRetryBatch} retryingBatch={retryingBatch} userId={user?.uid} chapterId={chapter.id} chapterName={chapter.chapterName} subject={chapter.subject} />;
       case "summary":
         if (isGenerating("summary")) return <SectionGenerating label="Quick Revision" />;
@@ -514,7 +514,7 @@ export default function ChapterPage() {
         return <MindMap mindmap={chapter.mindmap} chapterName={chapter.chapterName} subject={chapter.subject} classNum={String(chapter.classNum || "11")} />;
       case "mistakes":
         if (isGenerating("mistakes")) return <SectionGenerating label="Common Mistakes" />;
-        if (!chapter.mistakes || (chapter.mistakes as any[]).length === 0) return <SectionEmpty label="Ye Galti Mat Karo" description="AI will identify the top 10 most common and costly mistakes Bihar Board students make in this chapter." onGenerate={() => generateSection("mistakes")} generating={generatingSection === "mistakes"} />;
+        if (!chapter.mistakes || (chapter.mistakes as any[]).length === 0) return <SectionEmpty label="Ye Galti Mat Karo" description="AI will identify the top 10 most common and costly mistakes students make in this chapter." onGenerate={() => generateSection("mistakes")} generating={generatingSection === "mistakes"} />;
         return <MistakesView mistakes={chapter.mistakes as any[]} />;
       case "flashcards":
         if (isGenerating("flashcards")) return <SectionGenerating label="Flash Cards" />;

@@ -10,7 +10,7 @@ import {
 const FOUNDER_USERNAME = "rupesh_gupta";
 const FOUNDER_NAME = "Rupesh Gupta";
 const FOUNDER_LOCATION = "India";
-const FOUNDER_BIO = "Founder of Topper 2.0 — building an AI-powered study platform for Bihar Board Class 11 & 12 students. From Bihar, building for Bihar. My mission is to make world-class education accessible to every student preparing for their board exams. 🚀";
+const FOUNDER_BIO = "Founder of Topper 2.0 — building an AI-powered study platform for Class 11 & 12 students across all NCERT boards. My mission is to make world-class education accessible to every student preparing for their board exams. 🚀";
 const FOUNDER_INSTAGRAM = "https://www.instagram.com/rupesh_gupta___/";
 const FOUNDER_TWITTER = "https://x.com/rupesh__gupta_";
 const FOUNDER_AVATAR = "/founder-avatar.png";
@@ -271,7 +271,7 @@ function FounderProfileView({ currentUid, onBack }: { currentUid: string | null;
           </div>
           <div>
             <p className="text-sm font-bold text-white">Topper 2.0</p>
-            <p className="text-xs text-green-400/60">Bihar Board AI Study Platform</p>
+            <p className="text-xs text-green-400/60">NCERT Board AI Study Platform</p>
           </div>
           <div className="ml-auto">
             <span className="text-[10px] font-black text-amber-300 bg-amber-400/10 border border-amber-400/30 px-2 py-1 rounded-full uppercase tracking-widest">
@@ -729,7 +729,7 @@ function NormalProfilePage({ username }: { username: string }) {
                   {profile.district && (
                     <div className="flex items-center gap-1">
                       <MapPin className="w-3.5 h-3.5" />
-                      {profile.district}, Bihar
+                      {profile.district}
                     </div>
                   )}
                   <div className="flex items-center gap-1">

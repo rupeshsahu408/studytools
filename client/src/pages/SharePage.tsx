@@ -181,12 +181,12 @@ export default function SharePage() {
         <div className="mt-10 bg-gradient-to-br from-green-600 to-emerald-700 rounded-2xl p-8 text-white text-center">
           <div className="inline-flex items-center gap-1.5 bg-white/15 border border-white/20 rounded-full px-3 py-1 mb-4">
             <Sparkles className="w-3 h-3 text-green-200" />
-            <span className="text-xs font-bold uppercase tracking-widest">Bihar Board AI Platform</span>
+            <span className="text-xs font-bold uppercase tracking-widest">NCERT Board AI Platform</span>
           </div>
           <h2 className="text-xl font-black mb-2">Get AI notes for your own chapters</h2>
           <p className="text-green-100 text-sm mb-6 max-w-md mx-auto leading-relaxed">
             Upload any NCERT chapter PDF and get complete notes, full question banks, flash cards,
-            simulations, and more — built specifically for Bihar Board students.
+            simulations, and more — built for all NCERT board students.
           </p>
           <Link
             to="/signup"

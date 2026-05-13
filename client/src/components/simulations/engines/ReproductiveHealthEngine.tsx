@@ -706,7 +706,7 @@ function renderSurgicalMethods(ctx: CanvasRenderingContext2D) {
     "Vasectomy: simpler, outpatient",
     "Tubectomy: laparoscopic surgery",
     "Not recommended as primary choice",
-    "Bihar Board: know both procedures",
+    "Board Exam: know both procedures",
   ], 10, H - 103, 240);
 }
 

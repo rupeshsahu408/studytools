@@ -270,7 +270,7 @@ function makeHeader(title: string, chapterName: string, subject: string, classNu
       <div>
         <div class="app-badge">
           <span class="app-badge-icon">T2</span>
-          Topper 2.0 — Bihar Board Study Notes
+          Topper 2.0 — NCERT Study Notes
         </div>
         <div class="doc-title">${esc(chapterName)}</div>
         <div class="doc-meta">
@@ -289,7 +289,7 @@ function makeHeader(title: string, chapterName: string, subject: string, classNu
 }
 
 function makeFooter(chapterName: string): string {
-  return `<div class="footer">Topper 2.0 &mdash; AI-powered study notes for Bihar Board &mdash; ${esc(chapterName)}</div>`;
+  return `<div class="footer">Topper 2.0 &mdash; AI-powered study notes for NCERT boards &mdash; ${esc(chapterName)}</div>`;
 }
 
 // ─── NOTES PDF ────────────────────────────────────────────────────────────────

@@ -7,7 +7,7 @@ const features = [
   { icon: Brain, title: "Practice Modes", desc: "Practice at your pace or take timed tests just like real board exams." },
   { icon: BarChart2, title: "All Subjects", desc: "Physics, Chemistry, Mathematics, Biology — Class 11 & 12 NCERT covered." },
   { icon: MessageCircle, title: "Doubt Chat", desc: "Ask any question about your chapter and get instant AI-powered answers." },
-  { icon: Users, title: "Community", desc: "Discuss with thousands of Bihar Board students. Share tips, ask doubts, climb the leaderboard." },
+  { icon: Users, title: "Community", desc: "Discuss with thousands of NCERT board students. Share tips, ask doubts, climb the leaderboard." },
 ];
 
 const steps = [
@@ -19,7 +19,7 @@ const steps = [
 const stats = [
   { value: "11+", label: "Study Tools" },
   { value: "4", label: "Subjects" },
-  { value: "Class 11 & 12", label: "Bihar Board" },
+  { value: "Class 11 & 12", label: "All Boards" },
   { value: "AI", label: "Powered" },
 ];
 
@@ -28,7 +28,7 @@ const communityFeatures = [
     icon: Trophy,
     color: "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400",
     title: "Weekly Leaderboard",
-    desc: "Compete with students across all of Bihar. Top rankers every Monday.",
+    desc: "Compete with students from across the country. Top rankers every Monday.",
   },
   {
     icon: MessageCircle,
@@ -75,7 +75,7 @@ export default function LandingPage() {
       <section className="pt-36 pb-24 px-4 text-center max-w-4xl mx-auto">
         <div className="inline-flex items-center gap-1.5 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-semibold px-3.5 py-1.5 rounded-full mb-8 border border-green-200 dark:border-green-800/50">
           <Sparkles className="w-3 h-3" />
-          Made exclusively for Bihar Board Students
+          For All NCERT Board Students — Class 11 & 12
         </div>
         <h1 className="text-5xl md:text-7xl font-black leading-[1.05] tracking-tight mb-6 text-gray-900 dark:text-white">
           From Beginner<br className="hidden sm:block" /> to{" "}
@@ -133,13 +133,13 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-1.5 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-semibold px-3.5 py-1.5 rounded-full mb-5 border border-green-200 dark:border-green-800/50">
-              <Users className="w-3 h-3" /> Bihar Board Community
+              <Users className="w-3 h-3" /> Student Community
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Study Together, Score Together
             </h2>
             <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto leading-relaxed">
-              Join thousands of Bihar Board students. Ask doubts, share tips, compete on the leaderboard — and never study alone again.
+              Join thousands of NCERT board students. Ask doubts, share tips, compete on the leaderboard — and never study alone again.
             </p>
           </div>
 
@@ -170,7 +170,7 @@ export default function LandingPage() {
               </div>
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-              Join the Bihar Board Community
+              Join the Student Community
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
               Free discussion rooms, live leaderboard, and a community of students just like you — all inside Topper 2.0.
@@ -207,9 +207,9 @@ export default function LandingPage() {
       {/* ── CTA banner ── */}
       <section className="py-20 px-4 mx-4 mb-4 rounded-3xl bg-green-600 text-white text-center">
         <div className="max-w-3xl mx-auto">
-          <p className="text-green-200 text-sm font-semibold tracking-widest uppercase mb-3">Built for Bihar Board</p>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Built for Bihar Board. Built for You.</h2>
-          <p className="text-green-100 mb-8 text-lg">All 4 subjects. Class 11 &amp; 12. Hindi-medium friendly. Bihar Board exam pattern.</p>
+          <p className="text-green-200 text-sm font-semibold tracking-widest uppercase mb-3">Built for Every Board</p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Built for Every Board. Built for You.</h2>
+          <p className="text-green-100 mb-8 text-lg">All 4 subjects. Class 11 &amp; 12. All NCERT boards. Complete board exam pattern.</p>
           <div className="flex flex-wrap justify-center gap-3 mb-10">
             {["Physics", "Chemistry", "Mathematics", "Biology"].map(s => (
               <span key={s} className="bg-white/20 backdrop-blur-sm text-white font-semibold px-5 py-2 rounded-full text-sm border border-white/20">
@@ -230,7 +230,7 @@ export default function LandingPage() {
 
       {/* ── Footer ── */}
       <footer className="py-8 px-4 text-center text-sm text-gray-400 dark:text-gray-600 border-t border-gray-200 dark:border-gray-800">
-        <p>Topper 2.0 — AI-powered study platform for Bihar Board students</p>
+        <p>Topper 2.0 — AI-powered study platform for NCERT board students</p>
       </footer>
     </div>
   );

@@ -79,7 +79,7 @@ function PublishModal({
   onClose: () => void; publishing: boolean; unpublishing: boolean;
 }) {
   const [form, setForm] = useState<PublishForm>({
-    board: "Bihar Board", classNum: chapter.classNum || "11",
+    board: chapter.board || "CBSE", classNum: chapter.classNum || "11",
     medium: chapter.language === "hindi" ? "hindi" : "english",
     subject: PUBLIC_SUBJECTS.includes(chapter.subject) ? chapter.subject : "Physics",
   });

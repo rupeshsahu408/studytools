@@ -98,7 +98,7 @@ function LeaderboardTab({ currentUid, school, district }: { currentUid: string; 
 
       <div className="flex gap-2 mb-5">
         {[
-          { key: "all", label: "All Bihar" },
+          { key: "all", label: "All India" },
           { key: "school", label: "My School", disabled: !school },
           { key: "district", label: "My District", disabled: !district },
         ].map(f => (
@@ -152,7 +152,7 @@ function LeaderboardTab({ currentUid, school, district }: { currentUid: string; 
                     </div>
                     <RankIcon rank={rank} />
                     <p className="text-xs font-bold text-gray-900 dark:text-white leading-tight line-clamp-1">{entry.displayName}</p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 line-clamp-1">{entry.school || entry.district || "Bihar"}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 line-clamp-1">{entry.school || entry.district || "India"}</p>
                     <div className="bg-green-50 dark:bg-green-900/20 rounded-lg px-2 py-1 w-full mt-1">
                       <p className="text-xs font-bold text-green-600 dark:text-green-400">{entry.questionsThisWeek} Qs</p>
                     </div>
@@ -185,7 +185,7 @@ function LeaderboardTab({ currentUid, school, district }: { currentUid: string; 
                       {entry.displayName}
                       {isMe && <span className="text-xs bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded-full font-medium">You</span>}
                     </p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500">{[entry.school, entry.district].filter(Boolean).join(" · ") || "Bihar"}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">{[entry.school, entry.district].filter(Boolean).join(" · ") || "India"}</p>
                   </div>
                   <div className="flex items-center gap-4 flex-shrink-0">
                     <div className="text-right">

@@ -1,5 +1,5 @@
 // ─── Simulation Library — Topper 2.0 ─────────────────────────────────────────
-// Pre-built chapter-wise simulation catalog for Class 12 Bihar Board / NCERT
+// Pre-built chapter-wise simulation catalog for Class 12 NCERT Curriculum
 // NO AI needed to run these. AI is ONLY used for the "Explain This" button.
 // ─────────────────────────────────────────────────────────────────────────────
 

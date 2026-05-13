@@ -479,7 +479,7 @@ export default function NotesView({ notes, subject, chapterName, classNum, onRea
       {notes.examTips?.length > 0 && (
         <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 rounded-2xl p-5">
           <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-            <Star className="w-3 h-3" /> Exam Tips — Bihar Board Focus
+            <Star className="w-3 h-3" /> Exam Tips — Board Exam Focus
           </p>
           <ul className="space-y-2">
             {notes.examTips.map((tip, i) => (

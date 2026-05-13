@@ -514,7 +514,7 @@ export default function ProfilePage() {
                         placeholder="e.g. Govt Higher Secondary School" />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 block">District (Bihar)</label>
+                      <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 block">District</label>
                       <select value={editDistrict} onChange={e => setEditDistrict(e.target.value)}
                         className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-green-500">
                         <option value="">Select district</option>
@@ -776,7 +776,7 @@ export default function ProfilePage() {
                     {daysRemaining < 0 ? "Board exam has passed"
                     : daysRemaining === 0 ? "Exam is TODAY! 💪"
                     : daysRemaining === 1 ? "day remaining — Kal exam hai!"
-                    : `days until Bihar Board exam`}
+                    : `days until board exam`}
                   </div>
                   {daysRemaining > 0 && daysRemaining <= 30 && (
                     <p className="text-xs text-red-500 dark:text-red-400 mt-2 font-medium">
