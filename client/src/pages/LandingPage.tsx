@@ -99,11 +99,16 @@ export default function LandingPage() {
           <Sparkles className="w-3 h-3" />
           For All NCERT Board Students — Class 11 & 12
         </div>
-        <h1 className="text-5xl md:text-7xl font-black leading-[1.05] tracking-tight mb-6 text-gray-900 dark:text-white">
-          From Beginner<br className="hidden sm:block" /> to{" "}
-          <span className="text-green-600 dark:text-green-400">Topper</span>
-          <br className="hidden sm:block" />
-          <span className="text-4xl md:text-5xl font-bold text-gray-500 dark:text-gray-400">Powered by AI</span>
+        <h1 className="font-black tracking-tight mb-6 text-gray-900 dark:text-white">
+          <span className="block text-4xl sm:text-5xl md:text-7xl leading-tight">
+            From Beginner to
+          </span>
+          <span className="block text-4xl sm:text-5xl md:text-7xl leading-tight text-green-600 dark:text-green-400">
+            Topper
+          </span>
+          <span className="block text-xl sm:text-2xl md:text-4xl font-bold text-gray-500 dark:text-gray-400 mt-1">
+            Powered by AI
+          </span>
         </h1>
         <p className="text-lg md:text-xl text-gray-500 dark:text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
           Upload any NCERT chapter. Get complete notes, a full question bank,
