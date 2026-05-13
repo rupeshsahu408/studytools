@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { compressImageToBase64 } from "../lib/imageUtils";
 import {
   AtSign, Camera, Check, X, Loader2, Sparkles, ArrowRight, User, Lock,
   AlertCircle, GraduationCap, CheckCircle2, ChevronRight,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { storage } from "../lib/firebase";
 import { checkUsernameAvailable, setupUserProfile } from "../lib/firestore";
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
@@ -232,10 +231,7 @@ export default function UsernameSetupPage() {
     try {
       let photoURL: string | null = null;
       if (photoFile) {
-        const ext = photoFile.name.split(".").pop() || "jpg";
-        const pathRef = storageRef(storage, `profilePhotos/${user.uid}.${ext}`);
-        await uploadBytes(pathRef, photoFile);
-        photoURL = await getDownloadURL(pathRef);
+        photoURL = await compressImageToBase64(photoFile);
       }
       await setupUserProfile(user.uid, { username, bio, photoURL });
       setStep(2);

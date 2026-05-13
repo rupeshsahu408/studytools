@@ -4,7 +4,7 @@ import {
   Settings, User, UserX, ShieldOff,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { compressImageToBase64 } from "../lib/imageUtils";
 import { useAuth } from "../contexts/AuthContext";
 import TopHeader from "../components/TopHeader";
 import BottomNav from "../components/BottomNav";
@@ -16,7 +16,6 @@ import {
   type SocialUser,
 } from "../lib/firestore";
 import BlueTick from "../components/BlueTick";
-import { storage } from "../lib/firebase";
 
 const GRADIENTS = [
   "from-violet-500 to-purple-600",
@@ -135,10 +134,7 @@ export default function SettingsPage() {
 
       if (photoFile) {
         setUploadingPhoto(true);
-        const ext = photoFile.name.split(".").pop() || "jpg";
-        const fileRef = storageRef(storage, `profilePhotos/${user.uid}.${ext}`);
-        await uploadBytes(fileRef, photoFile);
-        photoURL = await getDownloadURL(fileRef);
+        photoURL = await compressImageToBase64(photoFile);
         setUploadingPhoto(false);
         setPhotoFile(null);
         setPhotoPreview(null);

@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
-import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { compressImageToBase64 } from "../lib/imageUtils";
 import { useAuth } from "../contexts/AuthContext";
 import { useProgress, ALL_BADGES } from "../contexts/ProgressContext";
 import { analyzeWeakAreas } from "../lib/api";
@@ -17,7 +17,6 @@ import {
   subscribeToSocialUser, updateSocialProfile,
   type SocialUser,
 } from "../lib/firestore";
-import { storage } from "../lib/firebase";
 import TopHeader from "../components/TopHeader";
 import BottomNav from "../components/BottomNav";
 import BlueTick from "../components/BlueTick";
@@ -236,11 +235,8 @@ export default function ProfilePage() {
     if (file.size > 5 * 1024 * 1024) return;
     setPhotoUploading(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const pathRef = storageRef(storage, `profilePhotos/${user.uid}.${ext}`);
-      await uploadBytes(pathRef, file);
-      const url = await getDownloadURL(pathRef);
-      await updateSocialProfile(user.uid, { photoURL: url });
+      const base64 = await compressImageToBase64(file);
+      await updateSocialProfile(user.uid, { photoURL: base64 });
     } catch (e) { console.error(e); }
     finally { setPhotoUploading(false); if (photoInputRef.current) photoInputRef.current.value = ""; }
   };
