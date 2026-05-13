@@ -4,8 +4,7 @@ import {
   Plus, BookOpen, Trash2, ChevronRight, FlaskConical,
   Calculator, Leaf, Atom, Flame, Target,
   TrendingUp, Loader2, RefreshCw, AlertTriangle,
-  Globe, X, CheckCircle, Compass, Settings, Trophy,
-  Calendar, Upload,
+  Globe, X, CheckCircle, Trophy, Calendar, Upload,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useProgress, ALL_BADGES } from "../contexts/ProgressContext";
@@ -199,7 +198,6 @@ export default function DashboardPage() {
       const r = await generateNotes(chapter.text, chapter.subject, chapter.classNum, chapter.chapterName, chapter.language);
       if (r?.notes) { await updateChapterSection(chapter.id, "notes", r.notes); await refreshChapters(); }
     } catch (err: any) {
-      console.error("[dashboard] Notes retry failed:", err?.message);
       setRetryError("Notes generation failed. Please try again.");
     } finally { setRetryingNotesId(null); }
   };
@@ -212,7 +210,6 @@ export default function DashboardPage() {
       const r = await generateQuestions(chapter.text, chapter.subject, chapter.classNum, chapter.chapterName, chapter.language);
       if (r?.questions) { await updateChapterSection(chapter.id, "questions", r.questions); await refreshChapters(); }
     } catch (err: any) {
-      console.error("[dashboard] Questions retry failed:", err?.message);
       setRetryError("Questions generation failed. Please try again.");
     } finally { setRetryingQuestionsId(null); }
   };
@@ -265,12 +262,9 @@ export default function DashboardPage() {
   const accuracy = totalAnswered > 0 ? Math.round(((totalAnswered - totalWrong) / totalAnswered) * 100) : null;
   const displayName = userData?.profile?.name || user?.displayName || "Student";
 
-  // Badges
-  const earnedBadges = userData?.badges || [];
+  const earnedCount = (userData?.badges || []).length;
   const totalBadges = ALL_BADGES.length;
-  const earnedCount = earnedBadges.length;
 
-  // Exam countdown
   const examDate = userData?.examDate || null;
   const daysRemaining = getDaysRemaining(examDate);
 
@@ -291,7 +285,6 @@ export default function DashboardPage() {
               {!canAddMore && " · Delete a chapter to add more"}
             </p>
           </div>
-          {/* Upload shortcut since Upload was moved out of BottomNav */}
           {canAddMore && (
             <button
               onClick={() => navigate("/upload")}
@@ -343,7 +336,7 @@ export default function DashboardPage() {
                   ? "Exam is tomorrow — be ready! 🎯"
                   : `${daysRemaining} days to exam`}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 {daysRemaining > 0
                   ? daysRemaining <= 7
                     ? "Last stretch — revise hard!"
@@ -357,45 +350,46 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Quick stats strip */}
-        <div className="grid grid-cols-3 gap-2.5 mb-4">
+        {/* ── 4 stat widgets in a 2×2 grid ── */}
+        <div className="grid grid-cols-2 gap-2.5 mb-4">
+
           {/* Streak */}
-          <div className={`bg-white dark:bg-gray-900 rounded-2xl border p-3.5 ${
+          <div className={`bg-white dark:bg-gray-900 rounded-2xl border p-4 ${
             streak > 0 ? "border-orange-100 dark:border-orange-800/40" : "border-gray-100 dark:border-gray-800"
           }`}>
-            <div className="flex items-center gap-1.5 mb-0.5">
+            <div className="flex items-center gap-1.5 mb-1">
               <Flame className={`w-3.5 h-3.5 ${streak > 0 ? "text-orange-500" : "text-gray-300 dark:text-gray-700"}`} />
-              <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400">Streak</span>
+              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Streak</span>
             </div>
-            <div className={`text-2xl font-black leading-none ${streak > 0 ? "text-orange-500" : "text-gray-400 dark:text-gray-600"}`}>
+            <div className={`text-3xl font-black leading-none ${streak > 0 ? "text-orange-500" : "text-gray-400 dark:text-gray-600"}`}>
               {streak}
             </div>
-            <div className="text-[10px] text-gray-400 mt-0.5">days</div>
+            <div className="text-xs text-gray-400 mt-1">days 🔥</div>
           </div>
 
-          {/* Daily goal */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-3.5">
-            <div className="flex items-center gap-1.5 mb-0.5">
+          {/* Today's target */}
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4">
+            <div className="flex items-center gap-1.5 mb-1">
               <Target className="w-3.5 h-3.5 text-green-600" />
-              <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400">Aaj Ka Target</span>
+              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Aaj Ka Target</span>
             </div>
-            <div className="text-2xl font-black text-green-600 dark:text-green-400 leading-none">
+            <div className="text-3xl font-black text-green-600 dark:text-green-400 leading-none">
               {dailyDone}
             </div>
-            <div className="text-[10px] text-gray-400 mt-0.5">/{dailyTarget} Q</div>
-            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1 mt-1.5 overflow-hidden">
+            <div className="text-xs text-gray-400 mt-1">/{dailyTarget} Q</div>
+            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1 mt-2 overflow-hidden">
               <div className="h-full bg-green-500 rounded-full transition-all"
                 style={{ width: `${Math.min(100, Math.round((dailyDone / dailyTarget) * 100))}%` }} />
             </div>
           </div>
 
           {/* Accuracy */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-3.5">
-            <div className="flex items-center gap-1.5 mb-0.5">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4">
+            <div className="flex items-center gap-1.5 mb-1">
               <TrendingUp className="w-3.5 h-3.5 text-blue-500" />
-              <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400">Accuracy</span>
+              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Accuracy</span>
             </div>
-            <div className={`text-2xl font-black leading-none ${
+            <div className={`text-3xl font-black leading-none ${
               accuracy === null ? "text-gray-400 dark:text-gray-600"
               : accuracy >= 70 ? "text-blue-600 dark:text-blue-400"
               : accuracy >= 50 ? "text-orange-500"
@@ -403,62 +397,34 @@ export default function DashboardPage() {
             }`}>
               {accuracy !== null ? `${accuracy}%` : "—"}
             </div>
-            {totalAnswered > 0 && <div className="text-[10px] text-gray-400 mt-0.5">{totalAnswered} answered</div>}
+            {totalAnswered > 0
+              ? <div className="text-xs text-gray-400 mt-1">{totalAnswered} answered</div>
+              : <div className="text-xs text-gray-400 mt-1">Practice to track</div>
+            }
           </div>
-        </div>
 
-        {/* ── Badges + Discover + Settings quick-access row ── */}
-        <div className="grid grid-cols-3 gap-2.5 mb-5">
-
-          {/* Badges card */}
+          {/* Badges */}
           <button
             onClick={() => navigate("/profile")}
-            className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-3.5 text-left hover:border-green-300 dark:hover:border-green-700 hover:shadow-sm transition-all group"
+            className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 text-left hover:border-amber-300 dark:hover:border-amber-700 hover:shadow-sm transition-all"
           >
             <div className="flex items-center gap-1.5 mb-1">
               <Trophy className="w-3.5 h-3.5 text-amber-500" />
-              <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400">Badges</span>
+              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Badges</span>
             </div>
-            <div className="text-2xl font-black text-amber-500 leading-none">{earnedCount}</div>
-            <div className="text-[10px] text-gray-400 mt-0.5">/{totalBadges} earned</div>
-            {earnedCount > 0 && (
-              <div className="mt-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1 overflow-hidden">
-                <div
-                  className="h-full bg-amber-400 rounded-full transition-all"
-                  style={{ width: `${Math.round((earnedCount / totalBadges) * 100)}%` }}
-                />
-              </div>
-            )}
+            <div className="text-3xl font-black text-amber-500 leading-none">{earnedCount}</div>
+            <div className="text-xs text-gray-400 mt-1">/{totalBadges} earned</div>
+            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1 mt-2 overflow-hidden">
+              <div
+                className="h-full bg-amber-400 rounded-full transition-all"
+                style={{ width: `${Math.round((earnedCount / totalBadges) * 100)}%` }}
+              />
+            </div>
           </button>
 
-          {/* Find Friends / Discover card */}
-          <button
-            onClick={() => navigate("/discover")}
-            className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-3.5 text-left hover:border-green-300 dark:hover:border-green-700 hover:shadow-sm transition-all group"
-          >
-            <div className="flex items-center gap-1.5 mb-1">
-              <Compass className="w-3.5 h-3.5 text-indigo-500" />
-              <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400">Discover</span>
-            </div>
-            <p className="text-xs font-bold text-gray-800 dark:text-white leading-snug">Find Friends</p>
-            <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">Search students</p>
-          </button>
-
-          {/* Settings card */}
-          <button
-            onClick={() => navigate("/settings")}
-            className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-3.5 text-left hover:border-green-300 dark:hover:border-green-700 hover:shadow-sm transition-all group"
-          >
-            <div className="flex items-center gap-1.5 mb-1">
-              <Settings className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
-              <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400">Settings</span>
-            </div>
-            <p className="text-xs font-bold text-gray-800 dark:text-white leading-snug">Profile & Privacy</p>
-            <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">Photo, bio, links</p>
-          </button>
         </div>
 
-        {/* ── No exam date set nudge ── */}
+        {/* ── No exam date nudge ── */}
         {!examDate && (
           <button
             onClick={() => navigate("/profile")}
@@ -476,18 +442,10 @@ export default function DashboardPage() {
         {/* Chapter Library header */}
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-bold text-gray-900 dark:text-white">Chapter Library</h2>
-          <div className="flex items-center gap-2">
-            <button onClick={() => navigate("/public-notes")}
-              className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-green-600 transition-colors">
-              <Globe className="w-3 h-3" /> Community Notes
-            </button>
-            {canAddMore && (
-              <button onClick={() => navigate("/upload")}
-                className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors">
-                <Plus className="w-3 h-3" /> Add
-              </button>
-            )}
-          </div>
+          <button onClick={() => navigate("/public-notes")}
+            className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-green-600 transition-colors">
+            <Globe className="w-3 h-3" /> Community Notes
+          </button>
         </div>
 
         {/* Retry error banner */}
@@ -512,7 +470,7 @@ export default function DashboardPage() {
             <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">No chapters yet. Upload your first chapter!</p>
             <button onClick={() => navigate("/upload")}
               className="bg-green-600 hover:bg-green-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors flex items-center gap-2 mx-auto">
-              <Plus className="w-4 h-4" /> Upload Chapter
+              <Upload className="w-4 h-4" /> Upload Chapter
             </button>
           </div>
         ) : (
@@ -610,15 +568,6 @@ export default function DashboardPage() {
                 </div>
               );
             })}
-
-            {/* Add new chapter card */}
-            {canAddMore && (
-              <button onClick={() => navigate("/upload")}
-                className="w-full bg-white dark:bg-gray-900 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 p-5 text-center hover:border-green-400 dark:hover:border-green-600 hover:bg-green-50/30 dark:hover:bg-green-900/10 transition-all group">
-                <Plus className="w-6 h-6 text-gray-400 group-hover:text-green-600 mx-auto mb-1 transition-colors" />
-                <p className="text-sm text-gray-400 group-hover:text-green-600 font-medium transition-colors">Add Chapter ({chapters.length}/{MAX_CHAPTERS})</p>
-              </button>
-            )}
           </div>
         )}
       </div>

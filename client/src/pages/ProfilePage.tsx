@@ -3,9 +3,10 @@ import {
   Flame, Target, Calendar, Trophy, Brain,
   Edit2, Check, X, ChevronRight, AlertTriangle, Loader2,
   BookOpen, Zap, Star, GraduationCap, Users, ExternalLink,
-  Camera, Lock,
+  Camera, Lock, Settings, Sun, Moon, LogOut,
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
+import { useTheme } from "../contexts/ThemeContext";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "../contexts/AuthContext";
 import { useProgress, ALL_BADGES } from "../contexts/ProgressContext";
@@ -92,9 +93,15 @@ function buildRevisionPlan(chapters: any[], daysRemaining: number): Array<{ week
 }
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { isDark, toggleTheme } = useTheme();
   const { userData, loadingUser, chapters, updateProfile, setExamDate, setDailyGoal, refreshChapters, refreshUserData } = useProgress();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
 
   // Role state
   const [switchingRole, setSwitchingRole] = useState(false);
@@ -304,11 +311,37 @@ export default function ProfilePage() {
       <div className="pt-12 pb-20 max-w-5xl mx-auto px-4 py-4">
 
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Profile</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-            Manage your account, track your streak, and set your exam goal.
-          </p>
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Profile</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+              Manage your account, track your streak, and set your exam goal.
+            </p>
+          </div>
+          {/* Theme / Settings / Logout */}
+          <div className="flex items-center gap-1 flex-shrink-0 mt-1">
+            <button
+              onClick={toggleTheme}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              title={isDark ? "Light mode" : "Dark mode"}
+            >
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={() => navigate("/settings")}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              title="Settings"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleLogout}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 transition-colors"
+              title="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* ── Social Profile Card ── */}
