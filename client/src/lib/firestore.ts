@@ -759,6 +759,11 @@ export async function submitFeedback(entry: Omit<FeedbackEntry, "createdAt">): P
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+  reactions?: {
+    thumbsUp?: boolean;
+    lightbulb?: boolean;
+    star?: boolean;
+  };
 }
 
 export interface ChatSession {
