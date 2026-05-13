@@ -19,7 +19,6 @@ import {
 } from "../lib/api";
 import { useProgress } from "../contexts/ProgressContext";
 import { useAuth } from "../contexts/AuthContext";
-import TopHeader from "../components/TopHeader";
 import NotesView from "../components/NotesView";
 import QuestionsView from "../components/QuestionsView";
 import FormulaSheet from "../components/FormulaSheet";
@@ -218,8 +217,6 @@ export default function ChapterPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const tabScrollRef = useRef<HTMLDivElement>(null);
-
   const [chapter, setChapter] = useState<Chapter | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState(() => searchParams.get("section") || "notes");
@@ -541,38 +538,16 @@ export default function ChapterPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
 
-      {/* ── Desktop TopHeader (hidden on mobile) ── */}
-      <TopHeader
-        className="hidden md:flex"
-        showBack
-        backTo="/dashboard"
-        backLabel="Library"
-        rightSlot={
-          <button
-            onClick={() => { setPublishError(null); setShowPublishModal(true); }}
-            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-              currentPublish
-                ? "text-green-600 bg-green-50 dark:bg-green-900/20"
-                : "text-gray-400 hover:text-green-600 hover:bg-gray-100 dark:hover:bg-gray-800"
-            }`}
-          >
-            <Globe className="w-3.5 h-3.5" />
-          </button>
-        }
-      />
-
-      {/* ── Mobile Header (hidden on desktop) ── */}
+      {/* ════════════════════════════════════════════
+          MOBILE HEADER (hidden on desktop)
+          ════════════════════════════════════════════ */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 h-12 flex items-center px-1 gap-2">
-
-        {/* Hamburger — opens sidebar */}
         <button
           onClick={() => setShowSidebar(true)}
           className="w-11 h-11 flex items-center justify-center text-gray-500 dark:text-gray-400 flex-shrink-0 active:bg-gray-100 dark:active:bg-gray-800 rounded-xl transition-colors"
         >
           <Menu className="w-5 h-5" />
         </button>
-
-        {/* Active section label */}
         <div className="flex-1 min-w-0 flex items-center gap-2">
           {activeItem && (
             <>
@@ -580,29 +555,23 @@ export default function ChapterPage() {
                 ? <Loader2 className="w-4 h-4 text-green-500 animate-spin flex-shrink-0" />
                 : <activeItem.icon className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
               }
-              <span className="text-sm font-semibold text-gray-800 dark:text-white truncate">
-                {activeItem.label}
-              </span>
+              <span className="text-sm font-semibold text-gray-800 dark:text-white truncate">{activeItem.label}</span>
             </>
           )}
         </div>
-
-        {/* Publish shortcut */}
         <button
           onClick={() => { setPublishError(null); setShowPublishModal(true); }}
           className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
-            currentPublish
-              ? "text-green-600 bg-green-50 dark:bg-green-900/20"
-              : "text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+            currentPublish ? "text-green-600 bg-green-50 dark:bg-green-900/20" : "text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
           }`}
         >
           <Globe className="w-4 h-4" />
         </button>
       </div>
 
-      {/* ── Chapter info strip ── */}
-      <div className="fixed top-12 left-0 right-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-4 py-2">
-        <div className="flex items-center gap-2 max-w-4xl mx-auto">
+      {/* ── Mobile: Chapter info strip ── */}
+      <div className="md:hidden fixed top-12 left-0 right-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-4 py-2">
+        <div className="flex items-center gap-2">
           <SubjectIcon className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
           <span className="text-xs font-semibold text-green-600 flex-shrink-0">{chapter.subject} · Cl.{chapter.classNum}</span>
           <span className="text-gray-200 dark:text-gray-700 flex-shrink-0">|</span>
@@ -612,126 +581,153 @@ export default function ChapterPage() {
         </div>
       </div>
 
-      {/* ── Desktop: Horizontal scrollable tab bar ── */}
-      <div ref={tabScrollRef} className="hidden md:block fixed top-[88px] left-0 right-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 overflow-x-auto scrollbar-none">
-        <div className="flex items-center px-2 min-w-max">
-          {TAB_ITEMS.map(item => {
-            const isActive = activeSection === item.key;
-            const isCurrentlyGenerating = generatingSection === item.key || (item.key === "exampaper" && generatingExamPaper);
-            const isReady = item.key === "simulations" ? simCount > 0
-              : item.key === "questions" ? questionCount > 0
-              : item.key === "exampaper" ? !!(chapter as any).examPaper
-              : !!(chapter[item.key as keyof Chapter]);
-            return (
-              <button
-                id={`tab-${item.key}`}
-                key={item.key}
-                onClick={() => switchSection(item.key)}
-                className={`flex flex-col items-center gap-0.5 px-3.5 py-2.5 text-xs font-medium transition-all flex-shrink-0 relative border-b-2 ${
-                  isActive
-                    ? "text-green-600 dark:text-green-400 border-green-600 dark:border-green-400"
-                    : "text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-600 dark:hover:text-gray-300"
-                }`}>
-                <div className="relative">
-                  {isCurrentlyGenerating
-                    ? <Loader2 className="w-4 h-4 animate-spin text-green-500" />
-                    : <item.icon className="w-4 h-4" />
-                  }
-                  {isReady && !isCurrentlyGenerating && !isActive && (
-                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-green-500 rounded-full" />
-                  )}
-                </div>
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      {/* ════════════════════════════════════════════
+          DESKTOP LAYOUT (hidden on mobile)
+          ════════════════════════════════════════════ */}
 
-      {/* ── Desktop Sidebar ── */}
-      <aside className="hidden md:flex flex-col w-56 fixed left-0 top-12 h-[calc(100vh-3rem)] bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 overflow-y-auto z-20">
-        <div className="p-4">
-          <button onClick={() => navigate("/dashboard")} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-green-600 transition-colors mb-4">
-            <ArrowLeft className="w-3 h-3" /> Back to Library
+      {/* ── Desktop Sidebar — full height, single source of navigation ── */}
+      <aside className="hidden md:flex flex-col w-64 fixed left-0 top-0 h-screen bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 z-40">
+
+        {/* Sidebar top: logo + back */}
+        <div className="flex items-center justify-between px-4 h-14 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-green-600 rounded-md flex items-center justify-center shadow-sm flex-shrink-0">
+              <span className="text-white font-bold text-[10px]">T2</span>
+            </div>
+            <span className="text-sm font-bold text-gray-900 dark:text-white">Topper 2.0</span>
+          </div>
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="flex items-center gap-1 text-xs text-gray-400 hover:text-green-600 transition-colors"
+          >
+            <ArrowLeft className="w-3 h-3" />
+            <span>Library</span>
           </button>
-          <div className="flex items-center gap-2 mb-1">
-            <SubjectIcon className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+        </div>
+
+        {/* Chapter info */}
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
+          <div className="flex items-center gap-1.5 mb-1">
+            <SubjectIcon className="w-3.5 h-3.5 text-green-600 dark:text-green-400 flex-shrink-0" />
             <span className="text-xs font-semibold text-green-600 dark:text-green-400">{chapter.subject} · Class {chapter.classNum}</span>
           </div>
-          <p className="text-xs font-bold text-gray-900 dark:text-white leading-snug mb-2">{chapter.chapterName}</p>
-          <div className="space-y-0.5 mb-3 text-xs text-gray-400">
-            {createdDate && <div className="flex items-center gap-1"><Calendar className="w-3 h-3" /><span>Added {createdDate}</span></div>}
-            {questionCount > 0 && <div className="flex items-center gap-1"><HelpCircle className="w-3 h-3" /><span>{questionCount} questions</span></div>}
+          <p className="text-[13px] font-bold text-gray-900 dark:text-white leading-snug mb-2">{chapter.chapterName}</p>
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-gray-400">
+            {createdDate && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{createdDate}</span>}
+            {questionCount > 0 && <span className="flex items-center gap-1"><HelpCircle className="w-3 h-3" />{questionCount} questions</span>}
           </div>
+        </div>
 
-          {/* Share */}
-          <div className="mb-2 pb-2 border-b border-gray-100 dark:border-gray-800">
-            {!shareToken ? (
-              <button onClick={handleCreateShare} disabled={shareLoading || !chapter.notes}
-                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-green-600 disabled:opacity-40 transition-colors">
-                {shareLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Share2 className="w-3 h-3" />}
-                {shareRevoked ? "Link removed" : "Share Notes"}
-              </button>
-            ) : (
-              <div className="space-y-1">
-                <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-green-500" /><span className="text-xs font-medium text-green-600">Share active</span></div>
-                <div className="flex items-center gap-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-2 pr-1 py-1">
-                  <span className="text-xs text-gray-400 flex-1 truncate font-mono">/share/{shareToken.slice(0,8)}…</span>
-                  <button onClick={handleCopyShare} className="flex-shrink-0 p-1 text-gray-400 hover:text-green-600">
-                    {shareCopied ? <CheckCheck className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
-                  </button>
-                </div>
-                <button onClick={handleRevokeShare} disabled={shareLoading} className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 transition-colors">
-                  {shareLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />} Remove link
+        {/* Actions: Share + Publish — appear exactly once */}
+        <div className="px-4 py-2.5 border-b border-gray-100 dark:border-gray-800 flex-shrink-0 space-y-2">
+          {/* Share Notes */}
+          {!shareToken ? (
+            <button
+              onClick={handleCreateShare}
+              disabled={shareLoading || !chapter.notes}
+              className="flex items-center gap-2 text-xs text-gray-500 hover:text-green-600 disabled:opacity-40 transition-colors w-full"
+            >
+              {shareLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Share2 className="w-3.5 h-3.5 flex-shrink-0" />}
+              <span>{shareRevoked ? "Link removed" : "Share Notes"}</span>
+            </button>
+          ) : (
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-green-600">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                Share active
+              </div>
+              <div className="flex items-center gap-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-2 pr-1 py-1">
+                <span className="text-[11px] text-gray-400 flex-1 truncate font-mono">/share/{shareToken.slice(0, 8)}…</span>
+                <button onClick={handleCopyShare} className="flex-shrink-0 p-1 text-gray-400 hover:text-green-600 transition-colors">
+                  {shareCopied ? <CheckCheck className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                </button>
+                <button onClick={handleRevokeShare} disabled={shareLoading} className="flex-shrink-0 p-1 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-40">
+                  {shareLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
                 </button>
               </div>
+            </div>
+          )}
+          {/* Publish to Community */}
+          {publishSuccess && (
+            <div className="flex items-center gap-1 text-xs text-green-600"><Check className="w-3 h-3" /> Published!</div>
+          )}
+          <button
+            onClick={() => { setPublishError(null); setShowPublishModal(true); }}
+            className={`flex items-center gap-2 text-xs transition-colors w-full ${
+              currentPublish ? "text-green-600 hover:text-green-700" : "text-gray-500 hover:text-green-600"
+            }`}
+          >
+            <Globe className="w-3.5 h-3.5 flex-shrink-0" />
+            <span>{currentPublish ? "Update community post" : "Publish to Community"}</span>
+            {currentPublish && (
+              <span className="ml-auto text-[9px] font-bold bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 px-1.5 py-0.5 rounded-full flex-shrink-0">LIVE</span>
             )}
-          </div>
+          </button>
+        </div>
 
-          {/* Publish */}
-          <div className="mb-3 pb-3 border-b border-gray-100 dark:border-gray-800">
-            {publishSuccess && <div className="flex items-center gap-1 text-xs text-green-600 mb-1.5"><Check className="w-3 h-3" />Published!</div>}
-            {currentPublish ? (
-              <button onClick={() => { setPublishError(null); setShowPublishModal(true); }} className="flex items-center gap-1 text-xs text-green-600 hover:text-green-700">
-                <Globe className="w-3 h-3" /> Update community post
-              </button>
-            ) : (
-              <button onClick={() => { setPublishError(null); setShowPublishModal(true); }} className="flex items-center gap-1 text-xs text-gray-400 hover:text-green-600 transition-colors">
-                <Globe className="w-3 h-3" /> Publish to Community
-              </button>
-            )}
-          </div>
-
-          {/* Section items */}
+        {/* Navigation — the ONLY place tabs appear on desktop */}
+        <nav className="flex-1 overflow-y-auto py-2">
           {["study", "ai", "sim", "community", "exam"].map(group => {
             const items = TAB_ITEMS.filter(t => t.group === group);
             return (
-              <div key={group} className="mb-3">
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide px-2 mb-1">{GROUP_LABELS[group]}</p>
+              <div key={group} className="mb-1">
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-4 py-1.5">{GROUP_LABELS[group]}</p>
                 {items.map(item => {
+                  const isActive = activeSection === item.key;
                   const isCurrentlyGenerating = generatingSection === item.key || (item.key === "exampaper" && generatingExamPaper);
                   const isReady = item.key === "simulations" ? simCount > 0 : item.key === "questions" ? questionCount > 0 : item.key === "exampaper" ? !!(chapter as any).examPaper : !!(chapter[item.key as keyof Chapter]);
                   return (
-                    <button key={item.key} onClick={() => switchSection(item.key)}
-                      className={`w-full flex items-center gap-2 px-2 py-2 rounded-xl text-xs font-medium transition-all mb-0.5 ${
-                        activeSection === item.key
+                    <button
+                      key={item.key}
+                      onClick={() => switchSection(item.key)}
+                      className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium transition-all relative ${
+                        isActive
                           ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400"
-                          : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                          : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200"
+                      }`}
+                    >
+                      {isActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-green-600 dark:bg-green-400 rounded-r-full" />}
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        isActive ? "bg-green-100 dark:bg-green-900/40" : "bg-gray-100 dark:bg-gray-800"
                       }`}>
-                      {isCurrentlyGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin text-green-500 flex-shrink-0" /> : <item.icon className="w-3.5 h-3.5 flex-shrink-0" />}
-                      <span className="flex-1 text-left">{item.label}</span>
-                      {isReady && !isCurrentlyGenerating && <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />}
+                        {isCurrentlyGenerating
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin text-green-500" />
+                          : <item.icon className={`w-3.5 h-3.5 ${isActive ? "text-green-600 dark:text-green-400" : "text-gray-500 dark:text-gray-400"}`} />
+                        }
+                      </div>
+                      <span className="flex-1 text-left text-[13px]">{item.label}</span>
+                      {isReady && !isCurrentlyGenerating && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                      )}
                     </button>
                   );
                 })}
               </div>
             );
           })}
-        </div>
+        </nav>
       </aside>
 
+      {/* ── Desktop: Slim top content bar (shows active section label) ── */}
+      <div className="hidden md:flex fixed top-0 left-64 right-0 z-30 h-14 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 items-center px-6 gap-3">
+        {activeItem && (
+          <>
+            {generatingSection === activeSection
+              ? <Loader2 className="w-4 h-4 text-green-500 animate-spin flex-shrink-0" />
+              : <activeItem.icon className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+            }
+            <span className="text-sm font-semibold text-gray-800 dark:text-white">{activeItem.label}</span>
+          </>
+        )}
+        {publishSuccess && (
+          <span className="ml-auto text-xs text-green-600 font-semibold flex items-center gap-1">
+            <Check className="w-3.5 h-3.5" /> Published!
+          </span>
+        )}
+      </div>
+
       {/* ── Main Content ── */}
-      <main className="md:ml-56 pt-[80px] md:pt-[136px] pb-8 min-h-screen">
+      <main className="md:ml-64 pt-[80px] md:pt-14 pb-8 min-h-screen">
         {genError && (
           <div className="mx-4 mt-4 mb-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl px-4 py-3 text-sm flex items-center justify-between">
             <span>{genError}</span>
