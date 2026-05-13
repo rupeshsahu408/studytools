@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Sun, Moon, Bell, LogOut } from "lucide-react";
+import { Sun, Moon, Bell, LogOut, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
@@ -12,6 +12,7 @@ interface TopHeaderProps {
   backLabel?: string;
   rightSlot?: React.ReactNode;
   className?: string;
+  hideSettings?: boolean;
 }
 
 export default function TopHeader({
@@ -21,6 +22,7 @@ export default function TopHeader({
   backLabel = "Back",
   rightSlot,
   className = "",
+  hideSettings = false,
 }: TopHeaderProps) {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
@@ -71,6 +73,17 @@ export default function TopHeader({
 
         <div className="flex items-center gap-1 ml-auto">
           {rightSlot}
+
+          {/* Settings icon */}
+          {user && !hideSettings && (
+            <Link
+              to="/settings"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              title="Settings"
+            >
+              <Settings className="w-4 h-4" />
+            </Link>
+          )}
 
           <button
             onClick={toggleTheme}

@@ -4,10 +4,11 @@ import {
   Plus, BookOpen, Trash2, ChevronRight, FlaskConical,
   Calculator, Leaf, Atom, Flame, Target,
   TrendingUp, Loader2, RefreshCw, AlertTriangle,
-  Globe, X, CheckCircle,
+  Globe, X, CheckCircle, Compass, Settings, Trophy,
+  Calendar, Upload,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { useProgress } from "../contexts/ProgressContext";
+import { useProgress, ALL_BADGES } from "../contexts/ProgressContext";
 import {
   deleteChapter, updateChapterSection,
   publishNote, unpublishNote, getMyPublishedNotes,
@@ -41,6 +42,16 @@ const PUBLIC_SUBJECTS = [
 ];
 
 const MAX_CHAPTERS = 5;
+
+function getDaysRemaining(examDate: string | null): number | null {
+  if (!examDate) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const exam = new Date(examDate);
+  exam.setHours(0, 0, 0, 0);
+  const diff = Math.ceil((exam.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  return diff;
+}
 
 function getChapterCompletion(chapter: Chapter): number {
   const flags = [
@@ -254,6 +265,15 @@ export default function DashboardPage() {
   const accuracy = totalAnswered > 0 ? Math.round(((totalAnswered - totalWrong) / totalAnswered) * 100) : null;
   const displayName = userData?.profile?.name || user?.displayName || "Student";
 
+  // Badges
+  const earnedBadges = userData?.badges || [];
+  const totalBadges = ALL_BADGES.length;
+  const earnedCount = earnedBadges.length;
+
+  // Exam countdown
+  const examDate = userData?.examDate || null;
+  const daysRemaining = getDaysRemaining(examDate);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <TopHeader />
@@ -261,18 +281,84 @@ export default function DashboardPage() {
       <div className="pt-12 pb-20 max-w-2xl mx-auto px-4 py-4">
 
         {/* Greeting */}
-        <div className="pt-2 mb-4">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-            Namaste, {displayName.split(" ")[0]}! 👋
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">
-            {chapters.length}/{MAX_CHAPTERS} chapters
-            {!canAddMore && " · Delete a chapter to add more"}
-          </p>
+        <div className="pt-2 mb-4 flex items-start justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              Namaste, {displayName.split(" ")[0]}! 👋
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">
+              {chapters.length}/{MAX_CHAPTERS} chapters
+              {!canAddMore && " · Delete a chapter to add more"}
+            </p>
+          </div>
+          {/* Upload shortcut since Upload was moved out of BottomNav */}
+          {canAddMore && (
+            <button
+              onClick={() => navigate("/upload")}
+              className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-2 rounded-xl transition-colors flex-shrink-0"
+            >
+              <Upload className="w-3.5 h-3.5" /> Upload PDF
+            </button>
+          )}
         </div>
 
+        {/* ── Exam Countdown Banner ── */}
+        {daysRemaining !== null && (
+          <div
+            onClick={() => navigate("/profile")}
+            className={`mb-4 cursor-pointer rounded-2xl border px-4 py-3 flex items-center gap-3 transition-all hover:shadow-sm ${
+              daysRemaining <= 7
+                ? "bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800/40"
+                : daysRemaining <= 30
+                ? "bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800/40"
+                : "bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-800/40"
+            }`}
+          >
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+              daysRemaining <= 7
+                ? "bg-red-100 dark:bg-red-900/40"
+                : daysRemaining <= 30
+                ? "bg-amber-100 dark:bg-amber-900/40"
+                : "bg-green-100 dark:bg-green-900/40"
+            }`}>
+              <Calendar className={`w-5 h-5 ${
+                daysRemaining <= 7
+                  ? "text-red-600 dark:text-red-400"
+                  : daysRemaining <= 30
+                  ? "text-amber-600 dark:text-amber-400"
+                  : "text-green-600 dark:text-green-400"
+              }`} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`text-xs font-semibold ${
+                daysRemaining <= 7
+                  ? "text-red-600 dark:text-red-400"
+                  : daysRemaining <= 30
+                  ? "text-amber-700 dark:text-amber-400"
+                  : "text-green-700 dark:text-green-400"
+              }`}>
+                {daysRemaining <= 0
+                  ? "Exam day is today! All the best! 🎯"
+                  : daysRemaining === 1
+                  ? "Exam is tomorrow — be ready! 🎯"
+                  : `${daysRemaining} days to exam`}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                {daysRemaining > 0
+                  ? daysRemaining <= 7
+                    ? "Last stretch — revise hard!"
+                    : daysRemaining <= 30
+                    ? "Keep your revision on track"
+                    : "Stay consistent — you're doing great"
+                  : "Best of luck for your exam!"}
+              </p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          </div>
+        )}
+
         {/* Quick stats strip */}
-        <div className="grid grid-cols-3 gap-2.5 mb-5">
+        <div className="grid grid-cols-3 gap-2.5 mb-4">
           {/* Streak */}
           <div className={`bg-white dark:bg-gray-900 rounded-2xl border p-3.5 ${
             streak > 0 ? "border-orange-100 dark:border-orange-800/40" : "border-gray-100 dark:border-gray-800"
@@ -320,6 +406,72 @@ export default function DashboardPage() {
             {totalAnswered > 0 && <div className="text-[10px] text-gray-400 mt-0.5">{totalAnswered} answered</div>}
           </div>
         </div>
+
+        {/* ── Badges + Discover + Settings quick-access row ── */}
+        <div className="grid grid-cols-3 gap-2.5 mb-5">
+
+          {/* Badges card */}
+          <button
+            onClick={() => navigate("/profile")}
+            className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-3.5 text-left hover:border-green-300 dark:hover:border-green-700 hover:shadow-sm transition-all group"
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <Trophy className="w-3.5 h-3.5 text-amber-500" />
+              <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400">Badges</span>
+            </div>
+            <div className="text-2xl font-black text-amber-500 leading-none">{earnedCount}</div>
+            <div className="text-[10px] text-gray-400 mt-0.5">/{totalBadges} earned</div>
+            {earnedCount > 0 && (
+              <div className="mt-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1 overflow-hidden">
+                <div
+                  className="h-full bg-amber-400 rounded-full transition-all"
+                  style={{ width: `${Math.round((earnedCount / totalBadges) * 100)}%` }}
+                />
+              </div>
+            )}
+          </button>
+
+          {/* Find Friends / Discover card */}
+          <button
+            onClick={() => navigate("/discover")}
+            className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-3.5 text-left hover:border-green-300 dark:hover:border-green-700 hover:shadow-sm transition-all group"
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <Compass className="w-3.5 h-3.5 text-indigo-500" />
+              <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400">Discover</span>
+            </div>
+            <p className="text-xs font-bold text-gray-800 dark:text-white leading-snug">Find Friends</p>
+            <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">Search students</p>
+          </button>
+
+          {/* Settings card */}
+          <button
+            onClick={() => navigate("/settings")}
+            className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-3.5 text-left hover:border-green-300 dark:hover:border-green-700 hover:shadow-sm transition-all group"
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <Settings className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+              <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400">Settings</span>
+            </div>
+            <p className="text-xs font-bold text-gray-800 dark:text-white leading-snug">Profile & Privacy</p>
+            <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">Photo, bio, links</p>
+          </button>
+        </div>
+
+        {/* ── No exam date set nudge ── */}
+        {!examDate && (
+          <button
+            onClick={() => navigate("/profile")}
+            className="w-full mb-4 flex items-center gap-3 bg-white dark:bg-gray-900 border border-dashed border-green-300 dark:border-green-700 rounded-2xl px-4 py-3 text-left hover:bg-green-50/40 dark:hover:bg-green-900/10 transition-colors group"
+          >
+            <Calendar className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-green-700 dark:text-green-400">Set your exam date</p>
+              <p className="text-[10px] text-gray-400">Get a personalised countdown + revision plan</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-green-500 transition-colors" />
+          </button>
+        )}
 
         {/* Chapter Library header */}
         <div className="flex items-center justify-between mb-3">
@@ -387,12 +539,9 @@ export default function DashboardPage() {
                   }`}>
 
                   <div className="flex items-start gap-3 mb-3">
-                    {/* Subject icon */}
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${colorClass}`}>
                       <Icon className="w-4 h-4" />
                     </div>
-
-                    {/* Chapter info */}
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-gray-900 dark:text-white text-sm leading-snug truncate">
                         {ch.chapterName}
@@ -411,8 +560,6 @@ export default function DashboardPage() {
                         )}
                       </div>
                     </div>
-
-                    {/* Completion % + arrow */}
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className={`text-sm font-black ${
                         completion === 100 ? "text-green-600 dark:text-green-400"
@@ -423,7 +570,6 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  {/* Progress bar */}
                   <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 mb-3 overflow-hidden">
                     <div className={`h-full rounded-full transition-all ${
                       completion === 100 ? "bg-green-500"
@@ -432,7 +578,6 @@ export default function DashboardPage() {
                     }`} style={{ width: `${completion}%` }} />
                   </div>
 
-                  {/* Action buttons */}
                   <div className="flex items-center gap-2 flex-wrap" onClick={e => e.stopPropagation()}>
                     {missingNotes && (
                       <button onClick={(e) => handleRetryNotes(ch, e)} disabled={isRetryingNotes}

@@ -1,12 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Upload, Users, BarChart2, UserCircle } from "lucide-react";
+import { Home, Upload, Users, BarChart2, UserCircle, Compass } from "lucide-react";
 
 const NAV_ITEMS = [
-  { path: "/dashboard", icon: Home,       label: "Home"      },
-  { path: "/upload",    icon: Upload,     label: "Upload"    },
-  { path: "/community", icon: Users,      label: "Community" },
-  { path: "/progress",  icon: BarChart2,  label: "Progress"  },
-  { path: "/profile",   icon: UserCircle, label: "Profile"   },
+  { path: "/dashboard",  icon: Home,       label: "Home"      },
+  { path: "/discover",   icon: Compass,    label: "Discover"  },
+  { path: "/community",  icon: Users,      label: "Community" },
+  { path: "/progress",   icon: BarChart2,  label: "Progress"  },
+  { path: "/profile",    icon: UserCircle, label: "Profile"   },
 ];
 
 export default function BottomNav() {
@@ -26,7 +26,7 @@ export default function BottomNav() {
             <Link
               key={path}
               to={path}
-              className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors ${
+              className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors relative ${
                 active
                   ? "text-green-600 dark:text-green-400"
                   : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
