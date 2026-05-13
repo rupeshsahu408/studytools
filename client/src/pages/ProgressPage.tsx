@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import SEOHead from "../components/SEOHead";
 import {
   BarChart2, BookOpen, HelpCircle, Layers, Beaker,
   CheckCircle, XCircle, Flame, TrendingUp, Clock,
@@ -72,6 +73,7 @@ export default function ProgressPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <SEOHead title="My Progress — Chapter Completion & Stats" noIndex />
       <TopHeader title="My Progress" />
 
       <div className="pt-12 pb-20 max-w-2xl mx-auto px-4 py-4">

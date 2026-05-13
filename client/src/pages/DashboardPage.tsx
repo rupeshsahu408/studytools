@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import SEOHead from "../components/SEOHead";
 import {
   Plus, BookOpen, Trash2, ChevronRight, FlaskConical,
   Calculator, Leaf, Atom, Flame, Target,
@@ -270,6 +271,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <SEOHead title="My Study Library — Dashboard" noIndex />
       <TopHeader />
 
       <div className="pt-12 pb-20 max-w-2xl mx-auto px-4 py-4">

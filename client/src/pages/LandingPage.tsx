@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { BookOpen, Zap, Brain, BarChart2, ArrowRight, Sparkles, Users, MessageCircle, Trophy, Mail, MapPin } from "lucide-react";
+import SEOHead from "../components/SEOHead";
 
 function IconInstagram({ className }: { className?: string }) {
   return (
@@ -69,8 +70,90 @@ const communityFeatures = [
 ];
 
 export default function LandingPage() {
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Kya Topper 2.0 bilkul free hai?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Haan, Topper 2.0 completely free hai. Bihar Board Class 11 aur Class 12 ke students bina kisi payment ke AI-generated notes, question banks, flashcards aur doubt chat use kar sakte hain."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Topper 2.0 mein kaunse subjects hain?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Topper 2.0 mein Class 11 aur Class 12 ke liye Physics, Chemistry, Mathematics aur Biology subjects hain. Saare NCERT chapters covered hain."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "AI notes kaise generate hote hain?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Aap apna NCERT chapter PDF upload karo ya hamare library se select karo. Hamara AI ek baar mein detailed notes, 9 types ka question bank, flashcards, formula sheet, mind map aur simulations generate karta hai."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kya Topper 2.0 Bihar Board exam pattern follow karta hai?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Haan, Topper 2.0 specifically Bihar Board exam pattern ke liye bana hai. MCQ, 1-mark, 2-mark, 5-mark, Assertion-Reason aur Case-Based — saare question types Bihar Board pattern mein generate hote hain."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kya main AI se doubt puch sakta hoon?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Bilkul! Topper 2.0 mein AI Doubt Chat feature hai jahan aap apne chapter ke baare mein koi bhi sawaal puch sakte ho aur turant AI-powered jawab paate ho — Hindi aur English dono mein."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kya Topper 2.0 mobile pe bhi chalega?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Haan, Topper 2.0 ek web app hai jo sabhi devices pe smoothly chalta hai — mobile, tablet aur desktop. Koi app download nahi karna, browser mein seedha kholo."
+        }
+      }
+    ]
+  };
+
+  const educationalOrgSchema = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "Topper 2.0",
+    "url": "https://topper2.plyndrox.app/",
+    "logo": "https://topper2.plyndrox.app/logo.png",
+    "description": "AI-powered study platform for Bihar Board Class 11 & 12 NCERT students providing notes, question banks, flashcards, simulations and doubt chat.",
+    "address": {
+      "@type": "PostalAddress",
+      "addressRegion": "Bihar",
+      "addressCountry": "IN"
+    },
+    "sameAs": [
+      "https://www.instagram.com/rupesh_gupta___/",
+      "https://x.com/rupesh__gupta_",
+      "https://github.com/rupeshsahu408"
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white">
+      <SEOHead
+        title="Free AI Study Notes for Bihar Board Class 11 & 12 NCERT"
+        description="Topper 2.0 is India's #1 free AI study platform for Bihar Board Class 11 & 12 students. Get instant AI-generated notes, complete question banks, flashcards, simulations & doubt chat for NCERT Physics, Chemistry, Math and Biology. Study smarter. Score higher."
+        keywords="Bihar Board Class 11 notes, Bihar Board Class 12 notes, NCERT AI notes free, AI study platform Bihar Board, Bihar Board exam preparation 2025, NCERT question bank AI, AI flashcards Class 11 12, Bihar Board Physics notes, Bihar Board Chemistry notes, Class 12 Biology notes, NCERT Math notes Class 11, AI doubt chat NCERT, best study app Bihar students, free online study notes Bihar Board, AI generated NCERT notes Hindi, Class 11 12 science notes Bihar, NCERT chapter question bank, Bihar Board topper preparation, NCERT AI tutor free"
+        canonical="/"
+        ogType="website"
+        jsonLd={[faqSchema, educationalOrgSchema]}
+      />
 
       {/* ── Navbar ── */}
       <nav className="fixed top-0 w-full z-50 bg-gray-50/90 dark:bg-gray-950/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 h-16">

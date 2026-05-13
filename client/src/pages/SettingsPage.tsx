@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import SEOHead from "../components/SEOHead";
 import {
   Camera, Save, Check, Loader2, Globe, EyeOff, ArrowLeft,
   Settings, User, UserX, ShieldOff,
@@ -177,6 +178,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <SEOHead title="Settings — Profile & Account" noIndex />
       <TopHeader title="Settings" showBack backTo="/profile" backLabel="Profile" />
       <div className="pt-12 pb-20">
         <div className="max-w-2xl mx-auto px-4 py-6">

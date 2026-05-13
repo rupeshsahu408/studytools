@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import SEOHead from "../components/SEOHead";
 import {
   Globe, Search, BookOpen, X, ChevronDown, ChevronUp,
   Loader2, Filter, ArrowLeft, Eye, Atom, FlaskConical,
@@ -861,6 +862,12 @@ export default function PublicNotesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <SEOHead
+        title="Free Bihar Board & NCERT Study Notes — Community Library"
+        description="Browse thousands of free AI-generated study notes shared by top Bihar Board & NCERT students. Find Class 11 & 12 notes for Physics, Chemistry, Mathematics and Biology. Filter by board, class, subject and medium."
+        keywords="free NCERT study notes Bihar Board, Class 11 12 notes community, shared study notes India, Physics Chemistry Math Biology notes free, Bihar Board notes free download, NCERT chapter notes free"
+        canonical="/public-notes"
+      />
       <TopHeader title="Community Library" />
       <div className="pt-12 pb-20 max-w-6xl mx-auto px-4 py-4">
 

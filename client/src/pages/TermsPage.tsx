@@ -1,9 +1,16 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, ScrollText } from "lucide-react";
+import SEOHead from "../components/SEOHead";
 
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-gray-950 text-gray-300">
+      <SEOHead
+        title="Terms & Conditions — Topper 2.0"
+        description="Read Topper 2.0's Terms & Conditions. Learn about the rules, guidelines and policies for using India's leading free AI study platform for Bihar Board Class 11 & 12 students."
+        keywords="Topper 2.0 terms and conditions, AI study platform terms, NCERT study platform terms of use"
+        canonical="/terms"
+      />
       {/* Header */}
       <header className="sticky top-0 z-10 bg-gray-950/90 backdrop-blur-sm border-b border-gray-800">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">

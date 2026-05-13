@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import SEOHead from "../components/SEOHead";
 import {
   BookOpen, Atom, FlaskConical, Calculator, Leaf,
   Sparkles, Eye, Share2, ArrowRight, AlertCircle,
@@ -96,6 +97,14 @@ export default function SharePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEOHead
+        title={`${shareData.chapterName} — ${shareData.subject} Class ${shareData.classNum} Notes`}
+        description={`Free AI-generated ${shareData.subject} notes for ${shareData.chapterName}, Class ${shareData.classNum}. Complete study notes shared by ${shareData.sharedByName} on Topper 2.0 — India's #1 free AI study platform for Bihar Board & NCERT students.`}
+        keywords={`${shareData.chapterName} notes, ${shareData.subject} Class ${shareData.classNum} notes, Bihar Board ${shareData.subject} notes, NCERT ${shareData.chapterName}, ${shareData.subject} chapter notes Class ${shareData.classNum}, free NCERT notes`}
+        canonical={`/share/${shareData.token}`}
+        ogType="article"
+        author={shareData.sharedByName}
+      />
 
       {/* ── Sticky Top Bar ── */}
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 h-14 flex items-center">

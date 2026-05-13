@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
+import SEOHead from "../components/SEOHead";
 import {
   Compass, Search, Loader2, UserPlus, UserCheck, UserMinus,
   Users, Clock, Bell, UserX, ChevronDown, X, MapPin, UserCheck2,
@@ -913,6 +914,12 @@ export default function DiscoverPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <SEOHead
+        title="Discover — Find & Connect with Bihar Board Students"
+        description="Discover and connect with top Bihar Board Class 11 & 12 NCERT students on Topper 2.0. Find study friends, send friend requests and build your study network across India."
+        keywords="Bihar Board student network, NCERT study friends, find study partner India, Class 11 12 student community, Bihar student connect"
+        canonical="/discover"
+      />
       <TopHeader title="Discover" />
       <div className="pt-12 pb-20">
         <div className="max-w-xl mx-auto px-4 py-8">

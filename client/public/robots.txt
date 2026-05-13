@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+Allow: /share/
+Allow: /u/
+Allow: /public-notes
+Allow: /discover
+Allow: /community
+Allow: /privacy-policy
+Allow: /terms
+
+# Block authenticated-only pages (no value to crawlers)
+Disallow: /dashboard
+Disallow: /upload
+Disallow: /chapter/
+Disallow: /profile
+Disallow: /progress
+Disallow: /settings
+Disallow: /setup
+
+Sitemap: https://topper2.plyndrox.app/sitemap.xml
+
+# Crawl-delay for politeness
+Crawl-delay: 1

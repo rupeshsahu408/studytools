@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
+import SEOHead from "../components/SEOHead";
 import {
   BookOpen, HelpCircle, ArrowLeft, Atom, FlaskConical,
   Calculator, Leaf, Calendar, Sigma, Network, AlertTriangle,
@@ -537,6 +538,10 @@ export default function ChapterPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <SEOHead
+        title={`${chapter.chapterName} — ${chapter.subject} Class ${chapter.classNum}`}
+        noIndex
+      />
 
       {/* ════════════════════════════════════════════
           MOBILE HEADER (hidden on desktop)

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import SEOHead from "../components/SEOHead";
 import {
   Flame, Target, Calendar, Trophy, Brain,
   Edit2, Check, X, ChevronRight, AlertTriangle, Loader2,
@@ -303,6 +304,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <SEOHead title="My Profile — Badges, Streak & Study Plan" noIndex />
       <TopHeader title="My Profile" />
       <div className="pt-12 pb-20 max-w-5xl mx-auto px-4 py-4">
 

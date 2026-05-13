@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import SEOHead from "../components/SEOHead";
 import {
   Trophy, Users, Copy, Check, LogIn, LogOut,
   Plus, Loader2, Crown, Medal, Award,
@@ -769,6 +770,12 @@ export default function CommunityPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <SEOHead
+        title="Community — Leaderboard, Discussions & Study Groups"
+        description="Join thousands of Bihar Board students on Topper 2.0's community. Compete on the weekly leaderboard, join subject discussions, share chapters in your class group and study together."
+        keywords="Bihar Board student leaderboard, NCERT study community, Class 11 12 discussion group, student leaderboard India, study group Bihar Board, weekly leaderboard Bihar students"
+        canonical="/community"
+      />
       <TopHeader title="Community" />
       <div className="pt-12 pb-20 max-w-3xl mx-auto px-4 py-4">
 

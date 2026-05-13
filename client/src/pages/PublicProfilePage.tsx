@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import SEOHead from "../components/SEOHead";
 import {
   ArrowLeft, Flame, Trophy, BookOpen, Users, UserPlus, UserCheck,
   UserMinus, Loader2, MapPin, GraduationCap, Clock, UserX, EyeOff,
@@ -814,6 +815,14 @@ export default function PublicProfilePage() {
   if (username?.toLowerCase() === FOUNDER_USERNAME) {
     return (
       <>
+        <SEOHead
+          title="Rupesh Gupta — Founder of Topper 2.0 | AI Study Platform"
+          description="Rupesh Gupta is the founder of Topper 2.0 — India's leading free AI-powered study platform for Bihar Board Class 11 & 12 NCERT students. Follow his journey building world-class accessible education."
+          keywords="Rupesh Gupta, Topper 2.0 founder, AI study platform creator India, Bihar Board education startup, Plyndrox founder"
+          canonical="/u/rupesh_gupta"
+          ogType="profile"
+          author="Rupesh Gupta"
+        />
         <FounderProfileView
           currentUid={user?.uid || null}
           onBack={() => navigate(-1)}
@@ -823,5 +832,16 @@ export default function PublicProfilePage() {
     );
   }
 
-  return <NormalProfilePage username={username || ""} />;
+  return (
+    <>
+      <SEOHead
+        title={`@${username} — Student Profile on Topper 2.0`}
+        description={`View @${username}'s study profile on Topper 2.0. See their badges, study streak, progress and shared notes for Bihar Board & NCERT Class 11 & 12.`}
+        keywords={`${username} Topper 2.0 profile, Bihar Board student, NCERT study profile, student notes`}
+        canonical={`/u/${username}`}
+        ogType="profile"
+      />
+      <NormalProfilePage username={username || ""} />
+    </>
+  );
 }

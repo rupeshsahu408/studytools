@@ -1,9 +1,16 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, Shield } from "lucide-react";
+import SEOHead from "../components/SEOHead";
 
 export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-gray-950 text-gray-300">
+      <SEOHead
+        title="Privacy Policy — Topper 2.0"
+        description="Read Topper 2.0's Privacy Policy. Understand how we collect, use, and protect your data as a student on India's leading AI study platform for Bihar Board Class 11 & 12."
+        keywords="Topper 2.0 privacy policy, AI study platform privacy, student data protection"
+        canonical="/privacy-policy"
+      />
       {/* Header */}
       <header className="sticky top-0 z-10 bg-gray-950/90 backdrop-blur-sm border-b border-gray-800">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">

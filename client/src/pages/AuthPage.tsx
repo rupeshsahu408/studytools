@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import SEOHead from "../components/SEOHead";
 import { useAuth } from "../contexts/AuthContext";
 import { Eye, EyeOff, Mail, Lock, LogIn, RefreshCw, CheckCircle } from "lucide-react";
 
@@ -124,6 +125,16 @@ export default function AuthPage({ mode }: AuthPageProps) {
   // ── Main auth form ──
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4">
+      <SEOHead
+        title={mode === "login" ? "Login — Continue Your Topper Journey" : "Sign Up Free — Start Studying Smarter Today"}
+        description={
+          mode === "login"
+            ? "Log in to Topper 2.0 — India's leading free AI study platform for Bihar Board Class 11 & 12. Access your AI notes, question banks, flashcards and more."
+            : "Sign up free on Topper 2.0. Get AI-generated notes, complete question banks, flashcards, simulations and doubt chat for Bihar Board Class 11 & 12 NCERT — 100% free."
+        }
+        keywords="Topper 2.0 login, AI study platform signup, Bihar Board study app free, NCERT study notes login"
+        canonical={mode === "login" ? "/login" : "/signup"}
+      />
       <div
         className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-lg max-w-md w-full">
 

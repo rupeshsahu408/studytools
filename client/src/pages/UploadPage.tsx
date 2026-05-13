@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import SEOHead from "../components/SEOHead";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDropzone } from "react-dropzone";
 import { useNavigate } from "react-router-dom";
@@ -604,6 +605,7 @@ export default function UploadPage() {
   // ── Form stage ──
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <SEOHead title="Add Chapter — Upload PDF or Browse NCERT" noIndex />
       <TopHeader title="Add Chapter" showBack backTo="/dashboard" backLabel="Library" />
       <div className="pt-12 pb-20 max-w-2xl mx-auto px-4 py-6">
         <div>
