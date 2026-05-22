@@ -224,7 +224,7 @@ export default function AdminPage() {
   // ── Auth gate
   useEffect(() => {
     if (sessionStorage.getItem("adm_ok") !== "1") {
-      navigate("/", { replace: true });
+      navigate("/TELI", { replace: true });
     }
   }, [navigate]);
 
@@ -328,7 +328,7 @@ export default function AdminPage() {
   // ── Logout
   const handleLogout = () => {
     sessionStorage.removeItem("adm_ok");
-    navigate("/", { replace: true });
+    navigate("/TELI", { replace: true });
   };
 
   // ── Derived stats
