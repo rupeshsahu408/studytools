@@ -305,6 +305,10 @@ router.get("/seed-status", async (req, res) => {
 // Fetches all users, chapters and feedback using the Admin SDK so Firestore
 // security rules are bypassed entirely. Protected by x-admin-secret header.
 
+router.get("/ping", (req, res) => {
+  res.json({ adminSecretSet: !!process.env.ADMIN_SECRET });
+});
+
 router.get("/data", async (req, res) => {
   const secret = req.headers["x-admin-secret"];
   const expected = process.env.ADMIN_SECRET;
