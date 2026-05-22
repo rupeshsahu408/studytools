@@ -217,6 +217,33 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Social Proof Image ── */}
+      <section className="px-4 pb-6 bg-gray-50 dark:bg-gray-950">
+        <div className="max-w-5xl mx-auto">
+          <div className="relative rounded-3xl overflow-hidden shadow-xl border border-gray-200 dark:border-gray-800">
+            <img
+              src="/students-studying.png"
+              alt="Students using Topper 2.0 in library"
+              className="w-full h-64 sm:h-80 md:h-96 object-cover object-center"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex -space-x-1">
+                  {["bg-green-500", "bg-blue-500", "bg-violet-500"].map((c, i) => (
+                    <div key={i} className={`w-5 h-5 rounded-full border-2 border-white ${c}`} />
+                  ))}
+                </div>
+                <span className="text-white text-sm font-semibold">Real students, real results</span>
+              </div>
+              <p className="text-white/80 text-xs max-w-md leading-relaxed">
+                Students across India are using Topper 2.0 to prepare smarter — from NCERT notes to full question banks, all in one place.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Intro Video ── */}
       <section className="py-16 px-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
         <div className="max-w-4xl mx-auto">
