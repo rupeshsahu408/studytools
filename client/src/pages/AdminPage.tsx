@@ -1,7 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { db } from "../lib/firebase";
-import { collection, getDocs } from "firebase/firestore";
 import {
   Shield, LogOut, RefreshCw, Users, BookOpen, HelpCircle,
   MessageSquare, TrendingUp, Award, BarChart2, Search,
@@ -246,76 +244,73 @@ export default function AdminPage() {
   const [userSort, setUserSort] = useState<{ col: string; dir: "asc" | "desc" }>({ col: "questionsAnswered", dir: "desc" });
   const [chapterSort, setChapterSort] = useState<{ col: string; dir: "asc" | "desc" }>({ col: "createdAt", dir: "desc" });
 
-  // ── Load data
+  // ── Load data via backend (Admin SDK — bypasses Firestore security rules)
   const loadData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [usersSnap, chaptersSnap, feedbackSnap] = await Promise.all([
-        getDocs(collection(db, "users")),
-        getDocs(collection(db, "chapters")),
-        getDocs(collection(db, "feedback")),
-      ]);
+      const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001";
+      const res = await fetch(`${API_BASE}/api/admin/data`, {
+        headers: { "x-admin-secret": "pastlove7890" },
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
 
-      const loadedUsers: AdminUser[] = usersSnap.docs.map(d => {
-        const data = d.data();
-        const dp = data.dailyProgress;
+      const loadedUsers: AdminUser[] = (data.users || []).map((d: any) => {
+        const dp = d.dailyProgress;
         return {
-          uid: d.id,
-          name: data.profile?.name || "—",
-          school: data.profile?.school || "—",
-          district: data.profile?.district || "—",
-          class: data.profile?.class || "—",
-          role: data.role || "student",
-          streak: data.streak?.current || 0,
-          longestStreak: data.streak?.longest || 0,
-          questionsAnswered: data.totalQuestionsAnswered || 0,
-          questionsWrong: data.totalQuestionsWrong || 0,
-          badges: (data.badges || []).length,
+          uid: d.uid,
+          name: d.profile?.name || "—",
+          school: d.profile?.school || "—",
+          district: d.profile?.district || "—",
+          class: d.profile?.class || "—",
+          role: d.role || "student",
+          streak: d.streak?.current || 0,
+          longestStreak: d.streak?.longest || 0,
+          questionsAnswered: d.totalQuestionsAnswered || 0,
+          questionsWrong: d.totalQuestionsWrong || 0,
+          badges: (d.badges || []).length,
           activeToday: dp?.date === today,
-          dailyGoal: data.dailyGoalTarget || 10,
+          dailyGoal: d.dailyGoalTarget || 10,
           dailyDone: dp?.date === today ? (dp?.questionsAnswered || 0) : 0,
         };
       });
 
-      const loadedChapters: AdminChapter[] = chaptersSnap.docs.map(d => {
-        const data = d.data();
-        return {
-          id: d.id,
-          userId: data.userId || "—",
-          chapterName: data.chapterName || "—",
-          subject: data.subject || "—",
-          classNum: data.classNum || "—",
-          language: data.language || "—",
-          questionsAttempted: data.questionsAttempted || 0,
-          questionsWrong: data.questionsWrong || 0,
-          createdAt: data.createdAt?.toMillis?.() ?? 0,
-          notesRead: !!data.notesRead,
-          flashcardsDone: !!data.flashcardsDone,
-          simulationsSeen: !!data.simulationsSeen,
-        };
-      });
+      const loadedChapters: AdminChapter[] = (data.chapters || []).map((d: any) => ({
+        id: d.id,
+        userId: d.userId || "—",
+        chapterName: d.chapterName || "—",
+        subject: d.subject || "—",
+        classNum: d.classNum || "—",
+        language: d.language || "—",
+        questionsAttempted: d.questionsAttempted || 0,
+        questionsWrong: d.questionsWrong || 0,
+        createdAt: d.createdAt || 0,
+        notesRead: !!d.notesRead,
+        flashcardsDone: !!d.flashcardsDone,
+        simulationsSeen: !!d.simulationsSeen,
+      }));
 
-      const loadedFeedback: AdminFeedback[] = feedbackSnap.docs.map(d => {
-        const data = d.data();
-        return {
-          id: d.id,
-          userId: data.userId || "—",
-          chapterName: data.chapterName || "—",
-          subject: data.subject || "—",
-          type: data.type || "—",
-          reason: data.reason || "—",
-          note: data.note || "",
-          createdAt: data.createdAt?.toMillis?.() ?? 0,
-        };
-      });
+      const loadedFeedback: AdminFeedback[] = (data.feedback || []).map((d: any) => ({
+        id: d.id,
+        userId: d.userId || "—",
+        chapterName: d.chapterName || "—",
+        subject: d.subject || "—",
+        type: d.type || "—",
+        reason: d.reason || "—",
+        note: d.note || "",
+        createdAt: d.createdAt || 0,
+      }));
 
       setUsers(loadedUsers);
       setChapters(loadedChapters);
       setFeedback(loadedFeedback.sort((a, b) => b.createdAt - a.createdAt));
       setLastRefresh(new Date());
     } catch (e: any) {
-      setError(e?.message || "Failed to load data from Firestore.");
+      setError(e?.message || "Failed to load admin data.");
     } finally {
       setLoading(false);
     }

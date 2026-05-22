@@ -301,4 +301,80 @@ router.get("/seed-status", async (req, res) => {
   }
 });
 
+// ─── GET /api/admin/data ──────────────────────────────────────────────────────
+// Fetches all users, chapters and feedback using the Admin SDK so Firestore
+// security rules are bypassed entirely. Protected by x-admin-secret header.
+
+router.get("/data", async (req, res) => {
+  const secret = req.headers["x-admin-secret"];
+  const expected = process.env.ADMIN_SECRET;
+  if (!expected || secret !== expected) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  let db: admin.firestore.Firestore;
+  try { db = getAdminDb(); }
+  catch (err: any) { return res.status(500).json({ error: err.message }); }
+
+  try {
+    const [usersSnap, chaptersSnap, feedbackSnap] = await Promise.all([
+      db.collection("users").get(),
+      db.collection("chapters").get(),
+      db.collection("feedback").get(),
+    ]);
+
+    const users = usersSnap.docs.map(d => {
+      const data = d.data();
+      return {
+        uid: d.id,
+        profile: data.profile || {},
+        role: data.role || "student",
+        streak: data.streak || {},
+        totalQuestionsAnswered: data.totalQuestionsAnswered || 0,
+        totalQuestionsWrong: data.totalQuestionsWrong || 0,
+        badges: data.badges || [],
+        dailyGoalTarget: data.dailyGoalTarget || 10,
+        dailyProgress: data.dailyProgress || null,
+        isDemo: data.isDemo || false,
+      };
+    });
+
+    const chapters = chaptersSnap.docs.map(d => {
+      const data = d.data();
+      return {
+        id: d.id,
+        userId: data.userId || "",
+        chapterName: data.chapterName || "",
+        subject: data.subject || "",
+        classNum: data.classNum || "",
+        language: data.language || "",
+        questionsAttempted: data.questionsAttempted || 0,
+        questionsWrong: data.questionsWrong || 0,
+        createdAt: data.createdAt?._seconds ? data.createdAt._seconds * 1000 : 0,
+        notesRead: !!data.notesRead,
+        flashcardsDone: !!data.flashcardsDone,
+        simulationsSeen: !!data.simulationsSeen,
+      };
+    });
+
+    const feedback = feedbackSnap.docs.map(d => {
+      const data = d.data();
+      return {
+        id: d.id,
+        userId: data.userId || "",
+        chapterName: data.chapterName || "",
+        subject: data.subject || "",
+        type: data.type || "",
+        reason: data.reason || "",
+        note: data.note || "",
+        createdAt: data.createdAt?._seconds ? data.createdAt._seconds * 1000 : 0,
+      };
+    });
+
+    res.json({ users, chapters, feedback });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;
