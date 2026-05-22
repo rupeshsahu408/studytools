@@ -22,6 +22,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsPage from "./pages/TermsPage";
 import BlogPage from "./pages/BlogPage";
 import StatusPage from "./pages/StatusPage";
+import AdminPage from "./pages/AdminPage";
 
 function Spinner() {
   return (
@@ -79,6 +80,7 @@ function AppRoutes() {
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/blog" element={<BlogPage />} />
       <Route path="/status" element={<StatusPage />} />
+      <Route path="/admin" element={<AdminPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getDoc, doc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../lib/firebase";
@@ -291,7 +291,15 @@ async function checkFirestore(): Promise<{ status: ServiceStatus; latencyMs: num
 
 // ─── Main StatusPage ──────────────────────────────────────────────────────────
 
+const ADMIN_HASH = "0d86e76e4850a1fa71c111b6c5c030a23bfe2e36d9c8aad73607b0c7efcef459";
+
+async function sha256(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
 export default function StatusPage() {
+  const navigate = useNavigate();
   const [services, setServices] = useState<ServiceInfo[]>([]);
   const [overall, setOverall] = useState<OverallStatus>("checking");
   const [serverCheckedAt, setServerCheckedAt] = useState<string | null>(null);
@@ -300,6 +308,27 @@ export default function StatusPage() {
   const [loading, setLoading] = useState(true);
   const [serverError, setServerError] = useState(false);
   const refreshingRef = useRef(false);
+
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminInput, setAdminInput] = useState("");
+  const [adminError, setAdminError] = useState(false);
+  const [adminChecking, setAdminChecking] = useState(false);
+
+  async function handleAdminSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setAdminChecking(true);
+    setAdminError(false);
+    const hash = await sha256(adminInput);
+    if (hash === ADMIN_HASH) {
+      sessionStorage.setItem("adm_ok", "1");
+      setShowAdminModal(false);
+      navigate("/admin");
+    } else {
+      setAdminError(true);
+      setAdminInput("");
+    }
+    setAdminChecking(false);
+  }
 
   // Build the full service list from server + client checks
   const runAllChecks = useCallback(async () => {
@@ -444,6 +473,7 @@ export default function StatusPage() {
   const totalCount = services.length;
 
   return (
+    <>
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
 
       {/* ── Top Nav ── */}
@@ -641,18 +671,85 @@ export default function StatusPage() {
         <div className="border-t border-gray-200 dark:border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-400 dark:text-gray-600">
           <div className="flex items-center gap-2">
             <img src="/logo.png" className="w-4 h-4 rounded object-cover" alt="Topper 2.0" />
-            <span>© {new Date().getFullYear()} Topper 2.0 · Built by Rupesh Gupta · Bihar, India</span>
+            <span>{"© "}{new Date().getFullYear()}{" Topper 2.0 · Built by Rupesh Gupta · Bihar, India"}</span>
+            <span
+              onClick={() => { setShowAdminModal(true); setAdminInput(""); setAdminError(false); }}
+              style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", opacity: 0, cursor: "default", userSelect: "none" }}
+              aria-hidden="true"
+            />
           </div>
           <div className="flex items-center gap-3">
             <Link to="/" className="hover:text-green-500 transition-colors">Home</Link>
-            <span>·</span>
+            <span>{"·"}</span>
             <a href="mailto:hello@plyndrox.app" className="hover:text-green-500 transition-colors">Contact</a>
-            <span>·</span>
+            <span>{"·"}</span>
             <Link to="/privacy-policy" className="hover:text-green-500 transition-colors">Privacy</Link>
           </div>
         </div>
 
       </div>
     </div>
+
+    {showAdminModal ? (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center"
+        style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            setShowAdminModal(false);
+            setAdminInput("");
+            setAdminError(false);
+          }
+        }}
+      >
+        <form
+          onSubmit={handleAdminSubmit}
+          className="bg-gray-900 border border-gray-700 rounded-2xl p-8 w-full max-w-sm mx-4 shadow-2xl"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-9 h-9 rounded-xl bg-green-900 flex items-center justify-center flex-shrink-0">
+              <Shield className="w-4 h-4 text-green-400" />
+            </div>
+            <div>
+              <p className="text-white font-semibold text-sm">Restricted Access</p>
+              <p className="text-gray-500 text-xs">Enter password to continue</p>
+            </div>
+          </div>
+
+          <input
+            type="password"
+            value={adminInput}
+            onChange={(e) => { setAdminInput(e.target.value); setAdminError(false); }}
+            placeholder="Password"
+            autoFocus
+            className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-green-600 transition-colors mb-3"
+          />
+
+          {adminError && (
+            <p className="text-red-400 text-xs mb-3">
+              Incorrect password. Try again.
+            </p>
+          )}
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => { setShowAdminModal(false); setAdminInput(""); setAdminError(false); }}
+              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-700 text-gray-400 hover:text-white text-sm transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={adminChecking || adminInput.length === 0}
+              className="flex-1 px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold text-sm transition-colors"
+            >
+              {adminChecking ? "Checking..." : "Enter"}
+            </button>
+          </div>
+        </form>
+      </div>
+    ) : null}
+    </>
   );
 }
