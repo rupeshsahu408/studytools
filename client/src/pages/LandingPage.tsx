@@ -429,6 +429,55 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── App Showcase Split ── */}
+      <section className="py-20 px-4 bg-gray-50 dark:bg-gray-950">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
+            {/* Text side */}
+            <div className="flex-1 text-center md:text-left">
+              <p className="text-xs font-semibold text-green-600 dark:text-green-400 tracking-widest uppercase mb-3">Study Anywhere</p>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-5 leading-tight">
+                Everything You Need,<br />Right in Your Pocket
+              </h2>
+              <p className="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
+                Open Topper 2.0 on any device — phone, tablet, or laptop. Study smarter with AI notes, practice questions, flashcards, and doubt chat — all in one place, completely free.
+              </p>
+              <ul className="space-y-3 mb-8 text-sm text-gray-600 dark:text-gray-400 text-left inline-block">
+                {[
+                  "AI-generated notes in seconds",
+                  "9 types of practice questions",
+                  "Instant doubt chat — Hindi & English",
+                  "Track your progress & badges",
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-3">
+                    <span className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-3 h-3 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to="/signup"
+                className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3 rounded-xl transition-colors shadow-sm text-sm"
+              >
+                Start for Free <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+            {/* Image side */}
+            <div className="flex-1 flex justify-center md:justify-end">
+              <img
+                src="/student-app-showcase.png"
+                alt="Student using Topper 2.0 on mobile"
+                className="w-72 md:w-80 lg:w-96 rounded-3xl shadow-2xl object-cover"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Testimonials ── */}
       <section className="py-20 px-4 bg-gray-50 dark:bg-gray-950">
         <div className="max-w-5xl mx-auto">
