@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Shield, Eye, EyeOff, Lock } from "lucide-react";
+import { auth, db } from "../lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 const ADMIN_PASSWORD = "pastlove7890";
 
@@ -10,6 +12,7 @@ export default function TeliGatePage() {
   const [show, setShow] = useState(false);
   const [error, setError] = useState(false);
   const [shaking, setShaking] = useState(false);
+  const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -19,25 +22,38 @@ export default function TeliGatePage() {
     setTimeout(() => inputRef.current?.focus(), 100);
   }, [navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem("adm_ok", "1");
-      navigate("/TELI/panel", { replace: true });
-    } else {
+    if (password !== ADMIN_PASSWORD) {
       setError(true);
       setShaking(true);
       setPassword("");
       setTimeout(() => setShaking(false), 500);
       setTimeout(() => setError(false), 2500);
       inputRef.current?.focus();
+      return;
     }
+
+    setLoading(true);
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        await setDoc(doc(db, "users", user.uid), { isAdmin: true }, { merge: true });
+      }
+    } catch {
+      // Ignore — still grant access even if Firestore write fails
+    } finally {
+      setLoading(false);
+    }
+
+    sessionStorage.setItem("adm_ok", "1");
+    navigate("/TELI/panel", { replace: true });
   };
 
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
       <div
-        className={`w-full max-w-sm transition-all ${shaking ? "animate-[shake_0.4s_ease-in-out]" : ""}`}
+        className="w-full max-w-sm"
         style={shaking ? { animation: "shake 0.4s ease-in-out" } : {}}
       >
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-2xl">
@@ -82,10 +98,12 @@ export default function TeliGatePage() {
 
             <button
               type="submit"
-              disabled={!password}
-              className="w-full bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl text-sm transition-colors"
+              disabled={!password || loading}
+              className="w-full bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
             >
-              Access Panel
+              {loading ? (
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : "Access Panel"}
             </button>
           </form>
         </div>

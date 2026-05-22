@@ -2,10 +2,17 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ── Admin helper ─────────────────────────────────────────────────────────
+    function isAdmin() {
+      return request.auth != null
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
     // ── chapters ─────────────────────────────────────────────────────────────
     match /chapters/{chapterId} {
-      allow read: if request.auth != null
-                  && request.auth.uid == resource.data.userId;
+      allow read: if (request.auth != null
+                  && request.auth.uid == resource.data.userId)
+                  || isAdmin();
       allow create: if request.auth != null
                     && request.auth.uid == request.resource.data.userId;
       allow update, delete: if request.auth != null
@@ -103,12 +110,13 @@ service cloud.firestore {
 
     // ── feedback ──────────────────────────────────────────────────────────────
     // Authenticated users can submit feedback (create only).
-    // Users can read their own feedback reports.
+    // Users can read their own feedback reports. Admins can read all.
     match /feedback/{feedbackId} {
       allow create: if request.auth != null
                     && request.auth.uid == request.resource.data.userId;
-      allow read: if request.auth != null
-                  && request.auth.uid == resource.data.userId;
+      allow read: if (request.auth != null
+                  && request.auth.uid == resource.data.userId)
+                  || isAdmin();
     }
 
     // ── shares ────────────────────────────────────────────────────────────────
