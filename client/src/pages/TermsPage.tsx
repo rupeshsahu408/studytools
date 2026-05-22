@@ -7,7 +7,7 @@ export default function TermsPage() {
     <div className="min-h-screen bg-gray-950 text-gray-300">
       <SEOHead
         title="Terms & Conditions — Topper 2.0"
-        description="Read Topper 2.0's Terms & Conditions. Learn about the rules, guidelines and policies for using India's leading free AI study platform for Bihar Board Class 11 & 12 students."
+        description="Read Topper 2.0's Terms & Conditions. Learn about the rules, guidelines and policies for using India's leading free AI study platform for NCERT Class 9 to 12 students."
         keywords="Topper 2.0 terms and conditions, AI study platform terms, NCERT study platform terms of use"
         canonical="/terms"
       />
@@ -54,7 +54,7 @@ export default function TermsPage() {
           {/* Service Description */}
           <Section title="2. Description of Service">
             <p>
-              Topper 2.0 is an AI-powered educational study platform designed for Class 11 &amp; 12 students, with a focus on NCERT and Bihar Board curriculum. The Service includes:
+              Topper 2.0 is an AI-powered educational study platform designed for Class 9 to 12 students, with a focus on NCERT and all major board curricula including Bihar Board, CBSE, UP Board, and others. The Service includes:
             </p>
             <ul className="mt-3 space-y-2 list-none pl-0">
               {[

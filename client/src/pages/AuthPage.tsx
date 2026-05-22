@@ -129,8 +129,8 @@ export default function AuthPage({ mode }: AuthPageProps) {
         title={mode === "login" ? "Login — Continue Your Topper Journey" : "Sign Up Free — Start Studying Smarter Today"}
         description={
           mode === "login"
-            ? "Log in to Topper 2.0 — India's leading free AI study platform for Bihar Board Class 11 & 12. Access your AI notes, question banks, flashcards and more."
-            : "Sign up free on Topper 2.0. Get AI-generated notes, complete question banks, flashcards, simulations and doubt chat for Bihar Board Class 11 & 12 NCERT — 100% free."
+            ? "Log in to Topper 2.0 — India's leading free AI study platform for NCERT Class 9 to 12. Access your AI notes, question banks, flashcards and more."
+            : "Sign up free on Topper 2.0. Get AI-generated notes, complete question banks, flashcards, simulations and doubt chat for NCERT Class 9 to 12 — 100% free."
         }
         keywords="Topper 2.0 login, AI study platform signup, Bihar Board study app free, NCERT study notes login"
         canonical={mode === "login" ? "/login" : "/signup"}

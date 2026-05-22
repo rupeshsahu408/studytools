@@ -4,9 +4,9 @@ const SITE_NAME = "Topper 2.0";
 const BASE_URL = "https://studyai.plyndrox.app";
 const DEFAULT_IMAGE = `${BASE_URL}/og-image.png`;
 const DEFAULT_DESCRIPTION =
-  "India's #1 AI study platform for Bihar Board Class 11 & 12. Get AI-generated notes, question banks, flashcards, simulations & doubt chat for NCERT Physics, Chemistry, Math and Biology.";
+  "India's #1 free AI study platform for NCERT Class 9, 10, 11 & 12. Get AI-generated notes, question banks, flashcards, simulations & doubt chat for Physics, Chemistry, Math, Biology, Social Science, Hindi, English and more.";
 const DEFAULT_KEYWORDS =
-  "Bihar Board Class 11 notes, Bihar Board Class 12 notes, NCERT AI notes, AI study platform India, Bihar Board exam preparation 2025, NCERT question bank, AI flashcards Class 11 12, Bihar Board science notes, NCERT AI tutor";
+  "NCERT AI notes Class 9 10 11 12, Bihar Board notes, AI study platform India, NCERT exam preparation 2025, NCERT question bank AI, AI flashcards Class 9 to 12, Physics Chemistry Math Biology Social Science notes, NCERT AI tutor, Class 9 10 notes AI, free NCERT study platform";
 
 interface SEOHeadProps {
   title?: string;
@@ -35,7 +35,7 @@ export default function SEOHead({
   publishedTime,
   section,
 }: SEOHeadProps) {
-  const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} — Free AI Study Notes for Bihar Board Class 11 & 12`;
+  const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} — Free AI Study Notes for NCERT Class 9 to 12`;
   const canonicalUrl = canonical ? `${BASE_URL}${canonical}` : undefined;
 
   const jsonLdArray = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];

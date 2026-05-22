@@ -395,7 +395,7 @@ export default function UsernameSetupPage() {
               </div>
               <textarea
                 value={bio} onChange={e => setBio(e.target.value.slice(0, 120))}
-                placeholder="Class 12 student. Physics lover. Aiming 90%+"
+                placeholder="Class 10 student. Science lover. Aiming 90%+"
                 rows={2}
                 className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3.5 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:border-green-400 dark:focus:border-green-600 resize-none transition-colors"
               />

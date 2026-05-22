@@ -864,8 +864,8 @@ export default function PublicNotesPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <SEOHead
         title="Free Bihar Board & NCERT Study Notes — Community Library"
-        description="Browse thousands of free AI-generated study notes shared by top Bihar Board & NCERT students. Find Class 11 & 12 notes for Physics, Chemistry, Mathematics and Biology. Filter by board, class, subject and medium."
-        keywords="free NCERT study notes Bihar Board, Class 11 12 notes community, shared study notes India, Physics Chemistry Math Biology notes free, Bihar Board notes free download, NCERT chapter notes free"
+        description="Browse thousands of free AI-generated study notes shared by top NCERT students. Find Class 9, 10, 11 & 12 notes for Physics, Chemistry, Math, Biology, Social Science, Hindi, English and more. Filter by board, class, subject and medium."
+        keywords="free NCERT study notes Class 9 10 11 12, Bihar Board UP Board CBSE notes community, shared study notes India, Physics Chemistry Math Biology Social Science Hindi English notes free, NCERT chapter notes free"
         canonical="/public-notes"
       />
       <TopHeader title="Community Library" />

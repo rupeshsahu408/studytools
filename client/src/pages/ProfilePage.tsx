@@ -501,6 +501,8 @@ export default function ProfilePage() {
                       <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 block">Class</label>
                       <select value={editClass} onChange={e => setEditClass(e.target.value)}
                         className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-green-500">
+                        <option value="9">Class 9</option>
+                        <option value="10">Class 10</option>
                         <option value="11">Class 11</option>
                         <option value="12">Class 12</option>
                       </select>

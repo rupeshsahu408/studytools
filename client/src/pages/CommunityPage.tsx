@@ -773,7 +773,7 @@ export default function CommunityPage() {
       <SEOHead
         title="Community — Leaderboard, Discussions & Study Groups"
         description="Join thousands of Bihar Board students on Topper 2.0's community. Compete on the weekly leaderboard, join subject discussions, share chapters in your class group and study together."
-        keywords="Bihar Board student leaderboard, NCERT study community, Class 11 12 discussion group, student leaderboard India, study group Bihar Board, weekly leaderboard Bihar students"
+        keywords="NCERT student leaderboard, Class 9 10 11 12 study community, discussion group students India, student leaderboard India, study group Bihar Board CBSE UP Board, weekly leaderboard students"
         canonical="/community"
       />
       <TopHeader title="Community" />

@@ -7,7 +7,7 @@ export default function PrivacyPolicyPage() {
     <div className="min-h-screen bg-gray-950 text-gray-300">
       <SEOHead
         title="Privacy Policy — Topper 2.0"
-        description="Read Topper 2.0's Privacy Policy. Understand how we collect, use, and protect your data as a student on India's leading AI study platform for Bihar Board Class 11 & 12."
+        description="Read Topper 2.0's Privacy Policy. Understand how we collect, use, and protect your data as a student on India's leading free AI study platform for NCERT Class 9 to 12."
         keywords="Topper 2.0 privacy policy, AI study platform privacy, student data protection"
         canonical="/privacy-policy"
       />
@@ -136,7 +136,7 @@ export default function PrivacyPolicyPage() {
           {/* Children & Minors */}
           <Section title="7. Students & Minors">
             <p>
-              Topper 2.0 is designed for Class 11 and 12 students, who are typically <strong className="text-white">16–18 years old</strong>. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has created an account, please contact us immediately and we will delete their data.
+              Topper 2.0 is designed for Class 9 to 12 students, who are typically <strong className="text-white">13–18 years old</strong>. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has created an account, please contact us immediately and we will delete their data.
             </p>
             <p>
               For users aged 13–18, we encourage parental awareness of the platform. We collect only the minimum information necessary to provide the educational service.

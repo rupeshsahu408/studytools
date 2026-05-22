@@ -11,7 +11,7 @@ import {
 const FOUNDER_USERNAME = "rupesh_gupta";
 const FOUNDER_NAME = "Rupesh Gupta";
 const FOUNDER_LOCATION = "India";
-const FOUNDER_BIO = "Founder of Topper 2.0 — building an AI-powered study platform for Class 11 & 12 students across all NCERT boards. My mission is to make world-class education accessible to every student preparing for their board exams. 🚀";
+const FOUNDER_BIO = "Founder of Topper 2.0 — building an AI-powered study platform for Class 9 to 12 students across all NCERT boards. My mission is to make world-class education accessible to every student preparing for their board exams. 🚀";
 const FOUNDER_INSTAGRAM = "https://www.instagram.com/rupesh_gupta___/";
 const FOUNDER_TWITTER = "https://x.com/rupesh__gupta_";
 const FOUNDER_AVATAR = "/founder-avatar.png";
@@ -817,7 +817,7 @@ export default function PublicProfilePage() {
       <>
         <SEOHead
           title="Rupesh Gupta — Founder of Topper 2.0 | AI Study Platform"
-          description="Rupesh Gupta is the founder of Topper 2.0 — India's leading free AI-powered study platform for Bihar Board Class 11 & 12 NCERT students. Follow his journey building world-class accessible education."
+          description="Rupesh Gupta is the founder of Topper 2.0 — India's leading free AI-powered study platform for NCERT Class 9 to 12 students across all boards. Follow his journey building world-class accessible education."
           keywords="Rupesh Gupta, Topper 2.0 founder, AI study platform creator India, Bihar Board education startup, Plyndrox founder"
           canonical="/u/rupesh_gupta"
           ogType="profile"
@@ -836,7 +836,7 @@ export default function PublicProfilePage() {
     <>
       <SEOHead
         title={`@${username} — Student Profile on Topper 2.0`}
-        description={`View @${username}'s study profile on Topper 2.0. See their badges, study streak, progress and shared notes for Bihar Board & NCERT Class 11 & 12.`}
+        description={`View @${username}'s study profile on Topper 2.0. See their badges, study streak, progress and shared notes for NCERT Class 9 to 12.`}
         keywords={`${username} Topper 2.0 profile, Bihar Board student, NCERT study profile, student notes`}
         canonical={`/u/${username}`}
         ogType="profile"

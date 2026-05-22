@@ -30,7 +30,7 @@ const features = [
   { icon: BookOpen, title: "Smart Notes", desc: "AI generates complete, structured notes from any NCERT chapter instantly." },
   { icon: Zap, title: "Question Bank", desc: "MCQ, 1-mark, 2-mark, 5-mark, Assertion-Reason — all question types auto-generated." },
   { icon: Brain, title: "Practice Modes", desc: "Practice at your pace or take timed tests just like real board exams." },
-  { icon: BarChart2, title: "All Subjects", desc: "Physics, Chemistry, Mathematics, Biology — Class 11 & 12 NCERT covered." },
+  { icon: BarChart2, title: "All Subjects", desc: "Physics, Chemistry, Biology, Math, Social Science, Hindi, English & more — Class 9 to 12 NCERT." },
   { icon: MessageCircle, title: "Doubt Chat", desc: "Ask any question about your chapter and get instant AI-powered answers." },
   { icon: Users, title: "Community", desc: "Discuss with thousands of NCERT board students. Share tips, ask doubts, climb the leaderboard." },
 ];
@@ -43,8 +43,8 @@ const steps = [
 
 const stats = [
   { value: "11+", label: "Study Tools" },
-  { value: "4", label: "Subjects" },
-  { value: "Class 11 & 12", label: "All Boards" },
+  { value: "10+", label: "Subjects" },
+  { value: "Class 9–12", label: "All Classes" },
   { value: "AI", label: "Powered" },
 ];
 
@@ -59,7 +59,7 @@ const communityFeatures = [
     icon: MessageCircle,
     color: "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400",
     title: "Live Discussion Rooms",
-    desc: "Subject-wise chat rooms — Physics, Chemistry, Math, Biology, General.",
+    desc: "Subject-wise chat rooms — Physics, Chemistry, Math, Biology, Social Science, Hindi, English & more.",
   },
   {
     icon: Users,
@@ -79,7 +79,7 @@ export default function LandingPage() {
         "name": "Kya Topper 2.0 bilkul free hai?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Haan, Topper 2.0 completely free hai. Bihar Board Class 11 aur Class 12 ke students bina kisi payment ke AI-generated notes, question banks, flashcards aur doubt chat use kar sakte hain."
+          "text": "Haan, Topper 2.0 completely free hai. Class 9 se lekar Class 12 tak ke saare students bina kisi payment ke AI-generated notes, question banks, flashcards aur doubt chat use kar sakte hain."
         }
       },
       {
@@ -87,7 +87,7 @@ export default function LandingPage() {
         "name": "Topper 2.0 mein kaunse subjects hain?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Topper 2.0 mein Class 11 aur Class 12 ke liye Physics, Chemistry, Mathematics aur Biology subjects hain. Saare NCERT chapters covered hain."
+          "text": "Topper 2.0 mein Class 9 se Class 12 tak ke liye Physics, Chemistry, Mathematics, Biology, Social Science, History, Geography, Hindi, English aur bhi kai subjects hain. Saare NCERT chapters covered hain."
         }
       },
       {
@@ -131,7 +131,7 @@ export default function LandingPage() {
     "name": "Topper 2.0",
     "url": "https://studyai.plyndrox.app/",
     "logo": "https://studyai.plyndrox.app/logo.png",
-    "description": "AI-powered study platform for Bihar Board Class 11 & 12 NCERT students providing notes, question banks, flashcards, simulations and doubt chat.",
+    "description": "AI-powered study platform for NCERT Class 9 to 12 students providing notes, question banks, flashcards, simulations and doubt chat across Physics, Chemistry, Math, Biology, Social Science, Hindi, English and more.",
     "address": {
       "@type": "PostalAddress",
       "addressRegion": "Bihar",
@@ -147,9 +147,9 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white">
       <SEOHead
-        title="Free AI Study Notes for Bihar Board Class 11 & 12 NCERT"
-        description="Topper 2.0 is India's #1 free AI study platform for Bihar Board Class 11 & 12 students. Get instant AI-generated notes, complete question banks, flashcards, simulations & doubt chat for NCERT Physics, Chemistry, Math and Biology. Study smarter. Score higher."
-        keywords="Bihar Board Class 11 notes, Bihar Board Class 12 notes, NCERT AI notes free, AI study platform Bihar Board, Bihar Board exam preparation 2025, NCERT question bank AI, AI flashcards Class 11 12, Bihar Board Physics notes, Bihar Board Chemistry notes, Class 12 Biology notes, NCERT Math notes Class 11, AI doubt chat NCERT, best study app Bihar students, free online study notes Bihar Board, AI generated NCERT notes Hindi, Class 11 12 science notes Bihar, NCERT chapter question bank, Bihar Board topper preparation, NCERT AI tutor free"
+        title="Free AI Study Notes for NCERT Class 9, 10, 11 & 12 — All Subjects"
+        description="Topper 2.0 is India's #1 free AI study platform for NCERT Class 9 to 12 students. Get instant AI-generated notes, complete question banks, flashcards, simulations & doubt chat for Physics, Chemistry, Math, Biology, Social Science, Hindi, English and more. Study smarter. Score higher."
+        keywords="NCERT AI notes Class 9 10 11 12, Bihar Board notes free, NCERT AI study platform India, Bihar Board exam preparation 2025, NCERT question bank AI, AI flashcards Class 9 to 12, Physics Chemistry Math Biology notes, Social Science Hindi English notes NCERT, AI doubt chat NCERT, best study app students India, free online study notes NCERT, AI generated notes Hindi, NCERT chapter question bank, board exam preparation, NCERT AI tutor free, Class 9 10 Science notes"
         canonical="/"
         ogType="website"
         jsonLd={[faqSchema, educationalOrgSchema]}
@@ -180,7 +180,7 @@ export default function LandingPage() {
       <section className="pt-36 pb-24 px-4 text-center max-w-4xl mx-auto">
         <div className="inline-flex items-center gap-1.5 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-semibold px-3.5 py-1.5 rounded-full mb-8 border border-green-200 dark:border-green-800/50">
           <Sparkles className="w-3 h-3" />
-          For All NCERT Board Students — Class 11 & 12
+          For All NCERT Board Students — Class 9 to 12
         </div>
         <h1 className="font-black tracking-tight mb-6 text-gray-900 dark:text-white">
           <span className="block text-4xl sm:text-5xl md:text-7xl leading-tight">
@@ -195,7 +195,7 @@ export default function LandingPage() {
         </h1>
         <p className="text-lg md:text-xl text-gray-500 dark:text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
           Upload any NCERT chapter. Get complete notes, a full question bank,
-          and everything you need to ace Class 11 &amp; 12 board exams.
+          and everything you need to ace your board exams — Class 9 to 12.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center mb-16">
           <Link to="/signup" className="inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-4 rounded-xl transition-colors shadow-md text-base">
@@ -319,9 +319,9 @@ export default function LandingPage() {
         <div className="max-w-3xl mx-auto">
           <p className="text-green-200 text-sm font-semibold tracking-widest uppercase mb-3">Built for Every Board</p>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Built for Every Board. Built for You.</h2>
-          <p className="text-green-100 mb-8 text-lg">All 4 subjects. Class 11 &amp; 12. All NCERT boards. Complete board exam pattern.</p>
+          <p className="text-green-100 mb-8 text-lg">All subjects. Class 9 to 12. All NCERT boards. Complete board exam pattern.</p>
           <div className="flex flex-wrap justify-center gap-3 mb-10">
-            {["Physics", "Chemistry", "Mathematics", "Biology"].map(s => (
+            {["Physics", "Chemistry", "Mathematics", "Biology", "Social Science", "Hindi", "English"].map(s => (
               <span key={s} className="bg-white/20 backdrop-blur-sm text-white font-semibold px-5 py-2 rounded-full text-sm border border-white/20">
                 {s}
               </span>
@@ -352,7 +352,7 @@ export default function LandingPage() {
                 <span className="font-bold text-white text-base">Topper 2.0</span>
               </div>
               <p className="text-sm leading-relaxed mb-5 text-gray-500">
-                An AI-powered study platform built for NCERT Class 11 &amp; 12 board students across India.
+                An AI-powered study platform built for NCERT Class 9 to 12 board students across India.
               </p>
               {/* Social links */}
               <div className="flex items-center gap-3">

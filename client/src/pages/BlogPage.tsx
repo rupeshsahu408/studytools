@@ -7,8 +7,8 @@ const BLOG_URL = "https://studyai.plyndrox.app/blog";
 const blogJsonLd = {
   "@context": "https://schema.org",
   "@type": "BlogPosting",
-  "headline": "How AI is Revolutionising Bihar Board Class 11 & 12 Exam Preparation in 2025",
-  "description": "A comprehensive guide on how Topper 2.0's AI-powered tools — notes, question banks, flashcards, simulations and doubt chat — help Bihar Board students score higher in NCERT Physics, Chemistry, Math and Biology.",
+  "headline": "How AI is Revolutionising NCERT Board Exam Preparation for Class 9 to 12 in 2025",
+  "description": "A comprehensive guide on how Topper 2.0's AI-powered tools — notes, question banks, flashcards, simulations and doubt chat — help NCERT Class 9–12 students score higher across Physics, Chemistry, Math, Biology, Social Science, Hindi, English and more.",
   "url": BLOG_URL,
   "datePublished": "2025-05-13",
   "dateModified": "2025-05-13",
@@ -30,7 +30,7 @@ const blogJsonLd = {
     "@type": "WebPage",
     "@id": BLOG_URL
   },
-  "keywords": "Bihar Board Class 11 12 AI notes, NCERT AI study platform, Bihar Board exam preparation 2025, AI question bank NCERT, Bihar Board topper tips, Class 11 Physics notes AI, Class 12 Chemistry notes Bihar, NCERT flashcards spaced repetition, AI doubt chat Bihar Board, Bihar Board Science preparation",
+  "keywords": "NCERT AI notes Class 9 10 11 12, Bihar Board AI study platform, NCERT exam preparation 2025, AI question bank NCERT, board exam topper tips, Class 9 10 Science notes AI, Class 11 12 notes AI, NCERT flashcards spaced repetition, AI doubt chat NCERT, Social Science Hindi English notes AI, all subjects NCERT notes free",
   "articleSection": "Education",
   "inLanguage": "en-IN"
 };
@@ -78,9 +78,9 @@ export default function BlogPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <SEOHead
-        title="How AI is Revolutionising Bihar Board Exam Preparation in 2025 | Topper 2.0 Blog"
-        description="Discover how Topper 2.0's AI-powered notes, question banks, flashcards, simulations and doubt chat are helping Bihar Board Class 11 & 12 students ace NCERT Physics, Chemistry, Math and Biology in 2025."
-        keywords="Bihar Board Class 11 AI notes, Bihar Board Class 12 AI notes, NCERT AI study platform 2025, Bihar Board exam preparation tips, AI generated notes NCERT, Bihar Board Physics Chemistry Math Biology notes, Class 11 12 question bank AI, Bihar Board topper strategy, NCERT flashcards AI, AI doubt chat Bihar Board, best study app Bihar students, free AI notes Bihar Board, NCERT chapter summary AI, Bihar Board science preparation, Topper 2.0 review, studyai.plyndrox.app"
+        title="How AI is Revolutionising NCERT Exam Preparation for Class 9–12 in 2025 | Topper 2.0 Blog"
+        description="Discover how Topper 2.0's AI-powered notes, question banks, flashcards, simulations and doubt chat are helping NCERT Class 9 to 12 students ace board exams across Physics, Chemistry, Math, Biology, Social Science, Hindi, English and more in 2025."
+        keywords="NCERT AI notes Class 9 10 11 12, Bihar Board AI study platform 2025, NCERT exam preparation tips, AI generated notes all subjects, Physics Chemistry Math Biology Social Science Hindi English notes, Class 9 10 11 12 question bank AI, board exam topper strategy, NCERT flashcards AI, AI doubt chat NCERT, best study app students India, free AI notes NCERT, NCERT chapter summary AI, Topper 2.0 review, studyai.plyndrox.app"
         canonical="/blog"
         ogType="article"
         ogImage="https://studyai.plyndrox.app/og-image.png"
@@ -114,7 +114,7 @@ export default function BlogPage() {
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white leading-tight mb-5">
-            How AI is Revolutionising Bihar Board Class 11 &amp; 12 Exam Preparation in 2025
+            How AI is Revolutionising NCERT Board Exam Preparation for Class 9 to 12 in 2025
           </h1>
 
           <p className="text-lg text-gray-500 dark:text-gray-400 leading-relaxed mb-6">
@@ -137,20 +137,20 @@ export default function BlogPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-14">
           <StatBox value="11+" label="AI Study Tools in one platform" />
           <StatBox value="9" label="Question types per chapter" />
-          <StatBox value="4" label="Subjects fully covered" />
+          <StatBox value="10+" label="Subjects fully covered" />
           <StatBox value="Free" label="Always free for students" />
         </div>
 
         {/* ── Introduction ── */}
         <Section title="The Bihar Board Exam Challenge">
           <p>
-            Every year, millions of students appear for the <strong>Bihar Board Class 11 and Class 12 examinations</strong> — one of the most competitive board exam systems in India. The BSEB (Bihar School Examination Board) syllabus for Science stream covers <strong>Physics, Chemistry, Mathematics, and Biology</strong> across hundreds of NCERT chapters, each dense with concepts, derivations, formulas, and diagrams.
+            Every year, millions of students appear for <strong>NCERT board examinations from Class 9 to Class 12</strong> — including Bihar Board (BSEB), CBSE, UP Board, and other state boards. The curriculum spans <strong>Physics, Chemistry, Mathematics, Biology, Social Science, History, Political Science, Economics, Geography, Hindi, English, and more</strong> across hundreds of NCERT chapters, each dense with concepts, derivations, formulas, and diagrams.
           </p>
           <p>
             Yet the way most Bihar Board students prepare has barely changed in a decade: photocopied notes, overcrowded coaching centres, and last-minute rote memorisation. The result? Students who have studied hard still walk into the exam hall feeling under-prepared — not because they lacked effort, but because the <em>tools</em> available to them were simply not good enough.
           </p>
           <p>
-            That is precisely the problem <strong>Topper 2.0</strong> was built to solve. Available at <a href="https://studyai.plyndrox.app" className="text-green-600 dark:text-green-400 hover:underline font-medium">studyai.plyndrox.app</a>, it is India's first AI-powered study platform designed specifically for <strong>Bihar Board Class 11 and Class 12 Hindi-medium Science students</strong> — giving every student access to the same quality of preparation that was once only available in expensive coaching institutes.
+            That is precisely the problem <strong>Topper 2.0</strong> was built to solve. Available at <a href="https://studyai.plyndrox.app" className="text-green-600 dark:text-green-400 hover:underline font-medium">studyai.plyndrox.app</a>, it is India's first AI-powered study platform designed for <strong>all NCERT board students from Class 9 to Class 12</strong> — giving every student access to the same quality of preparation that was once only available in expensive coaching institutes.
           </p>
         </Section>
 
@@ -199,7 +199,7 @@ export default function BlogPage() {
         {/* ── What is Topper 2.0 ── */}
         <Section title="What is Topper 2.0? India's First AI Study Platform for Bihar Board">
           <p>
-            <strong>Topper 2.0</strong> is a free, AI-powered study platform available at <a href="https://studyai.plyndrox.app" className="text-green-600 dark:text-green-400 hover:underline font-medium">studyai.plyndrox.app</a> that transforms any NCERT chapter into a complete, exam-ready study package within minutes. It supports <strong>Class 11 and Class 12</strong> for <strong>Physics, Chemistry, Mathematics, and Biology</strong> — and is specifically designed for the <strong>Bihar Board (BSEB) exam pattern</strong>.
+            <strong>Topper 2.0</strong> is a free, AI-powered study platform available at <a href="https://studyai.plyndrox.app" className="text-green-600 dark:text-green-400 hover:underline font-medium">studyai.plyndrox.app</a> that transforms any NCERT chapter into a complete, exam-ready study package within minutes. It supports <strong>Class 9 to Class 12</strong> for <strong>Physics, Chemistry, Mathematics, Biology, Social Science, History, Political Science, Economics, Geography, Hindi, English, and more</strong> — aligned with all major board exam patterns including Bihar Board (BSEB), CBSE, and UP Board.
           </p>
           <p>
             The platform works in two ways: students can <strong>upload their own NCERT PDF</strong> (up to 20MB), or they can browse the built-in NCERT library and directly load any chapter with a single click. The AI then reads the chapter and generates the following — all automatically, all in seconds to minutes:
@@ -261,7 +261,7 @@ export default function BlogPage() {
         </Callout>
 
         {/* ── Question Bank ── */}
-        <Section title="The Most Complete Question Bank for Bihar Board Class 11 & 12">
+        <Section title="The Most Complete Question Bank for NCERT Class 9 to 12">
           <p>
             One of the most powerful features of Topper 2.0 is its <strong>AI-generated question bank</strong>. For every chapter, the AI generates questions across all <strong>9 question types</strong> that appear in the Bihar Board examinations:
           </p>
@@ -478,7 +478,7 @@ export default function BlogPage() {
               {
                 num: "02",
                 title: "Upload a Chapter or Browse the NCERT Library",
-                desc: "You can upload any NCERT chapter PDF from your phone or computer (up to 20MB), or browse the built-in NCERT library to instantly load any Class 11 or Class 12 chapter for Physics, Chemistry, Math, or Biology."
+                desc: "You can upload any NCERT chapter PDF from your phone or computer (up to 20MB), or browse the built-in NCERT library to instantly load any Class 9, 10, 11, or 12 chapter for Physics, Chemistry, Math, Biology, Social Science, Hindi, English, and more."
               },
               {
                 num: "03",
@@ -545,11 +545,11 @@ export default function BlogPage() {
           {[
             {
               q: "Kya Topper 2.0 bilkul free hai? (Is Topper 2.0 completely free?)",
-              a: "Haan, Topper 2.0 100% free hai — koi subscription nahi, koi hidden charge nahi. Bihar Board Class 11 aur 12 ke saare students bina kisi payment ke AI notes, question bank, flashcards, simulations aur doubt chat use kar sakte hain."
+              a: "Haan, Topper 2.0 100% free hai — koi subscription nahi, koi hidden charge nahi. Class 9 se lekar Class 12 tak ke saare students bina kisi payment ke AI notes, question bank, flashcards, simulations aur doubt chat use kar sakte hain."
             },
             {
               q: "Kaunse subjects aur classes supported hain?",
-              a: "Topper 2.0 mein Class 11 aur Class 12 ke liye Physics, Chemistry, Mathematics aur Biology fully covered hain. Built-in NCERT library mein saare standard chapters available hain, aur aap apna khud ka PDF bhi upload kar sakte ho kisi bhi chapter ke liye."
+              a: "Topper 2.0 mein Class 9 se Class 12 tak ke liye Physics, Chemistry, Mathematics, Biology, Social Science, History, Political Science, Economics, Geography, Hindi, English aur kai aur subjects covered hain. Built-in NCERT library mein saare standard chapters available hain, aur aap apna khud ka PDF bhi upload kar sakte ho kisi bhi chapter ke liye."
             },
             {
               q: "Notes generate hone mein kitna time lagta hai?",
@@ -578,16 +578,16 @@ export default function BlogPage() {
         {/* ── Conclusion ── */}
         <Section title="Conclusion: The Future of Bihar Board Exam Preparation is Here">
           <p>
-            The Bihar Board Class 11 and Class 12 examinations are among the most important milestones in a student's academic life. The marks scored in these exams open — or close — doors to colleges, careers, and opportunities. For far too long, access to quality preparation has been determined by geography and financial means: students in Patna with money for expensive coaching had a massive advantage over students in smaller districts who did not.
+            Board examinations from Class 9 to Class 12 are among the most important milestones in a student's academic life. The marks scored in these exams open — or close — doors to colleges, careers, and opportunities. For far too long, access to quality preparation has been determined by geography and financial means: students in big cities with money for expensive coaching had a massive advantage over students in smaller towns and districts who did not.
           </p>
           <p>
-            <strong>Topper 2.0 changes this equation.</strong> For the first time, every Bihar Board Science student — regardless of where they live or what they can afford — has access to the same quality of AI-powered preparation: complete notes, a full question bank, spaced-repetition flashcards, interactive simulations, personalised doubt resolution, and a motivating community of fellow students.
+            <strong>Topper 2.0 changes this equation.</strong> For the first time, every NCERT student from Class 9 to 12 — regardless of where they live or what they can afford — has access to the same quality of AI-powered preparation: complete notes, a full question bank, spaced-repetition flashcards, interactive simulations, personalised doubt resolution, and a motivating community of fellow students.
           </p>
           <p>
             The platform is live at <a href="https://studyai.plyndrox.app" className="text-green-600 dark:text-green-400 hover:underline font-medium">studyai.plyndrox.app</a>. It takes two minutes to sign up, costs nothing, and could make the difference between a good result and a great one.
           </p>
           <p className="font-semibold text-gray-900 dark:text-white">
-            Start studying smarter today. Bihar Board toppers are made, not born — and the right tools make all the difference.
+            Start studying smarter today. Toppers are made, not born — and the right tools make all the difference.
           </p>
         </Section>
 
@@ -595,7 +595,7 @@ export default function BlogPage() {
         <div className="bg-green-600 rounded-2xl p-8 text-center mt-10">
           <h3 className="text-2xl font-black text-white mb-3">Ready to Become a Topper?</h3>
           <p className="text-green-100 text-sm mb-6 leading-relaxed max-w-md mx-auto">
-            Join thousands of Bihar Board Class 11 &amp; 12 students already using Topper 2.0. Free forever. No app download needed.
+            Join thousands of NCERT Class 9 to 12 students already using Topper 2.0. Free forever. No app download needed.
           </p>
           <Link
             to="/signup"

@@ -33,7 +33,7 @@ import {
 const FOUNDER_USERNAME = "rupesh_gupta";
 const FOUNDER_NAME = "Rupesh Gupta";
 const FOUNDER_LOCATION = "India";
-const FOUNDER_BIO = "Founder of Topper 2.0 — building an AI-powered study platform for Class 11 & 12 students across all NCERT boards. My mission is to make world-class education accessible to every student preparing for their board exams. 🚀";
+const FOUNDER_BIO = "Founder of Topper 2.0 — building an AI-powered study platform for Class 9 to 12 students across all NCERT boards. My mission is to make world-class education accessible to every student preparing for their board exams. 🚀";
 const FOUNDER_INSTAGRAM = "https://www.instagram.com/rupesh_gupta___/";
 const FOUNDER_TWITTER = "https://x.com/rupesh__gupta_";
 const FOUNDER_AVATAR = "/founder-avatar.png";
@@ -916,8 +916,8 @@ export default function DiscoverPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <SEOHead
         title="Discover — Find & Connect with Bihar Board Students"
-        description="Discover and connect with top Bihar Board Class 11 & 12 NCERT students on Topper 2.0. Find study friends, send friend requests and build your study network across India."
-        keywords="Bihar Board student network, NCERT study friends, find study partner India, Class 11 12 student community, Bihar student connect"
+        description="Discover and connect with NCERT Class 9 to 12 students on Topper 2.0. Find study friends, send friend requests and build your study network across India."
+        keywords="NCERT student network, Class 9 10 11 12 study friends, find study partner India, Bihar Board student community, student connect India"
         canonical="/discover"
       />
       <TopHeader title="Discover" />
