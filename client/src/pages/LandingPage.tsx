@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, Zap, Brain, BarChart2, ArrowRight, Sparkles, Users, MessageCircle, Trophy, Mail, MapPin } from "lucide-react";
+import { BookOpen, Zap, Brain, BarChart2, ArrowRight, Sparkles, Users, MessageCircle, Trophy, Mail, MapPin, ChevronDown } from "lucide-react";
 import SEOHead from "../components/SEOHead";
 
 function IconInstagram({ className }: { className?: string }) {
@@ -68,6 +69,68 @@ const communityFeatures = [
     desc: "Teachers create classes, students join with an invite code and study together.",
   },
 ];
+
+const faqs = [
+  {
+    q: "Is Topper 2.0 completely free?",
+    a: "Yes! Topper 2.0 is 100% free for all students — Class 9 to 12. You get AI-generated notes, full question banks, flashcards, simulations, and doubt chat without paying anything.",
+  },
+  {
+    q: "Which subjects and classes are available?",
+    a: "We cover Class 9 to 12 for Physics, Chemistry, Mathematics, Biology, Social Science, History, Geography, Hindi, English, and more. All NCERT chapters are included.",
+  },
+  {
+    q: "How does the AI generate notes and questions?",
+    a: "Upload your NCERT chapter PDF or select one from our library. Our AI instantly generates detailed notes, a 9-type question bank, flashcards, formula sheet, mind map, and simulations — all in one go.",
+  },
+  {
+    q: "Does Topper 2.0 follow the Bihar Board exam pattern?",
+    a: "Yes! Topper 2.0 is specifically designed for Bihar Board students. MCQ, 1-mark, 2-mark, 5-mark, Assertion-Reason, and Case-Based questions are all generated in the exact Bihar Board pattern.",
+  },
+  {
+    q: "Can I ask doubts to the AI?",
+    a: "Absolutely! The AI Doubt Chat lets you ask any question about your chapter and get instant, clear answers in both Hindi and English.",
+  },
+  {
+    q: "Does it work on mobile?",
+    a: "Yes — Topper 2.0 is a web app that works smoothly on all devices: mobile, tablet, and desktop. No app download needed, just open it in your browser.",
+  },
+];
+
+function FaqAccordion() {
+  const [open, setOpen] = useState<number | null>(null);
+  return (
+    <div className="space-y-3">
+      {faqs.map((faq, i) => (
+        <div
+          key={i}
+          className="border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden"
+        >
+          <button
+            onClick={() => setOpen(open === i ? null : i)}
+            className="w-full flex items-center justify-between gap-4 px-6 py-4 text-left bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          >
+            <span className="font-semibold text-gray-900 dark:text-white text-sm md:text-base">
+              {faq.q}
+            </span>
+            <ChevronDown
+              className={`w-5 h-5 flex-shrink-0 text-green-600 dark:text-green-400 transition-transform duration-200 ${
+                open === i ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+          {open === i && (
+            <div className="px-6 pb-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700">
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed pt-4">
+                {faq.a}
+              </p>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function LandingPage() {
   const faqSchema = {
@@ -432,6 +495,17 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section className="py-20 px-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs font-semibold text-green-600 dark:text-green-400 tracking-widest uppercase mb-2">Got Questions?</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">Frequently Asked Questions</h2>
+          </div>
+          <FaqAccordion />
         </div>
       </section>
 
