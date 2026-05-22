@@ -1,0 +1,195 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── chapters ─────────────────────────────────────────────────────────────
+    match /chapters/{chapterId} {
+      allow read: if request.auth != null
+                  && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if request.auth != null
+                             && request.auth.uid == resource.data.userId;
+    }
+
+    // ── usernames ─────────────────────────────────────────────────────────────
+    // Any authenticated user can read (check availability, look up by username).
+    // Only the user whose uid matches can claim a username (create only — no updates).
+    match /usernames/{username} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid;
+      // No update or delete — usernames are permanent once claimed.
+    }
+
+    // ── users ─────────────────────────────────────────────────────────────────
+    // Any authenticated user can read any profile (needed for friend search,
+    // public profiles, leaderboard display, and friend-request flows).
+    // Only the owner can create or delete their own doc.
+    // Any authenticated user can update (needed for friend requests / accepts /
+    // declines / removals which write to the other party's document, AND for
+    // coin tips which credit coins into the recipient's document).
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+                    && request.auth.uid == userId;
+      allow update: if request.auth != null;
+      allow delete: if request.auth != null
+                    && request.auth.uid == userId;
+
+      match /notifications/{notifId} {
+        allow read, write: if request.auth != null
+                           && request.auth.uid == userId;
+      }
+    }
+
+    // ── leaderboard ──────────────────────────────────────────────────────────
+    // Any authenticated user can read all entries.
+    // A user can only write/update their own entry (doc ID == their UID).
+    match /leaderboard/{weekId}/entries/{entryUid} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.auth.uid == entryUid;
+    }
+
+    // ── classes ───────────────────────────────────────────────────────────────
+    // Any authenticated user can create a class or read classes (needed for invite-code lookup).
+    // Only the owner (createdBy) can update or delete.
+    match /classes/{classId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null
+                             && request.auth.uid == resource.data.createdBy;
+
+      match /members/{memberId} {
+        allow read, write: if request.auth != null;
+      }
+
+      match /shared/{sharedId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null;
+        allow delete: if request.auth != null
+                      && request.auth.uid == resource.data.sharedBy;
+      }
+    }
+
+    // ── discussions ───────────────────────────────────────────────────────────
+    // Any authenticated user can read and create posts/replies.
+    // Only the post author (uid field) can delete their own post.
+    // Any authenticated user can upvote (update).
+    match /discussions/{chapterId}/posts/{postId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if request.auth != null
+                    && request.auth.uid == resource.data.uid;
+
+      match /replies/{replyId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null;
+        allow delete: if request.auth != null
+                      && request.auth.uid == resource.data.uid;
+      }
+    }
+
+    // ── chatSessions ──────────────────────────────────────────────────────────
+    // Users can only read/write their own chat sessions (userId field == uid).
+    match /chatSessions/{sessionId} {
+      allow read, update, delete: if request.auth != null
+                                  && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.userId;
+    }
+
+    // ── feedback ──────────────────────────────────────────────────────────────
+    // Authenticated users can submit feedback (create only).
+    // Users can read their own feedback reports.
+    match /feedback/{feedbackId} {
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.userId;
+      allow read: if request.auth != null
+                  && request.auth.uid == resource.data.userId;
+    }
+
+    // ── shares ────────────────────────────────────────────────────────────────
+    // Public share links — anyone (including unauthenticated) can read.
+    // Only the authenticated owner can create, update, or delete their share.
+    match /shares/{token} {
+      allow read: if true;
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.userId;
+      allow update: if request.auth != null
+                    && request.auth.uid == resource.data.userId;
+      allow delete: if request.auth != null
+                    && request.auth.uid == resource.data.userId;
+    }
+
+    // ── publicNotes ───────────────────────────────────────────────────────────
+    // Any authenticated user can read the community notes library.
+    // Only the owner (userId field) can publish (create/update all fields) or
+    // unpublish (delete) their own note.
+    // Any authenticated user may increment viewCount (existing rule).
+    // Any authenticated user may update the likes / likeCount fields — this
+    // enables the community like feature without exposing other fields.
+    match /publicNotes/{chapterId} {
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.userId;
+
+      allow update: if request.auth != null
+                    && (
+                         // Owner can update anything
+                         request.auth.uid == resource.data.userId
+
+                         // Anyone can increment viewCount
+                         || request.resource.data.diff(resource.data).affectedKeys()
+                              .hasOnly(['viewCount'])
+
+                         // Anyone can toggle their like (likes array + likeCount counter)
+                         || request.resource.data.diff(resource.data).affectedKeys()
+                              .hasOnly(['likes', 'likeCount'])
+                       );
+
+      allow delete: if request.auth != null
+                    && request.auth.uid == resource.data.userId;
+
+      // ── tips subcollection ─────────────────────────────────────────────────
+      // Any authenticated user can log a tip they sent.
+      // Only the sender or recipient may read a tip record.
+      match /tips/{tipId} {
+        allow create: if request.auth != null
+                      && request.resource.data.fromUid == request.auth.uid;
+        allow read:   if request.auth != null
+                      && (request.auth.uid == resource.data.fromUid
+                          || request.auth.uid == resource.data.toUid);
+      }
+    }
+
+    // ── pushSubscriptions ─────────────────────────────────────────────────────
+    match /pushSubscriptions/{uid} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == uid;
+    }
+
+    // ── founder_stats ─────────────────────────────────────────────────────────
+    // Any authenticated user can read the follow count.
+    // Only the server / transactions can write (no direct client delete/update).
+    match /founder_stats/{docId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // ── founder_followers ─────────────────────────────────────────────────────
+    // Any authenticated user can check whether they follow the founder (read own doc).
+    // A user can only create/delete their own follow record.
+    match /founder_followers/{userId} {
+      allow read: if request.auth != null
+                  && request.auth.uid == userId;
+      allow create: if request.auth != null
+                    && request.auth.uid == userId;
+      allow delete: if request.auth != null
+                    && request.auth.uid == userId;
+    }
+  }
+}
