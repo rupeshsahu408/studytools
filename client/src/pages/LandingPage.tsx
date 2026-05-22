@@ -421,6 +421,21 @@ export default function LandingPage() {
                   <IconGithub className="w-4 h-4 text-white" />
                 </a>
               </div>
+
+              {/* Parent company */}
+              <div className="mt-5 pt-5 border-t border-gray-800">
+                <p className="text-xs text-gray-600 mb-2 uppercase tracking-wider font-medium">Under</p>
+                <a
+                  href="https://plyndrox.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-500 transition-all duration-200 group"
+                >
+                  <span className="w-2 h-2 rounded-full bg-green-500" />
+                  <span className="text-sm font-semibold text-white group-hover:text-green-400 transition-colors">plyndrox.app</span>
+                  <ArrowRight className="w-3 h-3 text-gray-500 group-hover:text-green-400 transition-colors" />
+                </a>
+              </div>
             </div>
 
             {/* Product links */}
