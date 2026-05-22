@@ -223,10 +223,10 @@ export default function LandingPage() {
           <div className="text-center mb-8">
             <p className="text-xs font-semibold text-green-600 dark:text-green-400 tracking-widest uppercase mb-2">Platform Introduction</p>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
-              Dekho Kaise Karta Hai Kaam
+              See How It Works
             </h2>
             <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto text-sm leading-relaxed">
-              2 minute mein samjho — Topper 2.0 kya hai, kya milta hai, aur kaise ye aapki padhai badal sakta hai.
+              Watch this 2-minute intro — learn what Topper 2.0 is, what you get, and how it can transform the way you study.
             </p>
           </div>
           <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700" style={{ paddingBottom: "56.25%" }}>
