@@ -366,6 +366,75 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Testimonials ── */}
+      <section className="py-20 px-4 bg-gray-50 dark:bg-gray-950">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs font-semibold text-green-600 dark:text-green-400 tracking-widest uppercase mb-2">Student Reviews</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">What Students Are Saying</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[
+              {
+                name: "Priya Sharma",
+                class: "Class 12 · Science",
+                avatar: "P",
+                color: "bg-violet-500",
+                stars: 5,
+                text: "Topper 2.0 ne meri Physics preparation completely change kar di. Notes itne clear hain ki ek baar padhne ke baad sab yaad ho jaata hai!",
+              },
+              {
+                name: "Rahul Kumar",
+                class: "Class 11 · Science",
+                avatar: "R",
+                color: "bg-blue-500",
+                stars: 5,
+                text: "Question bank bohot helpful hai. MCQ se lekar 5-mark tak sab cover ho jaata hai. Board exam mein 87% aaya — Topper 2.0 ka kamaal hai.",
+              },
+              {
+                name: "Ananya Singh",
+                class: "Class 12 · Biology",
+                avatar: "A",
+                color: "bg-rose-500",
+                stars: 5,
+                text: "Flashcards feature mera favorite hai! Chemistry ke formulas yaad karna ab itna easy ho gaya. Doubt Chat bhi instant answer deta hai.",
+              },
+              {
+                name: "Sumit Yadav",
+                class: "Class 10 · All Subjects",
+                avatar: "S",
+                color: "bg-amber-500",
+                stars: 5,
+                text: "Free mein itna sab milta hai — notes, questions, simulations. Kisi bhi coaching se zyada helpful hai ye platform. Sach mein game changer!",
+              },
+            ].map((t, i) => (
+              <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-200 dark:border-gray-800 flex flex-col gap-4 hover:border-green-300 dark:hover:border-green-700 transition-colors">
+                {/* Stars */}
+                <div className="flex gap-0.5">
+                  {Array.from({ length: t.stars }).map((_, s) => (
+                    <svg key={s} className="w-4 h-4 text-amber-400 fill-amber-400" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                {/* Review text */}
+                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed flex-1">"{t.text}"</p>
+                {/* Author */}
+                <div className="flex items-center gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+                  <div className={`w-9 h-9 rounded-full ${t.color} flex items-center justify-center text-white text-sm font-bold flex-shrink-0`}>
+                    {t.avatar}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{t.name}</p>
+                    <p className="text-xs text-gray-400">{t.class}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA banner ── */}
       <section className="py-20 px-4 mx-4 mb-4 rounded-3xl bg-green-600 text-white text-center">
         <div className="max-w-3xl mx-auto">
