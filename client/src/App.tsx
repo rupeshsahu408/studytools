@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { useHeartbeat } from "./hooks/useHeartbeat";
 import { registerServiceWorker } from "./lib/push";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProgressProvider } from "./contexts/ProgressContext";
@@ -59,8 +60,16 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function HeartbeatEmitter() {
+  const { user } = useAuth();
+  useHeartbeat(user?.uid ?? null);
+  return null;
+}
+
 function AppRoutes() {
   return (
+    <>
+      <HeartbeatEmitter />
     <Routes>
       <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
       <Route path="/login" element={<PublicRoute><AuthPage mode="login" /></PublicRoute>} />
@@ -85,6 +94,7 @@ function AppRoutes() {
       <Route path="/TELI/panel" element={<AdminPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }
 

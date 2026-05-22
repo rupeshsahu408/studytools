@@ -12,6 +12,7 @@ import simulationsRouter from "./routes/simulations";
 import pushRouter from "./routes/push";
 import adminRouter from "./routes/admin";
 import statusRouter from "./routes/status";
+import presenceRouter from "./routes/presence";
 import { MODEL, checkModelHealth, runStartupHealthCheck } from "./services/nvidia";
 
 const app = express();
@@ -63,6 +64,7 @@ app.use("/api/simulations", simulationsRouter);
 app.use("/api/push", pushRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/status", statusRouter);
+app.use("/api/presence", presenceRouter);
 
 // ─── Global Error Handler ───────────────────────────────────────────────────
 // CORS headers are already set by the middleware above, so all error

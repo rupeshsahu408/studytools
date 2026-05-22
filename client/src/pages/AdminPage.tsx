@@ -4,7 +4,7 @@ import {
   Shield, LogOut, RefreshCw, Users, BookOpen, HelpCircle,
   MessageSquare, TrendingUp, Award, BarChart2, Search,
   ChevronDown, ChevronUp, AlertCircle, Loader2, Clock,
-  Star, Flame, Target, Globe,
+  Star, Flame, Target, Globe, Activity, UserCheck, Eye,
 } from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -50,6 +50,14 @@ interface AdminFeedback {
   reason: string;
   note: string;
   createdAt: number;
+}
+
+interface LiveStats {
+  totalLive: number;
+  loggedInLive: number;
+  anonymousLive: number;
+  pageBreakdown: { page: string; count: number }[];
+  peakToday: number;
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -236,6 +244,23 @@ export default function AdminPage() {
   const [chapters, setChapters] = useState<AdminChapter[]>([]);
   const [feedback, setFeedback] = useState<AdminFeedback[]>([]);
 
+  // ── Live stats (polls every 5 s)
+  const [liveStats, setLiveStats] = useState<LiveStats | null>(null);
+  useEffect(() => {
+    const API_BASE = import.meta.env.VITE_API_URL || "";
+    const fetchLive = () => {
+      fetch(`${API_BASE}/api/admin/live-stats`, {
+        headers: { "x-admin-secret": "pastlove7890" },
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { if (d) setLiveStats(d); })
+        .catch(() => {});
+    };
+    fetchLive();
+    const t = setInterval(fetchLive, 5_000);
+    return () => clearInterval(t);
+  }, []);
+
   // search / sort
   const [userSearch, setUserSearch] = useState("");
   const [chapterSearch, setChapterSearch] = useState("");
@@ -249,7 +274,7 @@ export default function AdminPage() {
     setLoading(true);
     setError(null);
     try {
-      const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001";
+      const API_BASE = import.meta.env.VITE_API_URL || "";
       const res = await fetch(`${API_BASE}/api/admin/data`, {
         headers: { "x-admin-secret": "pastlove7890" },
       });
@@ -559,6 +584,73 @@ export default function AdminPage() {
             {/* ══════════════════════════════════════════════════════ OVERVIEW */}
             {tab === "overview" && (
               <div className="space-y-6">
+
+                {/* ── Live Now banner ── */}
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                  <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+                      </span>
+                      <p className="text-sm font-bold text-white">Live Right Now</p>
+                      <span className="text-xs text-gray-600">— updates every 5 s</span>
+                    </div>
+                    {liveStats && (
+                      <span className="text-xs text-gray-600">Peak today: {liveStats.peakToday}</span>
+                    )}
+                  </div>
+
+                  {liveStats === null ? (
+                    <p className="text-xs text-gray-600 italic">Connecting…</p>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      {/* Count tiles */}
+                      <div className="grid grid-cols-3 gap-3 flex-1">
+                        <div className="bg-gray-800/60 rounded-xl p-4 flex flex-col items-center gap-1">
+                          <Activity className="w-5 h-5 text-green-400 mb-1" />
+                          <p className="text-2xl font-bold text-white tabular-nums">{liveStats.totalLive}</p>
+                          <p className="text-xs text-gray-500 text-center">Total Live</p>
+                        </div>
+                        <div className="bg-gray-800/60 rounded-xl p-4 flex flex-col items-center gap-1">
+                          <UserCheck className="w-5 h-5 text-blue-400 mb-1" />
+                          <p className="text-2xl font-bold text-white tabular-nums">{liveStats.loggedInLive}</p>
+                          <p className="text-xs text-gray-500 text-center">Students</p>
+                        </div>
+                        <div className="bg-gray-800/60 rounded-xl p-4 flex flex-col items-center gap-1">
+                          <Eye className="w-5 h-5 text-purple-400 mb-1" />
+                          <p className="text-2xl font-bold text-white tabular-nums">{liveStats.anonymousLive}</p>
+                          <p className="text-xs text-gray-500 text-center">Visitors</p>
+                        </div>
+                      </div>
+
+                      {/* Page breakdown */}
+                      {liveStats.pageBreakdown.length > 0 && (
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Active Pages</p>
+                          <div className="space-y-1.5">
+                            {liveStats.pageBreakdown.slice(0, 6).map(({ page, count }) => (
+                              <div key={page} className="flex items-center gap-2">
+                                <div className="h-1.5 bg-gray-800 rounded-full flex-1 overflow-hidden">
+                                  <div
+                                    className="h-full bg-green-600 rounded-full transition-all duration-500"
+                                    style={{ width: `${Math.round((count / liveStats.totalLive) * 100)}%` }}
+                                  />
+                                </div>
+                                <span className="text-xs text-gray-400 font-mono truncate max-w-[120px]">{page}</span>
+                                <span className="text-xs text-gray-600 flex-shrink-0">{count}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {liveStats.totalLive === 0 && (
+                        <p className="text-sm text-gray-600 italic self-center">No active sessions at the moment.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 {/* Stat cards */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">

@@ -1,6 +1,6 @@
 /* Topper 2.0 — Web Push Notification utilities */
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API_BASE = import.meta.env.VITE_API_URL || "";
 
 // VAPID public key — read from env at build time (Vite), or fetched from server at runtime
 let _vapidPublicKey: string | null = (import.meta.env.VITE_VAPID_PUBLIC_KEY as string) || null;

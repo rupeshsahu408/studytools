@@ -1,6 +1,7 @@
 import express from "express";
 import * as admin from "firebase-admin";
 import { v4 as uuidv4 } from "uuid";
+import { getLiveStats } from "../services/presence";
 
 const router = express.Router();
 
@@ -307,6 +308,17 @@ router.get("/seed-status", async (req, res) => {
 
 router.get("/ping", (req, res) => {
   res.json({ adminSecretSet: !!process.env.ADMIN_SECRET });
+});
+
+// GET /api/admin/live-stats
+// Returns real-time active session counts. Protected by x-admin-secret.
+router.get("/live-stats", (req, res) => {
+  const secret = req.headers["x-admin-secret"];
+  const expected = process.env.ADMIN_SECRET;
+  if (!expected || secret !== expected) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  res.json(getLiveStats());
 });
 
 router.get("/data", async (req, res) => {
