@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chemistry + Hindi 34-Day Tracker</title>
+<style>
+  :root{
+    --paper:#F6F1E4;
+    --ink:#1C3B3A;
+    --ink-soft:#3E5C5A;
+    --amber:#D98E3C;
+    --amber-soft:#F0D3A6;
+    --rose:#B4544A;
+    --rose-soft:#EBC6C0;
+    --line:#C9BFA4;
+    --card:#FFFDF8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    font-family:'Georgia','Times New Roman',serif;
+    color:var(--ink);
+    padding:26px 14px 60px;
+  }
+  .wrap{max-width:760px;margin:0 auto;}
+
+  header{
+    border-bottom:3px double var(--ink);
+    padding-bottom:14px;
+    margin-bottom:20px;
+  }
+  .eyebrow{
+    font-family:'Courier New',monospace;
+    font-size:11px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--amber);
+    margin-bottom:4px;
+  }
+  h1{margin:0 0 6px;font-size:26px;}
+  .subtitle{font-size:13px;color:var(--ink-soft);font-family:'Courier New',monospace;}
+
+  .bars{
+    display:flex;
+    gap:12px;
+    margin:18px 0 22px;
+    flex-wrap:wrap;
+  }
+  .bar-card{
+    flex:1;
+    min-width:200px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:12px 14px;
+  }
+  .bar-card .label{
+    font-family:'Courier New',monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin-bottom:6px;
+  }
+  .bar-track{
+    height:10px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:5px;
+    overflow:hidden;
+  }
+  .bar-fill{height:100%;transition:width .4s ease;}
+  .chem-fill{background:linear-gradient(90deg, var(--amber-soft), var(--amber));}
+  .hindi-fill{background:linear-gradient(90deg, var(--rose-soft), var(--rose));}
+  .bar-pct{font-size:12px;color:var(--ink-soft);margin-top:4px;font-family:'Courier New',monospace;}
+
+  .legend{
+    display:flex;
+    gap:16px;
+    font-size:11px;
+    font-family:'Courier New',monospace;
+    color:var(--ink-soft);
+    margin-bottom:14px;
+  }
+  .legend span{display:flex;align-items:center;gap:5px;}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  .dot.chem{background:var(--amber);}
+  .dot.hindi{background:var(--rose);}
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  thead th{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'Courier New',monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    padding:8px 8px;
+    text-align:left;
+  }
+  tbody tr{border-bottom:1px dashed var(--line);}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:nth-child(even){background:#FBF7EE;}
+  td{padding:7px 8px;font-size:13px;vertical-align:middle;}
+  .date-cell{
+    font-family:'Courier New',monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    white-space:nowrap;
+    width:52px;
+  }
+  .cell-inner{display:flex;align-items:center;gap:7px;}
+  .cell-inner span.done{text-decoration:line-through;opacity:0.55;}
+  input[type=checkbox]{width:16px;height:16px;flex-shrink:0;cursor:pointer;}
+  input.chem-cb{accent-color:var(--amber);}
+  input.hindi-cb{accent-color:var(--rose);}
+
+  .table-scroll{overflow-x:auto;}
+
+  footer{
+    margin-top:22px;
+    text-align:center;
+    font-size:12px;
+    color:var(--ink-soft);
+    font-family:'Courier New',monospace;
+  }
+  button#reset{
+    margin-top:12px;
+    background:none;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    padding:6px 14px;
+    border-radius:3px;
+    font-family:'Courier New',monospace;
+    font-size:11px;
+    cursor:pointer;
+  }
+  button#reset:hover{border-color:var(--ink);color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">BSEB Class 12 &middot; Combined Tracker</div>
+    <h1>Chemistry + Hindi — 34 Days</h1>
+    <div class="subtitle">24 July – 26 August 2026</div>
+  </header>
+
+  <div class="legend">
+    <span><i class="dot chem"></i> Chemistry</span>
+    <span><i class="dot hindi"></i> Hindi</span>
+  </div>
+
+  <div class="bars">
+    <div class="bar-card">
+      <div class="label">Chemistry</div>
+      <div class="bar-track"><div class="bar-fill chem-fill" id="chemFill" style="width:0%"></div></div>
+      <div class="bar-pct" id="chemPct">0 / 34 days</div>
+    </div>
+    <div class="bar-card">
+      <div class="label">Hindi</div>
+      <div class="bar-track"><div class="bar-fill hindi-fill" id="hindiFill" style="width:0%"></div></div>
+      <div class="bar-pct" id="hindiPct">0 / 34 days</div>
+    </div>
+  </div>
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Chemistry</th>
+          <th>Hindi</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    Tick each subject separately as you finish that day's portion. Saves automatically.
+    <br>
+    <button id="reset">Reset all progress</button>
+  </footer>
+</div>
+
+<script>
+const days = [
+  {date:"24 Jul", chem:"Solutions", hindi:"बातचीत"},
+  {date:"25 Jul", chem:"Solutions", hindi:"उसने कहा था"},
+  {date:"26 Jul", chem:"Solutions", hindi:"उसने कहा था"},
+  {date:"27 Jul", chem:"Electrochemistry", hindi:"संपूर्ण क्रांति"},
+  {date:"28 Jul", chem:"Electrochemistry", hindi:"संपूर्ण क्रांति"},
+  {date:"29 Jul", chem:"Electrochemistry", hindi:"अर्द्धनारीश्वर"},
+  {date:"30 Jul", chem:"Chemical Kinetics", hindi:"अर्द्धनारीश्वर"},
+  {date:"31 Jul", chem:"Chemical Kinetics", hindi:"रोज"},
+  {date:"1 Aug", chem:"Chemical Kinetics", hindi:"रोज"},
+  {date:"2 Aug", chem:"Surface Chemistry", hindi:"एक लेख और एक पत्र"},
+  {date:"3 Aug", chem:"Surface Chemistry", hindi:"ओ सदानीरा"},
+  {date:"4 Aug", chem:"Isolation of Elements", hindi:"ओ सदानीरा"},
+  {date:"5 Aug", chem:"Isolation of Elements", hindi:"सिपाही की माँ"},
+  {date:"6 Aug", chem:"p-Block Elements", hindi:"प्रगीत और समाज"},
+  {date:"7 Aug", chem:"p-Block Elements", hindi:"प्रगीत और समाज"},
+  {date:"8 Aug", chem:"p-Block Elements", hindi:"जूठन"},
+  {date:"9 Aug", chem:"p-Block Elements", hindi:"जूठन"},
+  {date:"10 Aug", chem:"p-Block Elements", hindi:"हँसते हुए मेरा अकेलापन"},
+  {date:"11 Aug", chem:"d and f-Block Elements", hindi:"तिरिछ"},
+  {date:"12 Aug", chem:"d and f-Block Elements", hindi:"तिरिछ"},
+  {date:"13 Aug", chem:"d and f-Block Elements", hindi:"शिक्षा"},
+  {date:"14 Aug", chem:"d and f-Block Elements", hindi:"कड़बक"},
+  {date:"15 Aug", chem:"Haloalkanes & Haloarenes", hindi:"सूरदास के पद"},
+  {date:"16 Aug", chem:"Haloalkanes & Haloarenes", hindi:"तुलसीदास के पद"},
+  {date:"17 Aug", chem:"Haloalkanes & Haloarenes", hindi:"छप्पय"},
+  {date:"18 Aug", chem:"Alcohols, Phenols & Ethers", hindi:"कवित्त"},
+  {date:"19 Aug", chem:"Alcohols, Phenols & Ethers", hindi:"तुमुल कोलाहल कलह में"},
+  {date:"20 Aug", chem:"Alcohols, Phenols & Ethers", hindi:"पुत्र वियोग"},
+  {date:"21 Aug", chem:"Aldehydes, Ketones & Carboxylic Acids", hindi:"उषा"},
+  {date:"22 Aug", chem:"Aldehydes, Ketones & Carboxylic Acids", hindi:"जन-जन का चेहरा एक"},
+  {date:"23 Aug", chem:"Aldehydes, Ketones & Carboxylic Acids", hindi:"अधिनायक"},
+  {date:"24 Aug", chem:"Aldehydes, Ketones & Carboxylic Acids", hindi:"प्यारे नन्हें बेटे को"},
+  {date:"25 Aug", chem:"Amines", hindi:"हार-जीत"},
+  {date:"26 Aug", chem:"Biomolecules", hindi:"गाँव का घर"},
+];
+
+const STORAGE_KEY = "combined-tracker-v1";
+let state = {}; // { "chem-0": true, "hindi-0": true, ... }
+
+async function loadState(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    state = res ? JSON.parse(res.value) : {};
+  }catch(e){
+    state = {};
+  }
+  render();
+}
+
+async function saveState(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+  }catch(e){
+    console.error("save failed", e);
+  }
+}
+
+function render(){
+  const tbody = document.getElementById('rows');
+  tbody.innerHTML = '';
+  let chemDone = 0, hindiDone = 0;
+
+  days.forEach((d, i)=>{
+    const chemKey = `chem-${i}`;
+    const hindiKey = `hindi-${i}`;
+    const chemChecked = !!state[chemKey];
+    const hindiChecked = !!state[hindiKey];
+    if(chemChecked) chemDone++;
+    if(hindiChecked) hindiDone++;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="date-cell">${d.date}</td>
+      <td>
+        <div class="cell-inner">
+          <input type="checkbox" class="chem-cb" data-key="${chemKey}" ${chemChecked?'checked':''}>
+          <span class="${chemChecked?'done':''}">${d.chem}</span>
+        </div>
+      </td>
+      <td>
+        <div class="cell-inner">
+          <input type="checkbox" class="hindi-cb" data-key="${hindiKey}" ${hindiChecked?'checked':''}>
+          <span class="${hindiChecked?'done':''}">${d.hindi}</span>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+
+  const chemPct = Math.round((chemDone/days.length)*100);
+  const hindiPct = Math.round((hindiDone/days.length)*100);
+  document.getElementById('chemFill').style.width = chemPct + '%';
+  document.getElementById('hindiFill').style.width = hindiPct + '%';
+  document.getElementById('chemPct').textContent = `${chemDone} / ${days.length} days`;
+  document.getElementById('hindiPct').textContent = `${hindiDone} / ${days.length} days`;
+
+  tbody.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change', async (e)=>{
+      const key = e.target.getAttribute('data-key');
+      state[key] = e.target.checked;
+      await saveState();
+      render();
+    });
+  });
+}
+
+document.getElementById('reset').addEventListener('click', async ()=>{
+  if(confirm('Reset all progress? This cannot be undone.')){
+    state = {};
+    await saveState();
+    render();
+  }
+});
+
+loadState();
+</script>
+</body>
+</html>
