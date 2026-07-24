@@ -66,7 +66,6 @@ function CountdownUnit({ value, label, flash }: { value: number; label: string; 
       <div
         style={{
           background: "#1C3B3A",
-          color: "#F0D3A6",
           borderRadius: 6,
           padding: "10px 14px",
           fontFamily: "'Courier New',monospace",
