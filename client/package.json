@@ -28,6 +28,9 @@
     "tailwindcss": "^4.3.0",
     "three": "^0.184.0"
   },
+  "overrides": {
+    "websocket-driver": "0.7.5"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^24.12.2",

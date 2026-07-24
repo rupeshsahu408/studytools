@@ -25,6 +25,7 @@ import BlogPage from "./pages/BlogPage";
 import StatusPage from "./pages/StatusPage";
 import AdminPage from "./pages/AdminPage";
 import TeliGatePage from "./pages/TeliGatePage";
+import ExamPage from "./pages/ExamPage";
 
 function Spinner() {
   return (
@@ -92,6 +93,7 @@ function AppRoutes() {
       <Route path="/status" element={<StatusPage />} />
       <Route path="/TELI" element={<TeliGatePage />} />
       <Route path="/TELI/panel" element={<AdminPage />} />
+      <Route path="/exam" element={<ExamPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     </>
