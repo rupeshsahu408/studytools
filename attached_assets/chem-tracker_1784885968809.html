@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chemistry 34-Day Tracker</title>
+<style>
+  :root{
+    --paper:#F6F1E4;
+    --ink:#1C3B3A;
+    --ink-soft:#3E5C5A;
+    --amber:#D98E3C;
+    --amber-soft:#F0D3A6;
+    --line:#C9BFA4;
+    --done:#5C8A6A;
+    --card:#FFFDF8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    font-family:'Georgia', 'Times New Roman', serif;
+    color:var(--ink);
+    padding:28px 16px 60px;
+  }
+  .wrap{max-width:720px;margin:0 auto;}
+
+  header{
+    border-bottom:3px double var(--ink);
+    padding-bottom:14px;
+    margin-bottom:22px;
+  }
+  .eyebrow{
+    font-family:'Courier New', monospace;
+    font-size:11px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--amber);
+    margin-bottom:4px;
+  }
+  h1{
+    margin:0 0 6px;
+    font-size:28px;
+    letter-spacing:0.5px;
+  }
+  .subtitle{
+    font-size:13px;
+    color:var(--ink-soft);
+    font-family:'Courier New', monospace;
+  }
+
+  .beaker-wrap{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin:20px 0 26px;
+    padding:14px 16px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:4px;
+  }
+  .beaker{
+    position:relative;
+    width:46px;
+    height:60px;
+    border:2px solid var(--ink);
+    border-top:none;
+    border-radius:0 0 8px 8px;
+    overflow:hidden;
+    flex-shrink:0;
+    background:#fff;
+  }
+  .beaker::before{
+    content:'';
+    position:absolute;
+    left:-4px;right:-4px;top:-2px;
+    height:2px;
+    background:var(--ink);
+  }
+  .fill{
+    position:absolute;
+    bottom:0;left:0;right:0;
+    background:linear-gradient(180deg, var(--amber-soft), var(--amber));
+    transition:height .5s ease;
+  }
+  .progress-text{flex:1;}
+  .progress-pct{font-size:22px;font-weight:bold;}
+  .progress-label{font-size:12px;color:var(--ink-soft);font-family:'Courier New',monospace;}
+
+  .chapter{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:4px;
+    margin-bottom:14px;
+    overflow:hidden;
+  }
+  .chapter-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 14px;
+    background:var(--ink);
+    color:var(--paper);
+  }
+  .chapter-name{font-size:15px;font-weight:bold;}
+  .chapter-meta{font-size:11px;font-family:'Courier New',monospace;color:var(--amber-soft);}
+  .days{padding:8px 14px;}
+  .day-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:7px 0;
+    border-bottom:1px dashed var(--line);
+    font-size:14px;
+  }
+  .day-row:last-child{border-bottom:none;}
+  .day-row label{cursor:pointer;flex:1;display:flex;align-items:center;gap:10px;}
+  .day-date{
+    font-family:'Courier New',monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+    width:52px;
+    flex-shrink:0;
+  }
+  input[type=checkbox]{
+    width:18px;height:18px;
+    accent-color:var(--done);
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .done-text{text-decoration:line-through;color:var(--ink-soft);opacity:0.7;}
+
+  footer{
+    margin-top:26px;
+    text-align:center;
+    font-size:12px;
+    color:var(--ink-soft);
+    font-family:'Courier New',monospace;
+  }
+  button#reset{
+    margin-top:14px;
+    background:none;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    padding:6px 14px;
+    border-radius:3px;
+    font-family:'Courier New',monospace;
+    font-size:11px;
+    cursor:pointer;
+  }
+  button#reset:hover{border-color:var(--ink);color:var(--ink);}
+
+  .skip-note{
+    font-size:12px;
+    color:var(--ink-soft);
+    background:var(--amber-soft);
+    border:1px solid var(--amber);
+    border-radius:4px;
+    padding:8px 12px;
+    margin-bottom:18px;
+    font-family:'Courier New',monospace;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">BSEB Class 12 &middot; Chemistry</div>
+    <h1>34-Day Chapter Tracker</h1>
+    <div class="subtitle">24 July – 26 August 2026</div>
+  </header>
+
+  <div class="skip-note">Skipped (already done): Ch.1 Solid State &middot; Ch.9 Coordination Compounds &middot; Ch.15 Polymers &middot; Ch.16 Chemistry in Everyday Life</div>
+
+  <div class="beaker-wrap">
+    <div class="beaker"><div class="fill" id="fill" style="height:0%"></div></div>
+    <div class="progress-text">
+      <div class="progress-pct" id="pct">0%</div>
+      <div class="progress-label" id="daysLabel">0 / 34 days done</div>
+    </div>
+  </div>
+
+  <div id="chapters"></div>
+
+  <footer>
+    Tick each day as you finish it. Progress saves automatically.
+    <br>
+    <button id="reset">Reset all progress</button>
+  </footer>
+</div>
+
+<script>
+const schedule = [
+  {name:"Solutions", dates:["24 Jul","25 Jul","26 Jul"]},
+  {name:"Electrochemistry", dates:["27 Jul","28 Jul","29 Jul"]},
+  {name:"Chemical Kinetics", dates:["30 Jul","31 Jul","1 Aug"]},
+  {name:"Surface Chemistry", dates:["2 Aug","3 Aug"]},
+  {name:"Isolation of Elements", dates:["4 Aug","5 Aug"]},
+  {name:"p-Block Elements", dates:["6 Aug","7 Aug","8 Aug","9 Aug","10 Aug"]},
+  {name:"d and f-Block Elements", dates:["11 Aug","12 Aug","13 Aug","14 Aug"]},
+  {name:"Haloalkanes & Haloarenes", dates:["15 Aug","16 Aug","17 Aug"]},
+  {name:"Alcohols, Phenols & Ethers", dates:["18 Aug","19 Aug","20 Aug"]},
+  {name:"Aldehydes, Ketones & Carboxylic Acids", dates:["21 Aug","22 Aug","23 Aug","24 Aug"]},
+  {name:"Amines + Biomolecules", dates:["25 Aug","26 Aug"]},
+];
+
+const TOTAL_DAYS = schedule.reduce((s,c)=>s+c.dates.length,0);
+const STORAGE_KEY = "chem-tracker-days-v1";
+let state = {};
+
+function dayId(chIdx, dIdx){ return `${chIdx}-${dIdx}`; }
+
+async function loadState(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    state = res ? JSON.parse(res.value) : {};
+  }catch(e){
+    state = {};
+  }
+  render();
+}
+
+async function saveState(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+  }catch(e){
+    console.error("save failed", e);
+  }
+}
+
+function render(){
+  const container = document.getElementById('chapters');
+  container.innerHTML = '';
+  let doneCount = 0;
+
+  schedule.forEach((ch, cIdx)=>{
+    const chDone = ch.dates.filter((_,dIdx)=>state[dayId(cIdx,dIdx)]).length;
+    doneCount += chDone;
+
+    const chapterEl = document.createElement('div');
+    chapterEl.className = 'chapter';
+
+    const head = document.createElement('div');
+    head.className = 'chapter-head';
+    head.innerHTML = `<span class="chapter-name">${ch.name}</span><span class="chapter-meta">${chDone}/${ch.dates.length} days</span>`;
+    chapterEl.appendChild(head);
+
+    const daysEl = document.createElement('div');
+    daysEl.className = 'days';
+    ch.dates.forEach((date, dIdx)=>{
+      const id = dayId(cIdx,dIdx);
+      const checked = !!state[id];
+      const row = document.createElement('div');
+      row.className = 'day-row';
+      row.innerHTML = `
+        <label>
+          <input type="checkbox" data-id="${id}" data-chapter="${cIdx}" ${checked?'checked':''}>
+          <span class="day-date">${date}</span>
+          <span class="${checked?'done-text':''}">Study session</span>
+        </label>`;
+      daysEl.appendChild(row);
+    });
+    chapterEl.appendChild(daysEl);
+    container.appendChild(chapterEl);
+  });
+
+  const pct = Math.round((doneCount/TOTAL_DAYS)*100);
+  document.getElementById('fill').style.height = pct + '%';
+  document.getElementById('pct').textContent = pct + '%';
+  document.getElementById('daysLabel').textContent = `${doneCount} / ${TOTAL_DAYS} days done`;
+
+  container.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change', async (e)=>{
+      const id = e.target.getAttribute('data-id');
+      state[id] = e.target.checked;
+      await saveState();
+      render();
+    });
+  });
+}
+
+document.getElementById('reset').addEventListener('click', async ()=>{
+  if(confirm('Reset all progress? This cannot be undone.')){
+    state = {};
+    await saveState();
+    render();
+  }
+});
+
+loadState();
+</script>
+</body>
+</html>

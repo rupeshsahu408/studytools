@@ -1,148 +1,299 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-// ─── Data ────────────────────────────────────────────────────────────────────
-const DAYS = [
-  { date: "24 Jul", chem: "Solutions",                             hindi: "बातचीत" },
-  { date: "25 Jul", chem: "Solutions",                             hindi: "उसने कहा था" },
-  { date: "26 Jul", chem: "Solutions",                             hindi: "उसने कहा था" },
-  { date: "27 Jul", chem: "Electrochemistry",                      hindi: "संपूर्ण क्रांति" },
-  { date: "28 Jul", chem: "Electrochemistry",                      hindi: "संपूर्ण क्रांति" },
-  { date: "29 Jul", chem: "Electrochemistry",                      hindi: "अर्द्धनारीश्वर" },
-  { date: "30 Jul", chem: "Chemical Kinetics",                     hindi: "अर्द्धनारीश्वर" },
-  { date: "31 Jul", chem: "Chemical Kinetics",                     hindi: "रोज" },
-  { date: "1 Aug",  chem: "Chemical Kinetics",                     hindi: "रोज" },
-  { date: "2 Aug",  chem: "Surface Chemistry",                     hindi: "एक लेख और एक पत्र" },
-  { date: "3 Aug",  chem: "Surface Chemistry",                     hindi: "ओ सदानीरा" },
-  { date: "4 Aug",  chem: "Isolation of Elements",                 hindi: "ओ सदानीरा" },
-  { date: "5 Aug",  chem: "Isolation of Elements",                 hindi: "सिपाही की माँ" },
-  { date: "6 Aug",  chem: "p-Block Elements",                      hindi: "प्रगीत और समाज" },
-  { date: "7 Aug",  chem: "p-Block Elements",                      hindi: "प्रगीत और समाज" },
-  { date: "8 Aug",  chem: "p-Block Elements",                      hindi: "जूठन" },
-  { date: "9 Aug",  chem: "p-Block Elements",                      hindi: "जूठन" },
-  { date: "10 Aug", chem: "p-Block Elements",                      hindi: "हँसते हुए मेरा अकेलापन" },
-  { date: "11 Aug", chem: "d and f-Block Elements",                hindi: "तिरिछ" },
-  { date: "12 Aug", chem: "d and f-Block Elements",                hindi: "तिरिछ" },
-  { date: "13 Aug", chem: "d and f-Block Elements",                hindi: "शिक्षा" },
-  { date: "14 Aug", chem: "d and f-Block Elements",                hindi: "कड़बक" },
-  { date: "15 Aug", chem: "Haloalkanes & Haloarenes",              hindi: "सूरदास के पद" },
-  { date: "16 Aug", chem: "Haloalkanes & Haloarenes",              hindi: "तुलसीदास के पद" },
-  { date: "17 Aug", chem: "Haloalkanes & Haloarenes",              hindi: "छप्पय" },
-  { date: "18 Aug", chem: "Alcohols, Phenols & Ethers",            hindi: "कवित्त" },
-  { date: "19 Aug", chem: "Alcohols, Phenols & Ethers",            hindi: "तुमुल कोलाहल कलह में" },
-  { date: "20 Aug", chem: "Alcohols, Phenols & Ethers",            hindi: "पुत्र वियोग" },
-  { date: "21 Aug", chem: "Aldehydes, Ketones & Carboxylic Acids", hindi: "उषा" },
-  { date: "22 Aug", chem: "Aldehydes, Ketones & Carboxylic Acids", hindi: "जन-जन का चेहरा एक" },
-  { date: "23 Aug", chem: "Aldehydes, Ketones & Carboxylic Acids", hindi: "अधिनायक" },
-  { date: "24 Aug", chem: "Aldehydes, Ketones & Carboxylic Acids", hindi: "प्यारे नन्हें बेटे को" },
-  { date: "25 Aug", chem: "Amines",                                hindi: "हार-जीत" },
-  { date: "26 Aug", chem: "Biomolecules",                          hindi: "गाँव का घर" },
+// ─── Palette ──────────────────────────────────────────────────────────────────
+const C = {
+  paper:      "#F6F1E4",
+  ink:        "#1C3B3A",
+  inkSoft:    "#3E5C5A",
+  amber:      "#D98E3C",
+  amberSoft:  "#F0D3A6",
+  rose:       "#B4544A",
+  roseSoft:   "#EBC6C0",
+  done:       "#5C8A6A",
+  line:       "#C9BFA4",
+  card:       "#FFFDF8",
+  altRow:     "#FBF7EE",
+};
+
+// ─── Chemistry Schedule (chapter-grouped) ─────────────────────────────────────
+const CHEM_SCHEDULE = [
+  { name: "Solutions",                              dates: ["24 Jul","25 Jul","26 Jul"],                     indices: [0,1,2] },
+  { name: "Electrochemistry",                       dates: ["27 Jul","28 Jul","29 Jul"],                     indices: [3,4,5] },
+  { name: "Chemical Kinetics",                      dates: ["30 Jul","31 Jul","1 Aug"],                      indices: [6,7,8] },
+  { name: "Surface Chemistry",                      dates: ["2 Aug","3 Aug"],                                indices: [9,10] },
+  { name: "Isolation of Elements",                  dates: ["4 Aug","5 Aug"],                                indices: [11,12] },
+  { name: "p-Block Elements",                       dates: ["6 Aug","7 Aug","8 Aug","9 Aug","10 Aug"],       indices: [13,14,15,16,17] },
+  { name: "d and f-Block Elements",                 dates: ["11 Aug","12 Aug","13 Aug","14 Aug"],            indices: [18,19,20,21] },
+  { name: "Haloalkanes & Haloarenes",               dates: ["15 Aug","16 Aug","17 Aug"],                     indices: [22,23,24] },
+  { name: "Alcohols, Phenols & Ethers",             dates: ["18 Aug","19 Aug","20 Aug"],                     indices: [25,26,27] },
+  { name: "Aldehydes, Ketones & Carboxylic Acids",  dates: ["21 Aug","22 Aug","23 Aug","24 Aug"],            indices: [28,29,30,31] },
+  { name: "Amines",                                 dates: ["25 Aug"],                                       indices: [32] },
+  { name: "Biomolecules",                           dates: ["26 Aug"],                                       indices: [33] },
 ];
 
+// ─── Hindi Schedule (chapter-grouped) ─────────────────────────────────────────
+const HINDI_SCHEDULE = [
+  { name: "बातचीत",                   dates: ["24 Jul"],              indices: [0] },
+  { name: "उसने कहा था",              dates: ["25 Jul","26 Jul"],     indices: [1,2] },
+  { name: "संपूर्ण क्रांति",          dates: ["27 Jul","28 Jul"],     indices: [3,4] },
+  { name: "अर्द्धनारीश्वर",           dates: ["29 Jul","30 Jul"],     indices: [5,6] },
+  { name: "रोज",                       dates: ["31 Jul","1 Aug"],      indices: [7,8] },
+  { name: "एक लेख और एक पत्र",        dates: ["2 Aug"],               indices: [9] },
+  { name: "ओ सदानीरा",                dates: ["3 Aug","4 Aug"],       indices: [10,11] },
+  { name: "सिपाही की माँ",            dates: ["5 Aug"],               indices: [12] },
+  { name: "प्रगीत और समाज",           dates: ["6 Aug","7 Aug"],       indices: [13,14] },
+  { name: "जूठन",                     dates: ["8 Aug","9 Aug"],       indices: [15,16] },
+  { name: "हँसते हुए मेरा अकेलापन",   dates: ["10 Aug"],              indices: [17] },
+  { name: "तिरिछ",                    dates: ["11 Aug","12 Aug"],     indices: [18,19] },
+  { name: "शिक्षा",                   dates: ["13 Aug"],              indices: [20] },
+  { name: "कड़बक",                    dates: ["14 Aug"],              indices: [21] },
+  { name: "सूरदास के पद",             dates: ["15 Aug"],              indices: [22] },
+  { name: "तुलसीदास के पद",           dates: ["16 Aug"],              indices: [23] },
+  { name: "छप्पय",                    dates: ["17 Aug"],              indices: [24] },
+  { name: "कवित्त",                   dates: ["18 Aug"],              indices: [25] },
+  { name: "तुमुल कोलाहल कलह में",    dates: ["19 Aug"],              indices: [26] },
+  { name: "पुत्र वियोग",              dates: ["20 Aug"],              indices: [27] },
+  { name: "उषा",                      dates: ["21 Aug"],              indices: [28] },
+  { name: "जन-जन का चेहरा एक",       dates: ["22 Aug"],              indices: [29] },
+  { name: "अधिनायक",                  dates: ["23 Aug"],              indices: [30] },
+  { name: "प्यारे नन्हें बेटे को",   dates: ["24 Aug"],              indices: [31] },
+  { name: "हार-जीत",                  dates: ["25 Aug"],              indices: [32] },
+  { name: "गाँव का घर",               dates: ["26 Aug"],              indices: [33] },
+];
+
+const TOTAL_DAYS = 34;
 const STORAGE_KEY = "exam-tracker-v1";
 const START_DATE  = new Date("2026-07-24T00:00:00");
 
-type Tab = "chem" | "hindi";
 type TrackerState = Record<string, boolean>;
+type Tab = "chem" | "hindi";
 
 function getTodayIndex() {
-  const diff = Date.now() - START_DATE.getTime();
-  return Math.min(Math.max(Math.floor(diff / 86400000), 0), DAYS.length - 1);
+  return Math.min(Math.max(Math.floor((Date.now() - START_DATE.getTime()) / 86400000), 0), TOTAL_DAYS - 1);
 }
 
-// ─── Progress bar ─────────────────────────────────────────────────────────────
-function Bar({ pct, color }: { pct: number; color: "amber" | "rose" }) {
-  const fill = color === "amber"
-    ? "linear-gradient(90deg,#F0D3A6,#D98E3C)"
-    : "linear-gradient(90deg,#EBC6C0,#B4544A)";
+// ─── Beaker Progress (CSS-based, exact HTML-example style) ───────────────────
+function Beaker({ pct, color, softColor, doneDays }: { pct: number; color: string; softColor: string; doneDays: number }) {
   return (
-    <div style={{ height: 10, background: "#C9BFA4", borderRadius: 5, overflow: "hidden" }}>
-      <div style={{ width: `${pct}%`, height: "100%", background: fill, transition: "width .4s ease" }} />
+    <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "16px 20px", background: C.card, border: `1px solid ${C.line}`, borderRadius: 4, marginBottom: 22 }}>
+
+      {/* beaker wrapper — positions the wide rim above the body */}
+      <div style={{ position: "relative", width: 46, height: 68, flexShrink: 0 }}>
+        {/* wide top rim */}
+        <div style={{ position: "absolute", top: 0, left: -5, right: -5, height: 3, background: C.ink, borderRadius: "2px 2px 0 0" }} />
+        {/* beaker body: border on 3 sides, rounded bottom, overflow hidden for fill */}
+        <div style={{
+          position: "absolute", top: 3, left: 0, right: 0, bottom: 0,
+          border: `2px solid ${C.ink}`, borderTop: "none",
+          borderRadius: "0 0 8px 8px",
+          overflow: "hidden", background: "#fff",
+        }}>
+          {/* liquid fill rising from bottom */}
+          <div style={{
+            position: "absolute", bottom: 0, left: 0, right: 0,
+            height: `${pct}%`,
+            background: `linear-gradient(180deg, ${softColor}, ${color})`,
+            transition: "height .6s ease",
+          }} />
+          {/* graduation tick marks */}
+          {[25, 50, 75].map(t => (
+            <div key={t} style={{
+              position: "absolute", bottom: `${t}%`, right: 0,
+              width: 7, height: 1, background: `${C.line}CC`,
+            }} />
+          ))}
+        </div>
+      </div>
+
+      {/* text beside beaker */}
+      <div>
+        <div style={{ fontSize: 28, fontWeight: "bold", color: C.ink, lineHeight: 1 }}>{pct}%</div>
+        <div style={{ fontFamily: "'Courier New',monospace", fontSize: 12, color: C.inkSoft, marginTop: 5 }}>
+          {doneDays} / {TOTAL_DAYS} days done
+        </div>
+        {pct === 100 && (
+          <div style={{ fontFamily: "'Courier New',monospace", fontSize: 11, color: C.done, marginTop: 4, fontWeight: "bold" }}>
+            ✓ Complete!
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-// ─── Subject table ────────────────────────────────────────────────────────────
-function SubjectTable({
-  subject, color, state, onToggle,
+// ─── Chapter Card ─────────────────────────────────────────────────────────────
+function ChapterCard({
+  chapter, subject, state, onToggle, todayIndex, accentColor,
 }: {
-  subject: "chem" | "hindi";
-  color: "amber" | "rose";
+  chapter: typeof CHEM_SCHEDULE[0];
+  subject: Tab;
+  state: TrackerState;
+  onToggle: (key: string, val: boolean) => void;
+  todayIndex: number;
+  accentColor: string;
+}) {
+  const prefix = subject === "chem" ? "chem" : "hindi";
+  const doneDays = chapter.indices.filter(i => state[`${prefix}-${i}`]).length;
+  const allDone  = doneDays === chapter.indices.length;
+
+  return (
+    <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 4, marginBottom: 14, overflow: "hidden" }}>
+      {/* header */}
+      <div style={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        padding: "10px 16px",
+        background: allDone ? C.done : C.ink,
+        color: C.paper,
+        transition: "background .3s",
+      }}>
+        <span style={{ fontSize: 15, fontWeight: "bold" }}>{chapter.name}</span>
+        <span style={{
+          fontFamily: "'Courier New',monospace", fontSize: 11,
+          color: allDone ? "#d4f0de" : C.amberSoft,
+          background: allDone ? "rgba(0,0,0,0.15)" : "transparent",
+          padding: allDone ? "2px 8px" : 0,
+          borderRadius: 3,
+        }}>
+          {allDone ? "✓ Complete" : `${doneDays}/${chapter.dates.length} days`}
+        </span>
+      </div>
+
+      {/* day rows */}
+      <div style={{ padding: "4px 16px 6px" }}>
+        {chapter.dates.map((date, dIdx) => {
+          const globalIdx = chapter.indices[dIdx];
+          const key       = `${prefix}-${globalIdx}`;
+          const checked   = !!state[key];
+          const isToday   = globalIdx === todayIndex;
+          return (
+            <div key={key} style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "8px 0",
+              borderBottom: dIdx < chapter.dates.length - 1 ? `1px dashed ${C.line}` : "none",
+              background: isToday ? "#FFF8E880" : "transparent",
+            }}>
+              <label style={{ cursor: "pointer", flex: 1, display: "flex", alignItems: "center", gap: 10 }}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={e => onToggle(key, e.target.checked)}
+                  style={{ width: 18, height: 18, accentColor: C.done, cursor: "pointer", flexShrink: 0 }}
+                />
+                <span style={{
+                  fontFamily: "'Courier New',monospace", fontSize: 12,
+                  color: isToday ? accentColor : C.inkSoft,
+                  width: 54, flexShrink: 0,
+                  fontWeight: isToday ? "bold" : "normal",
+                }}>
+                  {date}
+                  {isToday && <span style={{ display: "block", fontSize: 9, textTransform: "uppercase", letterSpacing: 1 }}>Today</span>}
+                </span>
+                <span style={{
+                  fontSize: 14,
+                  textDecoration: checked ? "line-through" : "none",
+                  color: checked ? C.inkSoft : C.ink,
+                  opacity: checked ? 0.6 : 1,
+                  transition: "all .2s",
+                }}>
+                  Study session
+                </span>
+              </label>
+              {checked && <span style={{ fontFamily: "'Courier New',monospace", fontSize: 11, color: C.done, flexShrink: 0 }}>✓</span>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Subject View ─────────────────────────────────────────────────────────────
+function SubjectView({
+  subject, state, onToggle,
+}: {
+  subject: Tab;
   state: TrackerState;
   onToggle: (key: string, val: boolean) => void;
 }) {
-  const todayIdx   = getTodayIndex();
-  const accentHex  = color === "amber" ? "#D98E3C" : "#B4544A";
-  const label      = subject === "chem" ? "Chemistry" : "Hindi";
-  const done       = DAYS.filter((_, i) => state[`${subject}-${i}`]).length;
-  const pct        = Math.round((done / DAYS.length) * 100);
+  const schedule    = subject === "chem" ? CHEM_SCHEDULE : HINDI_SCHEDULE;
+  const prefix      = subject === "chem" ? "chem" : "hindi";
+  const accentColor = subject === "chem" ? C.amber : C.rose;
+  const todayIdx    = getTodayIndex();
+
+  const doneDays = Array.from({ length: TOTAL_DAYS }, (_, i) => state[`${prefix}-${i}`]).filter(Boolean).length;
+  const pct      = Math.round((doneDays / TOTAL_DAYS) * 100);
+
+  const reset = () => {
+    if (!window.confirm(`Reset all ${subject === "chem" ? "Chemistry" : "Hindi"} progress?`)) return;
+    const next = { ...state };
+    Array.from({ length: TOTAL_DAYS }, (_, i) => { delete next[`${prefix}-${i}`]; });
+    onToggle("__reset__" + prefix, false); // triggers re-render via parent
+    Array.from({ length: TOTAL_DAYS }, (_, i) => onToggle(`${prefix}-${i}`, false));
+  };
 
   return (
     <div>
-      {/* subject progress card */}
-      <div style={{ background: "#FFFDF8", border: "1px solid #C9BFA4", borderRadius: 4, padding: "14px 18px", marginBottom: 18 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-          <span style={{ fontFamily: "'Courier New',monospace", fontSize: 11, textTransform: "uppercase", letterSpacing: 1 }}>{label} Progress</span>
-          <span style={{ fontFamily: "'Courier New',monospace", fontSize: 12, color: accentHex, fontWeight: "bold" }}>
-            {done} / {DAYS.length} &nbsp;({pct}%)
-          </span>
+      {/* skip note — only for chemistry */}
+      {subject === "chem" && (
+        <div style={{
+          fontFamily: "'Courier New',monospace", fontSize: 12,
+          color: C.inkSoft, background: C.amberSoft,
+          border: `1px solid ${C.amber}`, borderRadius: 4,
+          padding: "8px 14px", marginBottom: 18,
+        }}>
+          Skipped (already done): Ch.1 Solid State · Ch.9 Coordination Compounds · Ch.15 Polymers · Ch.16 Chemistry in Everyday Life
         </div>
-        <Bar pct={pct} color={color} />
-      </div>
+      )}
 
-      {/* table */}
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", background: "#FFFDF8", border: "1px solid #C9BFA4", borderRadius: 4, overflow: "hidden" }}>
-          <thead>
-            <tr>
-              <th style={{ background: "#1C3B3A", color: "#F6F1E4", fontFamily: "'Courier New',monospace", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, padding: "8px 12px", textAlign: "left", width: 70 }}>Date</th>
-              <th style={{ background: "#1C3B3A", color: "#F6F1E4", fontFamily: "'Courier New',monospace", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, padding: "8px 12px", textAlign: "left" }}>{label}</th>
-              <th style={{ background: "#1C3B3A", color: "#F6F1E4", fontFamily: "'Courier New',monospace", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, padding: "8px 12px", textAlign: "center", width: 80 }}>Done</th>
-            </tr>
-          </thead>
-          <tbody>
-            {DAYS.map((d, i) => {
-              const key      = `${subject}-${i}`;
-              const checked  = !!state[key];
-              const isToday  = i === todayIdx;
-              const text     = subject === "chem" ? d.chem : d.hindi;
-              return (
-                <tr key={i} style={{
-                  borderBottom: "1px dashed #C9BFA4",
-                  background: isToday ? "#FFF8E8" : i % 2 === 0 ? "#FFFDF8" : "#FBF7EE",
-                  outline: isToday ? `2px solid ${accentHex}` : "none",
-                  outlineOffset: -1,
-                }}>
-                  <td style={{ padding: "8px 12px", fontFamily: "'Courier New',monospace", fontSize: 11, color: "#3E5C5A", whiteSpace: "nowrap", verticalAlign: "middle" }}>
-                    {d.date}
-                    {isToday && (
-                      <span style={{ display: "block", fontSize: 9, color: accentHex, fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1 }}>Today</span>
-                    )}
-                  </td>
-                  <td style={{ padding: "8px 12px", fontSize: 14, verticalAlign: "middle" }}>
-                    <span style={{ textDecoration: checked ? "line-through" : "none", opacity: checked ? 0.45 : 1, transition: "all .2s" }}>
-                      {text}
-                    </span>
-                  </td>
-                  <td style={{ padding: "8px 12px", textAlign: "center", verticalAlign: "middle" }}>
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={e => onToggle(key, e.target.checked)}
-                      style={{ width: 18, height: 18, accentColor: accentHex, cursor: "pointer" }}
-                    />
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      {/* skip note — for hindi */}
+      {subject === "hindi" && (
+        <div style={{
+          fontFamily: "'Courier New',monospace", fontSize: 12,
+          color: C.inkSoft, background: C.roseSoft,
+          border: `1px solid ${C.rose}`, borderRadius: 4,
+          padding: "8px 14px", marginBottom: 18,
+        }}>
+          BSEB Class 12 Hindi · गद्य + पद्य दोनों sections include हैं
+        </div>
+      )}
+
+      {/* beaker progress */}
+      <Beaker pct={pct} color={accentColor} softColor={subject === "chem" ? C.amberSoft : C.roseSoft} doneDays={doneDays} />
+
+      {/* chapter cards */}
+      {schedule.map((ch, idx) => (
+        <ChapterCard
+          key={idx}
+          chapter={ch}
+          subject={subject}
+          state={state}
+          onToggle={onToggle}
+          todayIndex={todayIdx}
+          accentColor={accentColor}
+        />
+      ))}
+
+      {/* reset */}
+      <div style={{ textAlign: "center", marginTop: 10 }}>
+        <button
+          onClick={reset}
+          style={{
+            background: "none", border: `1px solid ${C.line}`, color: C.inkSoft,
+            padding: "6px 18px", borderRadius: 3,
+            fontFamily: "'Courier New',monospace", fontSize: 11, cursor: "pointer",
+          }}
+          onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = C.ink; (e.target as HTMLElement).style.color = C.ink; }}
+          onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = C.line; (e.target as HTMLElement).style.color = C.inkSoft; }}
+        >
+          Reset {subject === "chem" ? "Chemistry" : "Hindi"} progress
+        </button>
       </div>
     </div>
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ExamTrackerPage() {
   const navigate = useNavigate();
   const [tab, setTab]     = useState<Tab>("chem");
@@ -156,97 +307,78 @@ export default function ExamTrackerPage() {
   }, []);
 
   const toggle = (key: string, val: boolean) => {
-    const next = { ...state, [key]: val };
-    setState(next);
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* noop */ }
+    if (key.startsWith("__reset__")) return; // handled inline
+    setState(prev => {
+      const next = { ...prev, [key]: val };
+      if (!val) delete next[key];
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* noop */ }
+      return next;
+    });
   };
 
-  const reset = () => {
-    if (!window.confirm("Reset all progress? This cannot be undone.")) return;
-    setState({});
-    try { localStorage.removeItem(STORAGE_KEY); } catch { /* noop */ }
-  };
+  const chemDone  = Array.from({ length: TOTAL_DAYS }, (_, i) => state[`chem-${i}`]).filter(Boolean).length;
+  const hindiDone = Array.from({ length: TOTAL_DAYS }, (_, i) => state[`hindi-${i}`]).filter(Boolean).length;
 
-  const chemDone  = DAYS.filter((_, i) => state[`chem-${i}`]).length;
-  const hindiDone = DAYS.filter((_, i) => state[`hindi-${i}`]).length;
-
-  const tabStyle = (active: boolean, color: "amber" | "rose"): React.CSSProperties => ({
+  const tabBtn = (t: Tab, label: string, count: number, color: string): React.CSSProperties => ({
     flex: 1,
     padding: "11px 0",
     border: "none",
-    borderBottom: active ? `3px solid ${color === "amber" ? "#D98E3C" : "#B4544A"}` : "3px solid transparent",
-    background: active ? "#FFFDF8" : "transparent",
-    color: active ? (color === "amber" ? "#D98E3C" : "#B4544A") : "#3E5C5A",
+    borderBottom: tab === t ? `3px solid ${color}` : "3px solid transparent",
+    background: tab === t ? C.card : "transparent",
+    color: tab === t ? color : C.inkSoft,
     fontFamily: "'Courier New',monospace",
     fontSize: 12,
-    textTransform: "uppercase" as const,
+    textTransform: "uppercase",
     letterSpacing: 1.5,
-    fontWeight: active ? "bold" : "normal",
+    fontWeight: tab === t ? "bold" : "normal",
     cursor: "pointer",
     transition: "all .2s",
   });
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#F6F1E4",
-      fontFamily: "'Georgia','Times New Roman',serif",
-      color: "#1C3B3A",
-      padding: "28px 14px 80px",
-    }}>
+    <div style={{ minHeight: "100vh", background: C.paper, fontFamily: "'Georgia','Times New Roman',serif", color: C.ink, padding: "28px 14px 80px" }}>
       <div style={{ maxWidth: 720, margin: "0 auto" }}>
 
         {/* ── Header ── */}
-        <header style={{ borderBottom: "3px double #1C3B3A", paddingBottom: 14, marginBottom: 22 }}>
+        <header style={{ borderBottom: "3px double " + C.ink, paddingBottom: 14, marginBottom: 22 }}>
           <button
             onClick={() => navigate("/exam")}
-            style={{ background: "none", border: "none", color: "#3E5C5A", fontFamily: "'Courier New',monospace", fontSize: 11, cursor: "pointer", padding: 0, marginBottom: 8, letterSpacing: 1 }}
+            style={{ background: "none", border: "none", color: C.inkSoft, fontFamily: "'Courier New',monospace", fontSize: 11, cursor: "pointer", padding: 0, marginBottom: 8, letterSpacing: 1 }}
           >
             ← Back to Dashboard
           </button>
-          <div style={{ fontFamily: "'Courier New',monospace", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: "#D98E3C", marginBottom: 4 }}>
+          <div style={{ fontFamily: "'Courier New',monospace", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: C.amber, marginBottom: 4 }}>
             BSEB Class 12 · 34-Day Plan
           </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: "bold" }}>Study Tracker</h1>
-            <div style={{ display: "flex", gap: 10, fontFamily: "'Courier New',monospace", fontSize: 11, color: "#3E5C5A" }}>
-              <span>⬡ Chem: {chemDone}/{DAYS.length}</span>
-              <span>⬡ Hindi: {hindiDone}/{DAYS.length}</span>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+            <div>
+              <h1 style={{ margin: "0 0 2px", fontSize: 24, fontWeight: "bold" }}>Study Tracker</h1>
+              <div style={{ fontFamily: "'Courier New',monospace", fontSize: 11, color: C.inkSoft }}>24 July – 26 August 2026</div>
             </div>
-          </div>
-          <div style={{ fontFamily: "'Courier New',monospace", fontSize: 11, color: "#3E5C5A", marginTop: 4 }}>
-            24 July – 26 August 2026
+            <div style={{ fontFamily: "'Courier New',monospace", fontSize: 11, color: C.inkSoft, textAlign: "right" }}>
+              <div>🧪 Chem: {chemDone}/{TOTAL_DAYS}</div>
+              <div>📖 Hindi: {hindiDone}/{TOTAL_DAYS}</div>
+            </div>
           </div>
         </header>
 
         {/* ── Tabs ── */}
-        <div style={{ display: "flex", background: "#EDE8DA", borderRadius: "4px 4px 0 0", border: "1px solid #C9BFA4", borderBottom: "none", marginBottom: 0 }}>
-          <button style={tabStyle(tab === "chem", "amber")}  onClick={() => setTab("chem")}>
-            🧪 Chemistry &nbsp;{chemDone > 0 && <span style={{ opacity: 0.7 }}>({chemDone}/{DAYS.length})</span>}
+        <div style={{ display: "flex", background: "#EDE8DA", borderRadius: "4px 4px 0 0", border: `1px solid ${C.line}`, borderBottom: "none" }}>
+          <button style={tabBtn("chem",  "🧪 Chemistry", chemDone,  C.amber)} onClick={() => setTab("chem")}>
+            🧪 Chemistry {chemDone > 0 && <span style={{ opacity: .65 }}>({chemDone}/{TOTAL_DAYS})</span>}
           </button>
-          <button style={tabStyle(tab === "hindi", "rose")} onClick={() => setTab("hindi")}>
-            📖 Hindi &nbsp;{hindiDone > 0 && <span style={{ opacity: 0.7 }}>({hindiDone}/{DAYS.length})</span>}
+          <button style={tabBtn("hindi", "📖 Hindi",     hindiDone, C.rose)}  onClick={() => setTab("hindi")}>
+            📖 Hindi {hindiDone > 0 && <span style={{ opacity: .65 }}>({hindiDone}/{TOTAL_DAYS})</span>}
           </button>
         </div>
 
         {/* ── Tab content ── */}
-        <div style={{ background: "#F6F1E4", border: "1px solid #C9BFA4", borderTop: "none", borderRadius: "0 0 4px 4px", padding: "20px 16px" }}>
-          {tab === "chem"
-            ? <SubjectTable subject="chem"  color="amber" state={state} onToggle={toggle} />
-            : <SubjectTable subject="hindi" color="rose"  state={state} onToggle={toggle} />
-          }
+        <div style={{ background: C.paper, border: `1px solid ${C.line}`, borderTop: "none", borderRadius: "0 0 4px 4px", padding: "20px 16px 24px" }}>
+          <SubjectView subject={tab} state={state} onToggle={toggle} />
         </div>
 
-        {/* ── Footer ── */}
-        <div style={{ marginTop: 20, textAlign: "center" }}>
-          <button onClick={reset} style={{
-            background: "none", border: "1px solid #C9BFA4", color: "#3E5C5A",
-            padding: "6px 18px", borderRadius: 3, fontFamily: "'Courier New',monospace",
-            fontSize: 11, cursor: "pointer",
-          }}>Reset all progress</button>
-          <div style={{ fontFamily: "'Courier New',monospace", fontSize: 10, color: "#3E5C5A", opacity: 0.6, marginTop: 8 }}>
-            Saves automatically to this browser
-          </div>
+        <div style={{ textAlign: "center", marginTop: 18, fontFamily: "'Courier New',monospace", fontSize: 10, color: C.inkSoft, opacity: .6 }}>
+          Tick each day as you finish it · Saves automatically to this browser
         </div>
       </div>
     </div>
