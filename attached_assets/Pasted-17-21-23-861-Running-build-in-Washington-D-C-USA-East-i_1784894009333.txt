@@ -1,0 +1,84 @@
+17:21:23.861 Running build in Washington, D.C., USA (East) – iad1
+17:21:23.862 Build machine configuration: 2 cores, 8 GB
+17:21:23.981 Cloning github.com/enrupesh/studytools (Branch: main, Commit: 786d8e6)
+17:21:24.848 Cloning completed: 867.000ms
+17:21:25.001 Restored build cache from previous deployment (6tdxjiqrMmCi8nzJ1TKF5eBtc4AJ)
+17:21:25.271 Running "vercel build"
+17:21:25.291 Vercel CLI 56.5.0
+17:21:25.835 Running "install" command: `pnpm install --no-frozen-lockfile`...
+17:21:26.261  WARN  Moving @eslint/js that was installed by a different package manager to "node_modules/.ignored
+17:21:26.264  WARN  Moving @types/node that was installed by a different package manager to "node_modules/.ignored
+17:21:26.265  WARN  Moving @types/react that was installed by a different package manager to "node_modules/.ignored
+17:21:26.267  WARN  Moving @types/react-dom that was installed by a different package manager to "node_modules/.ignored
+17:21:26.268  WARN  Moving @vitejs/plugin-react that was installed by a different package manager to "node_modules/.ignored
+17:21:26.270  WARN  Moving eslint that was installed by a different package manager to "node_modules/.ignored
+17:21:26.271  WARN  Moving eslint-plugin-react-hooks that was installed by a different package manager to "node_modules/.ignored
+17:21:26.272  WARN  Moving eslint-plugin-react-refresh that was installed by a different package manager to "node_modules/.ignored
+17:21:26.273  WARN  Moving globals that was installed by a different package manager to "node_modules/.ignored
+17:21:26.274  WARN  Moving typescript that was installed by a different package manager to "node_modules/.ignored
+17:21:26.275  WARN  Moving typescript-eslint that was installed by a different package manager to "node_modules/.ignored
+17:21:26.276  WARN  Moving vite that was installed by a different package manager to "node_modules/.ignored
+17:21:26.278  WARN  Moving @tailwindcss/vite that was installed by a different package manager to "node_modules/.ignored
+17:21:26.280  WARN  Moving @types/three that was installed by a different package manager to "node_modules/.ignored
+17:21:26.281  WARN  Moving axios that was installed by a different package manager to "node_modules/.ignored
+17:21:26.282  WARN  Moving firebase that was installed by a different package manager to "node_modules/.ignored
+17:21:26.283  WARN  Moving framer-motion that was installed by a different package manager to "node_modules/.ignored
+17:21:26.284  WARN  Moving katex that was installed by a different package manager to "node_modules/.ignored
+17:21:26.285  WARN  Moving lucide-react that was installed by a different package manager to "node_modules/.ignored
+17:21:26.287  WARN  Moving react that was installed by a different package manager to "node_modules/.ignored
+17:21:26.288  WARN  Moving react-dom that was installed by a different package manager to "node_modules/.ignored
+17:21:26.289  WARN  Moving react-dropzone that was installed by a different package manager to "node_modules/.ignored
+17:21:26.290  WARN  Moving react-helmet-async that was installed by a different package manager to "node_modules/.ignored
+17:21:26.291  WARN  Moving react-katex that was installed by a different package manager to "node_modules/.ignored
+17:21:26.292  WARN  Moving react-markdown that was installed by a different package manager to "node_modules/.ignored
+17:21:26.293  WARN  Moving react-router-dom that was installed by a different package manager to "node_modules/.ignored
+17:21:26.293  WARN  Moving remark-gfm that was installed by a different package manager to "node_modules/.ignored
+17:21:26.294  WARN  Moving tailwindcss that was installed by a different package manager to "node_modules/.ignored
+17:21:26.295  WARN  Moving three that was installed by a different package manager to "node_modules/.ignored
+17:21:26.312  WARN  GET https://registry.npmjs.org/@eslint%2Fjs error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:21:26.314  WARN  GET https://registry.npmjs.org/@types%2Fnode error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:21:26.315  WARN  GET https://registry.npmjs.org/@types%2Freact error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:21:26.315  WARN  GET https://registry.npmjs.org/@types%2Freact-dom error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:21:26.315  WARN  GET https://registry.npmjs.org/@vitejs%2Fplugin-react error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:21:26.316  WARN  GET https://registry.npmjs.org/eslint error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:21:26.316  WARN  GET https://registry.npmjs.org/eslint-plugin-react-hooks error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:21:26.316  WARN  GET https://registry.npmjs.org/eslint-plugin-react-refresh error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:21:26.316  WARN  GET https://registry.npmjs.org/globals error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:21:26.316  WARN  GET https://registry.npmjs.org/typescript error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:21:26.316  WARN  GET https://registry.npmjs.org/typescript-eslint error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:21:26.316  WARN  GET https://registry.npmjs.org/vite error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:21:26.316  WARN  GET https://registry.npmjs.org/@tailwindcss%2Fvite error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:21:26.316  WARN  GET https://registry.npmjs.org/@types%2Fthree error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:21:26.316  WARN  GET https://registry.npmjs.org/axios error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:21:26.316  WARN  GET https://registry.npmjs.org/firebase error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:21:36.314  WARN  GET https://registry.npmjs.org/@eslint%2Fjs error (ERR_INVALID_THIS). Will retry in 1 minute. 1 retries left.
+17:21:36.315  WARN  GET https://registry.npmjs.org/@types%2Fnode error (ERR_INVALID_THIS). Will retry in 1 minute. 1 retries left.
+17:21:36.315  WARN  GET https://registry.npmjs.org/@types%2Freact error (ERR_INVALID_THIS). Will retry in 1 minute. 1 retries left.
+17:21:36.317  WARN  GET https://registry.npmjs.org/@types%2Freact-dom error (ERR_INVALID_THIS). Will retry in 1 minute. 1 retries left.
+17:21:36.317  WARN  GET https://registry.npmjs.org/@vitejs%2Fplugin-react error (ERR_INVALID_THIS). Will retry in 1 minute. 1 retries left.
+17:21:36.317  WARN  GET https://registry.npmjs.org/eslint error (ERR_INVALID_THIS). Will retry in 1 minute. 1 retries left.
+17:21:36.317  WARN  GET https://registry.npmjs.org/eslint-plugin-react-hooks error (ERR_INVALID_THIS). Will retry in 1 minute. 1 retries left.
+17:21:36.317  WARN  GET https://registry.npmjs.org/eslint-plugin-react-refresh error (ERR_INVALID_THIS). Will retry in 1 minute. 1 retries left.
+17:21:36.317  WARN  GET https://registry.npmjs.org/globals error (ERR_INVALID_THIS). Will retry in 1 minute. 1 retries left.
+17:21:36.317  WARN  GET https://registry.npmjs.org/typescript error (ERR_INVALID_THIS). Will retry in 1 minute. 1 retries left.
+17:21:36.318  WARN  GET https://registry.npmjs.org/typescript-eslint error (ERR_INVALID_THIS). Will retry in 1 minute. 1 retries left.
+17:21:36.319  WARN  GET https://registry.npmjs.org/vite error (ERR_INVALID_THIS). Will retry in 1 minute. 1 retries left.
+17:21:36.319  WARN  GET https://registry.npmjs.org/@tailwindcss%2Fvite error (ERR_INVALID_THIS). Will retry in 1 minute. 1 retries left.
+17:21:36.319  WARN  GET https://registry.npmjs.org/@types%2Fthree error (ERR_INVALID_THIS). Will retry in 1 minute. 1 retries left.
+17:21:36.320  WARN  GET https://registry.npmjs.org/axios error (ERR_INVALID_THIS). Will retry in 1 minute. 1 retries left.
+17:21:36.320  WARN  GET https://registry.npmjs.org/firebase error (ERR_INVALID_THIS). Will retry in 1 minute. 1 retries left.
+17:22:36.321  WARN  GET https://registry.npmjs.org/framer-motion error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:22:36.322  ERR_PNPM_META_FETCH_FAIL  GET https://registry.npmjs.org/@eslint%2Fjs: Value of "this" must be of type URLSearchParams
+17:22:36.323  WARN  GET https://registry.npmjs.org/katex error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:22:36.324  WARN  GET https://registry.npmjs.org/lucide-react error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:22:36.324  WARN  GET https://registry.npmjs.org/react error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:22:36.324  WARN  GET https://registry.npmjs.org/react-dom error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:22:36.325  WARN  GET https://registry.npmjs.org/react-dropzone error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:22:36.326  WARN  GET https://registry.npmjs.org/react-helmet-async error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:22:36.326  WARN  GET https://registry.npmjs.org/react-katex error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:22:36.327  WARN  GET https://registry.npmjs.org/react-markdown error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:22:36.327  WARN  GET https://registry.npmjs.org/react-router-dom error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:22:36.328  WARN  GET https://registry.npmjs.org/remark-gfm error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:22:36.328  WARN  GET https://registry.npmjs.org/tailwindcss error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:22:36.329  WARN  GET https://registry.npmjs.org/three error (ERR_INVALID_THIS). Will retry in 10 seconds. 2 retries left.
+17:22:36.341 Error: Command "pnpm install --no-frozen-lockfile" exited with 1
