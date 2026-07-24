@@ -223,6 +223,27 @@ export default function ExamPage() {
           </div>
         )}
 
+        {/* Books download button */}
+        <div style={{ textAlign: "center", marginBottom: 16 }}>
+          <a
+            href="https://biharboardbooks.com/download/#1l1QJI0tUo5OO7JJ-bDoHXNnq3PPNuEkm"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              background: "#2E7D32", color: "#fff",
+              border: "none", borderRadius: 4,
+              padding: "8px 18px", fontSize: 13,
+              fontFamily: "'Courier New',monospace",
+              fontWeight: "bold", letterSpacing: 0.5,
+              cursor: "pointer", textDecoration: "none",
+              boxShadow: "0 2px 8px rgba(46,125,50,0.3)",
+            }}
+          >
+            📚 BSEB Books Download
+          </a>
+        </div>
+
         {/* CTA button — navigates to /exam/tracker */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <button
