@@ -1,0 +1,104 @@
+15:52:49.026 Running build in Washington, D.C., USA (East) – iad1
+15:52:49.027 Build machine configuration: 2 cores, 8 GB
+15:52:49.559 Cloning github.com/enrupesh/studytools (Branch: main, Commit: 3a9858b)
+15:52:51.338 Cloning completed: 1.779s
+15:52:51.567 Restored build cache from previous deployment (6tdxjiqrMmCi8nzJ1TKF5eBtc4AJ)
+15:52:53.298 Running "vercel build"
+15:52:53.327 Vercel CLI 56.5.0
+15:52:54.726 Running "install" command: `npm ci --legacy-peer-deps`...
+15:52:56.887 npm error code EUSAGE
+15:52:56.894 npm error
+15:52:56.894 npm error `npm ci` can only install packages when your package.json and package-lock.json or npm-shrinkwrap.json are in sync. Please update your lock file with `npm install` before continuing.
+15:52:56.894 npm error
+15:52:56.895 npm error Missing: @tailwindcss/oxide-android-arm64@4.3.3 from lock file
+15:52:56.895 npm error Missing: @tailwindcss/oxide-darwin-arm64@4.3.3 from lock file
+15:52:56.895 npm error Missing: @tailwindcss/oxide-darwin-x64@4.3.3 from lock file
+15:52:56.895 npm error Missing: @tailwindcss/oxide-freebsd-x64@4.3.3 from lock file
+15:52:56.895 npm error Missing: @tailwindcss/oxide-linux-arm-gnueabihf@4.3.3 from lock file
+15:52:56.895 npm error Missing: @tailwindcss/oxide-linux-arm64-gnu@4.3.3 from lock file
+15:52:56.895 npm error Missing: @tailwindcss/oxide-linux-arm64-musl@4.3.3 from lock file
+15:52:56.895 npm error Missing: @tailwindcss/oxide-wasm32-wasi@4.3.3 from lock file
+15:52:56.895 npm error Missing: @tailwindcss/oxide-win32-arm64-msvc@4.3.3 from lock file
+15:52:56.895 npm error Missing: @tailwindcss/oxide-win32-x64-msvc@4.3.3 from lock file
+15:52:56.895 npm error Missing: lightningcss-android-arm64@1.32.0 from lock file
+15:52:56.896 npm error Missing: lightningcss-darwin-arm64@1.32.0 from lock file
+15:52:56.896 npm error Missing: lightningcss-darwin-x64@1.32.0 from lock file
+15:52:56.896 npm error Missing: lightningcss-freebsd-x64@1.32.0 from lock file
+15:52:56.896 npm error Missing: lightningcss-linux-arm-gnueabihf@1.32.0 from lock file
+15:52:56.898 npm error Missing: lightningcss-linux-arm64-gnu@1.32.0 from lock file
+15:52:56.898 npm error Missing: lightningcss-linux-arm64-musl@1.32.0 from lock file
+15:52:56.898 npm error Missing: lightningcss-win32-arm64-msvc@1.32.0 from lock file
+15:52:56.899 npm error Missing: lightningcss-win32-x64-msvc@1.32.0 from lock file
+15:52:56.899 npm error
+15:52:56.899 npm error Clean install a project
+15:52:56.899 npm error
+15:52:56.900 npm error Usage:
+15:52:56.900 npm error npm ci
+15:52:56.900 npm error
+15:52:56.900 npm error Options:
+15:52:56.900 npm error [--install-strategy <hoisted|nested|shallow|linked>] [--legacy-bundling]
+15:52:56.900 npm error [--global-style] [--omit <dev|optional|peer> [--omit <dev|optional|peer> ...]]
+15:52:56.900 npm error [--include <prod|dev|optional|peer> [--include <prod|dev|optional|peer> ...]]
+15:52:56.900 npm error [--strict-peer-deps] [--foreground-scripts] [--ignore-scripts]
+15:52:56.900 npm error [--allow-git <all|none|root>] [--no-audit] [--no-bin-links] [--no-fund]
+15:52:56.900 npm error [--dry-run]
+15:52:56.900 npm error [-w|--workspace <workspace-name> [-w|--workspace <workspace-name> ...]]
+15:52:56.900 npm error [--workspaces] [--include-workspace-root] [--install-links]
+15:52:56.900 npm error
+15:52:56.901 npm error   --install-strategy
+15:52:56.901 npm error     Sets the strategy for installing packages in node_modules.
+15:52:56.901 npm error
+15:52:56.901 npm error   --legacy-bundling
+15:52:56.901 npm error     Instead of hoisting package installs in `node_modules`, install packages
+15:52:56.901 npm error
+15:52:56.901 npm error   --global-style
+15:52:56.901 npm error     Only install direct dependencies in the top level `node_modules`,
+15:52:56.901 npm error
+15:52:56.901 npm error   --omit
+15:52:56.901 npm error     Dependency types to omit from the installation tree on disk.
+15:52:56.901 npm error
+15:52:56.901 npm error   --include
+15:52:56.901 npm error     Option that allows for defining which types of dependencies to install.
+15:52:56.901 npm error
+15:52:56.901 npm error   --strict-peer-deps
+15:52:56.901 npm error     If set to `true`, and `--legacy-peer-deps` is not set, then _any_
+15:52:56.901 npm error
+15:52:56.901 npm error   --foreground-scripts
+15:52:56.901 npm error     Run all build scripts (ie, `preinstall`, `install`, and
+15:52:56.901 npm error
+15:52:56.905 npm error   --ignore-scripts
+15:52:56.906 npm error     If true, npm does not run scripts specified in package.json files.
+15:52:56.906 npm error
+15:52:56.906 npm error   --allow-git
+15:52:56.907 npm error     Limits the ability for npm to fetch dependencies from git references.
+15:52:56.907 npm error
+15:52:56.907 npm error   --audit
+15:52:56.908 npm error     When "true" submit audit reports alongside the current npm command to the
+15:52:56.908 npm error
+15:52:56.909 npm error   --bin-links
+15:52:56.911 npm error     Tells npm to create symlinks (or `.cmd` shims on Windows) for package
+15:52:56.912 npm error
+15:52:56.912 npm error   --fund
+15:52:56.913 npm error     When "true" displays the message at the end of each `npm install`
+15:52:56.913 npm error
+15:52:56.913 npm error   --dry-run
+15:52:56.913 npm error     Indicates that you don't want npm to make any changes and that it should
+15:52:56.914 npm error
+15:52:56.914 npm error   -w|--workspace
+15:52:56.914 npm error     Enable running a command in the context of the configured workspaces of the
+15:52:56.914 npm error
+15:52:56.914 npm error   --workspaces
+15:52:56.914 npm error     Set to true to run the command in the context of **all** configured
+15:52:56.914 npm error
+15:52:56.914 npm error   --include-workspace-root
+15:52:56.914 npm error     Include the workspace root when workspaces are enabled for a command.
+15:52:56.914 npm error
+15:52:56.914 npm error   --install-links
+15:52:56.914 npm error     When set file: protocol dependencies will be packed and installed as
+15:52:56.914 npm error
+15:52:56.914 npm error
+15:52:56.914 npm error aliases: clean-install, ic, install-clean, isntall-clean
+15:52:56.914 npm error
+15:52:56.914 npm error Run "npm help ci" for more info
+15:52:56.915 npm error A complete log of this run can be found in: /vercel/.npm/_logs/2026-07-24T10_22_54_860Z-debug-0.log
+15:52:56.949 Error: Command "npm ci --legacy-peer-deps" exited with 1
