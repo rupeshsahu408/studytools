@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 const DAYS = [
@@ -51,6 +51,46 @@ function getTodayIndex() {
   return Math.min(Math.max(Math.floor((Date.now() - START_DATE.getTime()) / 86400000), 0), DAYS.length - 1);
 }
 
+function getCountdown() {
+  const diff = Math.max(0, EXAM_DATE.getTime() - Date.now());
+  const days    = Math.floor(diff / 86400000);
+  const hours   = Math.floor((diff % 86400000) / 3600000);
+  const minutes = Math.floor((diff % 3600000) / 60000);
+  const seconds = Math.floor((diff % 60000) / 1000);
+  return { days, hours, minutes, seconds };
+}
+
+function CountdownUnit({ value, label, flash }: { value: number; label: string; flash: boolean }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 62 }}>
+      <div
+        style={{
+          background: "#1C3B3A",
+          color: "#F0D3A6",
+          borderRadius: 6,
+          padding: "10px 14px",
+          fontFamily: "'Courier New',monospace",
+          fontSize: 32,
+          fontWeight: "bold",
+          lineHeight: 1,
+          minWidth: 62,
+          textAlign: "center",
+          letterSpacing: 1,
+          boxShadow: "0 4px 12px rgba(28,59,58,0.25)",
+          transition: "transform 0.12s ease, color 0.12s ease",
+          transform: flash ? "scale(1.08)" : "scale(1)",
+          color: flash ? "#D98E3C" : "#F0D3A6",
+        } as React.CSSProperties}
+      >
+        {String(value).padStart(2, "0")}
+      </div>
+      <div style={{ fontFamily: "'Courier New',monospace", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "#3E5C5A", marginTop: 6 }}>
+        {label}
+      </div>
+    </div>
+  );
+}
+
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
     <div style={{ background: "#FFFDF8", border: "1px solid #C9BFA4", borderRadius: 4, padding: "16px 20px", flex: 1, minWidth: 130 }}>
@@ -64,6 +104,11 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
 export default function ExamPage() {
   const navigate = useNavigate();
   const [trackerState, setTrackerState] = useState<TrackerState>({});
+  const [countdown, setCountdown] = useState(getCountdown());
+  const [flashSec, setFlashSec] = useState(false);
+  const [flashMin, setFlashMin] = useState(false);
+  const prevSecRef = useRef(countdown.seconds);
+  const prevMinRef = useRef(countdown.minutes);
   const daysLeft = getDaysRemaining();
   const todayIdx = getTodayIndex();
 
@@ -72,6 +117,24 @@ export default function ExamPage() {
       const raw = localStorage.getItem(STORAGE_KEY);
       setTrackerState(raw ? JSON.parse(raw) : {});
     } catch { setTrackerState({}); }
+  }, []);
+
+  useEffect(() => {
+    const tick = setInterval(() => {
+      const next = getCountdown();
+      setCountdown(next);
+      if (next.seconds !== prevSecRef.current) {
+        prevSecRef.current = next.seconds;
+        setFlashSec(true);
+        setTimeout(() => setFlashSec(false), 120);
+      }
+      if (next.minutes !== prevMinRef.current) {
+        prevMinRef.current = next.minutes;
+        setFlashMin(true);
+        setTimeout(() => setFlashMin(false), 200);
+      }
+    }, 1000);
+    return () => clearInterval(tick);
   }, []);
 
   const chemDone   = DAYS.filter((_, i) => trackerState[`chem-${i}`]).length;
@@ -86,6 +149,7 @@ export default function ExamPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F6F1E4", fontFamily: "'Georgia','Times New Roman',serif", color: "#1C3B3A", padding: "32px 16px 80px" }}>
+      <style>{`@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.15} }`}</style>
       <div style={{ maxWidth: 760, margin: "0 auto" }}>
 
         {/* Header */}
@@ -98,6 +162,25 @@ export default function ExamPage() {
             24 July – 26 August 2026 &nbsp;·&nbsp; Chemistry &amp; Hindi
           </div>
         </header>
+
+        {/* Animated Countdown Timer */}
+        <div style={{ background: "#FFFDF8", border: "2px solid #1C3B3A", borderRadius: 8, padding: "20px 16px", marginBottom: 28, textAlign: "center" }}>
+          <div style={{ fontFamily: "'Courier New',monospace", fontSize: 11, letterSpacing: 3, textTransform: "uppercase", color: "#D98E3C", marginBottom: 16 }}>
+            ⏳ Exam Countdown — 27 August 2026
+          </div>
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+            <CountdownUnit value={countdown.days}    label="Days"    flash={false} />
+            <div style={{ fontSize: 28, fontWeight: "bold", color: "#C9BFA4", paddingTop: 10, fontFamily: "'Courier New',monospace", animation: "blink 1s step-end infinite" }}>:</div>
+            <CountdownUnit value={countdown.hours}   label="Hours"   flash={false} />
+            <div style={{ fontSize: 28, fontWeight: "bold", color: "#C9BFA4", paddingTop: 10, fontFamily: "'Courier New',monospace", animation: "blink 1s step-end infinite" }}>:</div>
+            <CountdownUnit value={countdown.minutes} label="Minutes" flash={flashMin} />
+            <div style={{ fontSize: 28, fontWeight: "bold", color: "#C9BFA4", paddingTop: 10, fontFamily: "'Courier New',monospace", animation: "blink 1s step-end infinite" }}>:</div>
+            <CountdownUnit value={countdown.seconds} label="Seconds" flash={flashSec} />
+          </div>
+          <div style={{ fontFamily: "'Courier New',monospace", fontSize: 11, color: "#3E5C5A", marginTop: 14, letterSpacing: 1 }}>
+            {countdown.days > 0 ? `${countdown.days} din baaki — Karo mehnat, results aayenge! 💪` : "Aaj hai exam! All the best! 🎯"}
+          </div>
+        </div>
 
         {/* Stat cards */}
         <div style={{ display: "flex", gap: 12, marginBottom: 28, flexWrap: "wrap" }}>
